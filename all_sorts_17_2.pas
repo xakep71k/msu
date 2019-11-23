@@ -58,12 +58,13 @@ begin
 	getIndexMinElement := minElementIndex;
 end;
 
-procedure swapElements(var arr :ElementsVectorType; i, j :integer);
+procedure swapElements(var arr :ElementsVectorType; i, j :integer; var opsCounters :OperationsCounterType);
 var tmp :ElementType;
 begin
 	tmp := arr[i];
 	arr[i] := arr[j];
 	arr[j] := tmp;
+	opsCounters.swapOps := opsCounters.swapOps + 1;
 end;
 
 procedure sortBinaryInsertion(var arr :ElementsVectorType; var opsCounters :OperationsCounterType; demo :integer);
@@ -81,8 +82,7 @@ begin
 			for j := i - 1 downto middleIndex + 1 do begin { ищем место для текущего элемента в правой части }
 				opsCounters.compareOps := opsCounters.compareOps + 1;
 				if arr[j] > arr[insIndex] then begin
-					opsCounters.swapOps := opsCounters.swapOps + 1;
-					swapElements(arr, j, insIndex);
+					swapElements(arr, j, insIndex, opsCounters);
 					insIndex := j;
 					if demo = 1 then begin
 						printElementsVector(arr);
@@ -92,8 +92,7 @@ begin
 		end else begin
 			{ текущий элемент меньше среднего, идём налево }
 			for j := i downto middleIndex + 1 do begin { двигаем текущий элемент за средний начания справа }
-				opsCounters.swapOps := opsCounters.swapOps + 1;
-				swapElements(arr, j, j-1);
+				swapElements(arr, j, j-1, opsCounters);
 				if demo = 1 then begin
 					printElementsVector(arr);
 				end;
@@ -102,8 +101,7 @@ begin
 			for j := middleIndex - 1 downto 1 do begin { ищем место для текущего элемента в левой части }
 				opsCounters.compareOps := opsCounters.compareOps  + 1;
 				if arr[insIndex] < arr[j] then begin
-					opsCounters.swapOps := opsCounters.swapOps + 1;
-					swapElements(arr, j, insIndex);
+					swapElements(arr, j, insIndex, opsCounters);
 					insIndex := j;
 					if demo = 1 then begin
 						printElementsVector(arr);
@@ -125,8 +123,7 @@ begin
 		for j := i - 1 downto 1 do begin
 			opsCounters.compareOps := opsCounters.compareOps  + 1;
 			if arr[j] > arr[insIndex] then begin
-				opsCounters.swapOps := opsCounters.swapOps + 1;
-				swapElements(arr, j, insIndex);
+				swapElements(arr, j, insIndex, opsCounters);
 				insIndex := j;
 				if demo = 1 then begin
 					printElementsVector(arr);
@@ -143,8 +140,7 @@ begin
 		indexMinElement := getIndexMinElement(arr, i, MAX_ELEMENTS, opsCounters);
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
 		if (i <> indexMinElement) then begin
-			opsCounters.swapOps := opsCounters.swapOps + 1;
-			swapElements(arr, indexMinElement, i);
+			swapElements(arr, indexMinElement, i, opsCounters);
 			if demo = 1 then begin
 				printElementsVector(arr);
 			end;
