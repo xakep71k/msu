@@ -41,7 +41,7 @@ var i:integer;
 begin
 	for i := 1 to MAX_ELEMENTS do begin
 		arr[i] := MAX_ELEMENTS - i;
-		arr[i] := random(MAX_ELEMENTS * 10);
+		arr[i] := random(20 * 10);
 	end;
 end;
 
@@ -72,10 +72,13 @@ begin
 	for i := 2 to MAX_ELEMENTS do begin
 		middleIndex := i div 2;
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
+		if demo = 1 then begin
+			writeln('arr[', i, '] = ', arr[i]);
+		end;
 		if arr[middleIndex] < arr[i] then begin
 			insIndex := i;
 			{ текущий элемент больше среднего, идём направо }
-			for j := i downto middleIndex + 1 do begin { ищем место для текущего элемента в правой части }
+			for j := i - 1 downto middleIndex + 1 do begin { ищем место для текущего элемента в правой части }
 				opsCounters.compareOps := opsCounters.compareOps + 1;
 				if arr[j] > arr[insIndex] then begin
 					opsCounters.swapOps := opsCounters.swapOps + 1;
@@ -119,7 +122,7 @@ var i, j, insIndex :integer;
 begin
 	for i := 2 to MAX_ELEMENTS do begin
 		insIndex := i;
-		for j := insIndex downto 1 do begin
+		for j := i - 1 downto 1 do begin
 			opsCounters.compareOps := opsCounters.compareOps  + 1;
 			if arr[j] > arr[insIndex] then begin
 				opsCounters.swapOps := opsCounters.swapOps + 1;
@@ -128,7 +131,7 @@ begin
 				if demo = 1 then begin
 					printElementsVector(arr);
 				end;
-			end;
+			end else break;
 		end;
 	end;
 end;
@@ -169,12 +172,10 @@ begin
 		writeln('ВЫКЛЮЧЕН');
 	end;
 	fillElementsVector(elementsOrig);
-
 	writeln('Всего элементов в массиве: ', MAX_ELEMENTS);
-	writeln('Не отсортированный массив:');
 
 	writeln(#10, '=== (1) Сортировка простыми вставками ===');
-	printElementsVector(elementsOrig); writeln();
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
 	clearOpsCounter(opsCounter);
 	sortedElements := elementsOrig;
 	sortInsertion(sortedElements, opsCounter, demo);
@@ -182,7 +183,7 @@ begin
 	printOpsCounter(opsCounter);
 
 	writeln(#10, '=== (2) Сортировка бинарными вставками ===');
-	printElementsVector(elementsOrig); writeln();
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
 	clearOpsCounter(opsCounter);
 	sortedElements := elementsOrig;
 	sortBinaryInsertion(sortedElements, opsCounter, demo);
@@ -190,7 +191,7 @@ begin
 	printOpsCounter(opsCounter);
 
 	writeln(#10, '=== (5) Сортировка простым выбором ===');
-	printElementsVector(elementsOrig); writeln();
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
 	clearOpsCounter(opsCounter);
 	sortedElements := elementsOrig;
 	sortSelection(sortedElements, opsCounter, demo);
