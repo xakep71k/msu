@@ -73,40 +73,30 @@ begin
 	for i := 2 to MAX_ELEMENTS do begin
 		middleIndex := i div 2;
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
-		if demo = 1 then begin
-			writeln('arr[', i, '] = ', arr[i]);
-		end;
 		if arr[middleIndex] < arr[i] then begin
 			insIndex := i;
 			{ текущий элемент больше среднего, идём направо }
 			for j := i - 1 downto middleIndex + 1 do begin { ищем место для текущего элемента в правой части }
 				opsCounters.compareOps := opsCounters.compareOps + 1;
-				if arr[j] > arr[insIndex] then begin
-					swapElements(arr, j, insIndex, opsCounters);
+				if arr[j] > arr[i] then begin
 					insIndex := j;
-					if demo = 1 then begin
-						printElementsVector(arr);
-					end;
 				end else break;
 			end;
 		end else begin
-			{ текущий элемент меньше среднего, идём налево }
-			for j := i downto middleIndex + 1 do begin { двигаем текущий элемент за средний начания справа }
-				swapElements(arr, j, j-1, opsCounters);
-				if demo = 1 then begin
-					printElementsVector(arr);
-				end;
-			end;
 			insIndex := middleIndex;
+			{ текущий элемент меньше среднего, идём налево }
 			for j := middleIndex - 1 downto 1 do begin { ищем место для текущего элемента в левой части }
 				opsCounters.compareOps := opsCounters.compareOps  + 1;
-				if arr[insIndex] < arr[j] then begin
-					swapElements(arr, j, insIndex, opsCounters);
+				if arr[i] < arr[j] then begin
 					insIndex := j;
-					if demo = 1 then begin
-						printElementsVector(arr);
-					end;
 				end else break;
+			end;
+		end;
+		{ ставим элемент в найденное место insIndex }
+		for j := i downto insIndex + 1 do begin 
+			swapElements(arr, j, j-1, opsCounters);
+			if demo = 1 then begin
+				printElementsVector(arr);
 			end;
 		end;
 		if demo = 1 then begin
