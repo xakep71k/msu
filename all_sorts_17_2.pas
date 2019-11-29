@@ -9,7 +9,6 @@ type
 		swapOps, compareOps :integer;
 	end;
 
-
 procedure clearOpsCounter(var opsCounter :OperationsCounterType);
 begin
 	opsCounter.compareOps := 0;
@@ -19,6 +18,16 @@ end;
 procedure printOpsCounter(var opsCounter :OperationsCounterType);
 begin
 	writeln('Число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
+end;
+
+function less(var x,y :ElementType):boolean;
+begin
+	less := x < y;
+end;
+
+function more(var x,y :ElementType):boolean;
+begin
+	more := x > y;
 end;
 
 procedure printElement(element :ElementType);
@@ -51,7 +60,7 @@ begin
 	minElementIndex := starti;
 	for i := starti to endi do begin
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
-		if arr[minElementIndex] > arr[i] then begin
+		if more(arr[minElementIndex], arr[i]) then begin
 			minElementIndex := i;
 		end;
 	end;	
@@ -73,12 +82,12 @@ begin
 	for i := 2 to MAX_ELEMENTS do begin
 		middleIndex := i div 2;
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
-		if arr[middleIndex] < arr[i] then begin
+		if less(arr[middleIndex], arr[i]) then begin
 			insIndex := i;
 			{ текущий элемент больше среднего, идём направо }
 			for j := i - 1 downto middleIndex + 1 do begin { ищем место для текущего элемента в правой части }
 				opsCounters.compareOps := opsCounters.compareOps + 1;
-				if arr[j] > arr[i] then begin
+				if more(arr[j], arr[i]) then begin
 					insIndex := j;
 				end else break;
 			end;
@@ -87,7 +96,7 @@ begin
 			{ текущий элемент меньше среднего, идём налево }
 			for j := middleIndex - 1 downto 1 do begin { ищем место для текущего элемента в левой части }
 				opsCounters.compareOps := opsCounters.compareOps  + 1;
-				if arr[i] < arr[j] then begin
+				if less(arr[i], arr[j]) then begin
 					insIndex := j;
 				end else break;
 			end;
@@ -112,7 +121,7 @@ begin
 		insIndex := i;
 		for j := i - 1 downto 1 do begin
 			opsCounters.compareOps := opsCounters.compareOps  + 1;
-			if arr[j] > arr[insIndex] then begin
+			if more(arr[j], arr[insIndex]) then begin
 				swapElements(arr, j, insIndex, opsCounters);
 				insIndex := j;
 				if demo = 1 then begin
@@ -120,6 +129,48 @@ begin
 				end;
 			end else break;
 		end;
+	end;
+end;
+
+procedure sortBubble(var arr :ElementsVectorType; var opsCounters :OperationsCounterType; demo :integer);
+var i, j :integer;
+begin
+	for i:= 1 to MAX_ELEMENTS - 1 do begin
+		for j := 1 to MAX_ELEMENTS - i do begin
+			opsCounters.compareOps := opsCounters.compareOps  + 1;
+			if more(arr[j], arr[j+1]) then begin
+				swapElements(arr, j, j+1, opsCounters);
+				if demo = 1 then begin
+					printElementsVector(arr);
+				end;
+			end;
+		end;
+	end;
+end;
+
+procedure sortShuttle(var arr :ElementsVectorType; var opsCounters :OperationsCounterType; demo :integer);
+var i, j, k, max :integer;
+begin
+	i := 2;
+	while i <= MAX_ELEMENTS do begin
+		for j := i to MAX_ELEMENTS do begin
+			opsCounters.compareOps := opsCounters.compareOps  + 1;
+			if more(arr[j-1], arr[j]) then begin
+				for k := j downto 2 do begin { возвращаемя обратно }
+					opsCounters.compareOps := opsCounters.compareOps  + 1;
+					if less(arr[k], arr[k-1]) then begin
+						swapElements(arr, k, k-1, opsCounters);
+						if demo = 1 then begin
+							printElementsVector(arr);
+						end;
+					end else begin
+						i := k - 1;
+					end;
+				end;
+				break
+			end;
+		end;
+		i := i + 1
 	end;
 end;
 
@@ -176,6 +227,22 @@ begin
 	printElementsVector(sortedElements);
 	printOpsCounter(opsCounter);
 
+	writeln(#10, '=== (3) Сортировка методом пузырька ===');
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
+	clearOpsCounter(opsCounter);
+	sortedElements := elementsOrig;
+	sortBubble(sortedElements, opsCounter, demo);
+	printElementsVector(sortedElements);
+	printOpsCounter(opsCounter);
+
+	writeln(#10, '=== (4) Сортировка челночная ===');
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
+	clearOpsCounter(opsCounter);
+	sortedElements := elementsOrig;
+	sortShuttle(sortedElements, opsCounter, demo);
+	printElementsVector(sortedElements);
+	printOpsCounter(opsCounter);
+
 	writeln(#10, '=== (5) Сортировка простым выбором ===');
 	printElementsVector(elementsOrig); if demo = 1 then writeln();
 	clearOpsCounter(opsCounter);
@@ -184,3 +251,4 @@ begin
 	printElementsVector(sortedElements);
 	printOpsCounter(opsCounter);
 end.
+
