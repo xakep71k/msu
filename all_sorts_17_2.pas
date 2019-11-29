@@ -156,7 +156,7 @@ begin
 		for j := i to MAX_ELEMENTS do begin
 			opsCounters.compareOps := opsCounters.compareOps  + 1;
 			if more(arr[j-1], arr[j]) then begin
-				for k := j downto 2 do begin { возвращаемя обратно }
+				for k := j downto 2 do begin { возвращаемcя обратно }
 					opsCounters.compareOps := opsCounters.compareOps  + 1;
 					if less(arr[k], arr[k-1]) then begin
 						swapElements(arr, k, k-1, opsCounters);
