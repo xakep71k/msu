@@ -75,7 +75,7 @@ begin
 	begin
 		if EOF(fileReadFrom) then
 		begin
-			Writeln('Не запрошенного количества объектов');
+			Writeln('Нет запрошенного количества объектов');
 			exit;
 		end;
 		readCat(fileReadFrom, cats[i]);
@@ -107,64 +107,6 @@ begin
 	end;
 end;
 
-procedure openForRead(var fd: text; name: string);
-begin
-	assign(fd, name);
-	reset(fd);
-end;
-
-procedure openForWrite(var fd: text; name: string);
-begin
-	assign(fd, name);
-	Rewrite(fd);
-end;
-
-function getIndexMinElement(var cats: CatsType; starti, endi: integer; var opsCounters: OperationsCounterType): integer;
-var i, minElementIndex :integer;
-begin
-	minElementIndex := starti;
-	for i := starti to endi do begin
-		opsCounters.compareOps := opsCounters.compareOps  + 1;
-		if more(cats[minElementIndex], cats[i]) then begin
-			minElementIndex := i;
-		end;
-	end;	
-	getIndexMinElement := minElementIndex;
-end;
-
-procedure swapElements(var cat1, cat2: CatType; var opsCounters: OperationsCounterType);
-var tmp :CatType;
-begin
-	tmp := cat1;
-	cat1 := cat2;
-	cat2 := tmp;
-	opsCounters.swapOps := opsCounters.swapOps + 1;
-end;
-
-procedure sortSelection(var cats: CatsType; step, maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
-var i, indexMinElement: integer;
-begin
-	i := 1;
-	while i <= maxCats-1 do begin
-		indexMinElement := getIndexMinElement(cats, i, maxCats, opsCounters);
-		swapElements(cats[indexMinElement], cats[i], opsCounters);
-		if demo = 1 then begin
-			writeCats(output, cats, maxCats);
-		end;
-		i := i + step;
-	end;
-end;
-
-procedure sortShell(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
-var k: integer;
-begin
-	k := maxCats;
-	repeat begin
-		k := k div 2;
-		sortSelection(cats, k, maxCats, opsCounters, demo);
-	end until k < 2;
-end;
-
 procedure writeProjectTasksNumers(studentID: integer);
 begin
 	writeln('Простая сортировка: ', abs((studentID + 546) mod 5) + 1);
@@ -183,24 +125,116 @@ begin
 	Writeln();
 end;
 
-var readFile: text;
-catsSortedSelection, catsSortedShell: CatsType;
+procedure openForRead(var fd: text; name: string);
+begin
+	assign(fd, name);
+	reset(fd);
+end;
+
+procedure openForWrite(var fd: text; name: string);
+begin
+	assign(fd, name);
+	Rewrite(fd);
+end;
+
+procedure writeCats2File(var cats: CatsType; maxCats: integer; fileName: string);
+var fileDesc: text;
+begin
+	openForWrite(fileDesc, fileName);
+	writeCats(fileDesc, cats, maxCats);
+	Close(fileDesc);
+end;
+
+function getIndexMinElement(var cats: CatsType; starti, endi, step: integer; var opsCounters: OperationsCounterType): integer;
+var i, minElementIndex :integer;
+begin
+	minElementIndex := starti;
+	i := starti;
+	while i <= endi do begin
+		opsCounters.compareOps := opsCounters.compareOps  + 1;
+		if more(cats[minElementIndex], cats[i]) then begin
+			minElementIndex := i;
+		end;
+		i := i + step;
+	end;	
+	getIndexMinElement := minElementIndex;
+end;
+
+procedure swapElements(var cat1, cat2: CatType; var opsCounters: OperationsCounterType);
+var tmp :CatType;
+begin
+	tmp := cat1;
+	cat1 := cat2;
+	cat2 := tmp;
+	opsCounters.swapOps := opsCounters.swapOps + 1;
+end;
+
+procedure sortSelection(var cats: CatsType; step, maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+var i, indexMinElement: integer;
+begin
+	i := 1;
+	while i <= maxCats-1 do begin
+		indexMinElement := getIndexMinElement(cats, i, maxCats, step, opsCounters);
+		swapElements(cats[indexMinElement], cats[i], opsCounters);
+		if demo = 1 then begin
+			writeCats(output, cats, maxCats);
+		end;
+		i := i + step;
+	end;
+end;
+
+procedure sortShell(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+var k: integer;
+begin
+	k := maxCats;
+	repeat begin
+		k := k div 2;
+		sortSelection(cats, k, maxCats, opsCounters, demo);
+	end until k < 2;
+end;
+
+procedure shuffleCats(var cats: CatsType; maxCats: integer);
+var randomIndex, i: integer;
+tmp: CatType;
+begin
+	for i:= 1 to maxCats do
+	begin
+		randomIndex := random(maxCats - i) + i;
+		tmp := cats[i];
+		cats[i] := cats[randomIndex];
+		cats[randomIndex] := tmp;
+	end;
+end;
+
+var fileDesc: text;
+catsSortedSelection, catsSortedShell, catsRandom: CatsType;
 demo: integer;
 opsCounterSortSelection, opsCounterSortShell :OperationsCounterType;
 begin
+	{writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
+	randomize;
+	{ инициализация переменных }
 	demo := 0;
 	clearOpsCounter(opsCounterSortSelection);
 	clearOpsCounter(opsCounterSortShell);
-	{writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
-	openForRead(readFile, INITIAL_FILE);
-	readCats(readFile, catsSortedSelection, MAX_CATS);
+
+	{ инициализация котов }
+	openForRead(fileDesc, INITIAL_FILE);
+	readCats(fileDesc, catsSortedSelection, MAX_CATS);
+	Close(fileDesc);
 	catsSortedShell := catsSortedSelection;
+	catsRandom := catsSortedSelection;
+
+	{ сортировка }
 	sortSelection(catsSortedSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
 	sortShell(catsSortedShell, MAX_CATS, opsCounterSortShell, demo);
+
 	writeCatsRating(catsSortedSelection, MAX_CATS);
 	writeCatsRating(catsSortedShell, MAX_CATS);
 	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
 	writeOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
+	shuffleCats(catsRandom, MAX_CATS);
+	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE);
 end.
 
 
