@@ -140,12 +140,9 @@ var i, indexMinElement :integer;
 begin
 	for i := 1 to maxCats-1 do begin
 		indexMinElement := getIndexMinElement(cats, i, maxCats, opsCounters);
-		opsCounters.compareOps := opsCounters.compareOps  + 1;
-		if (i <> indexMinElement) then begin
-			swapElements(cats[indexMinElement], cats[i], opsCounters);
-			if demo = 1 then begin
-				writeCats(output, cats, maxCats);
-			end;
+		swapElements(cats[indexMinElement], cats[i], opsCounters);
+		if demo = 1 then begin
+			writeCats(output, cats, maxCats);
 		end;
 	end;
 end;
