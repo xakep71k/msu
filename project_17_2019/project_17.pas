@@ -30,7 +30,7 @@ OperationsCounterType = record
 	swapOps, compareOps :integer;
 end;
 
-procedure printOpsCounter(title: string; var opsCounter :OperationsCounterType);
+procedure writeOpsCounter(title: string; var opsCounter :OperationsCounterType);
 begin
 	writeln(title, 'число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
 end;
@@ -165,7 +165,7 @@ begin
 	end until k < 2;
 end;
 
-procedure printProjectTasksNumers(studentID: integer);
+procedure writeProjectTasksNumers(studentID: integer);
 begin
 	writeln('Простая сортировка: ', abs((studentID + 546) mod 5) + 1);
 	writeln('Сложная сортировка: ', abs((studentID + 212) mod 4) + 6);
@@ -173,34 +173,34 @@ begin
 	writeln();
 end;
 
+procedure writeCatsRating(var cats: CatsType; maxCats: integer);
+var i: integer;
+begin
+	for i := 1 to maxCats do
+	begin
+		Write(cats[i].sumRating, ' ');
+	end;
+	Writeln();
+end;
+
 var readFile: text;
 catsSortedSelection, catsSortedShell: CatsType;
 demo: integer;
 opsCounterSortSelection, opsCounterSortShell :OperationsCounterType;
-i: integer;
 begin
 	demo := 0;
 	clearOpsCounter(opsCounterSortSelection);
 	clearOpsCounter(opsCounterSortShell);
-	{printProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
+	{writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
 	openForRead(readFile, INITIAL_FILE);
 	readCats(readFile, catsSortedSelection, MAX_CATS);
 	catsSortedShell := catsSortedSelection;
 	sortSelection(catsSortedSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
 	sortShell(catsSortedShell, MAX_CATS, opsCounterSortShell, demo);
-	for i := 1 to MAX_CATS do
-	begin
-		Write(catsSortedSelection[i].sumRating, ' ');
-	end;
-	writeln();
-	for i := 1 to MAX_CATS do
-	begin
-		Write(catsSortedShell[i].sumRating, ' ');
-	end;
-	writeln();
-	printOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
-	printOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
-	writeln();
+	writeCatsRating(catsSortedSelection, MAX_CATS);
+	writeCatsRating(catsSortedShell, MAX_CATS);
+	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
+	writeOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
 end.
 
 
