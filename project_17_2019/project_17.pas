@@ -30,9 +30,15 @@ OperationsCounterType = record
 	swapOps, compareOps :integer;
 end;
 
-procedure printOpsCounter(var opsCounter :OperationsCounterType);
+procedure printOpsCounter(title: string; var opsCounter :OperationsCounterType);
 begin
-	writeln('Число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
+	writeln(title, 'число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
+end;
+
+procedure clearOpsCounter(var opsCounter :OperationsCounterType);
+begin
+	opsCounter.compareOps := 0;
+	opsCounter.swapOps := 0;
 end;
 
 function less(var cat1, cat2: CatType):boolean;
@@ -113,7 +119,7 @@ begin
 	Rewrite(fd);
 end;
 
-function getIndexMinElement(var cats :CatsType; starti, endi :integer; var opsCounters :OperationsCounterType): integer;
+function getIndexMinElement(var cats: CatsType; starti, endi: integer; var opsCounters: OperationsCounterType): integer;
 var i, minElementIndex :integer;
 begin
 	minElementIndex := starti;
@@ -126,7 +132,7 @@ begin
 	getIndexMinElement := minElementIndex;
 end;
 
-procedure swapElements(var cat1, cat2: CatType; var opsCounters :OperationsCounterType);
+procedure swapElements(var cat1, cat2: CatType; var opsCounters: OperationsCounterType);
 var tmp :CatType;
 begin
 	tmp := cat1;
@@ -135,16 +141,28 @@ begin
 	opsCounters.swapOps := opsCounters.swapOps + 1;
 end;
 
-procedure sortSelection(var cats :CatsType; var opsCounters :OperationsCounterType; maxCats: integer; demo :integer);
-var i, indexMinElement :integer;
+procedure sortSelection(var cats: CatsType; step, maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+var i, indexMinElement: integer;
 begin
-	for i := 1 to maxCats-1 do begin
+	i := 1;
+	while i <= maxCats-1 do begin
 		indexMinElement := getIndexMinElement(cats, i, maxCats, opsCounters);
 		swapElements(cats[indexMinElement], cats[i], opsCounters);
 		if demo = 1 then begin
 			writeCats(output, cats, maxCats);
 		end;
+		i := i + step;
 	end;
+end;
+
+procedure sortShell(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+var k: integer;
+begin
+	k := maxCats;
+	repeat begin
+		k := k div 2;
+		sortSelection(cats, k, maxCats, opsCounters, demo);
+	end until k < 2;
 end;
 
 procedure printProjectTasksNumers(studentID: integer);
@@ -156,16 +174,33 @@ begin
 end;
 
 var readFile: text;
-cats: CatsType;
+catsSortedSelection, catsSortedShell: CatsType;
 demo: integer;
-opsCounter :OperationsCounterType;
+opsCounterSortSelection, opsCounterSortShell :OperationsCounterType;
+i: integer;
 begin
 	demo := 0;
+	clearOpsCounter(opsCounterSortSelection);
+	clearOpsCounter(opsCounterSortShell);
 	{printProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
 	openForRead(readFile, INITIAL_FILE);
-	readCats(readFile, cats, MAX_CATS);
-	sortSelection(cats, opsCounter, MAX_CATS, demo);
-	writeCats(output, cats, 100);
+	readCats(readFile, catsSortedSelection, MAX_CATS);
+	catsSortedShell := catsSortedSelection;
+	sortSelection(catsSortedSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
+	sortShell(catsSortedShell, MAX_CATS, opsCounterSortShell, demo);
+	for i := 1 to MAX_CATS do
+	begin
+		Write(catsSortedSelection[i].sumRating, ' ');
+	end;
+	writeln();
+	for i := 1 to MAX_CATS do
+	begin
+		Write(catsSortedShell[i].sumRating, ' ');
+	end;
+	writeln();
+	printOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
+	printOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
+	writeln();
 end.
 
 
