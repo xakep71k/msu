@@ -5,6 +5,7 @@
 Виды сортировки:
 	1. Простой выбор.
 	2. Шелла.
+	3. Простое слияние.
 Данные:
 	Участники выставки кошек: имя животного, порода, пол, вес в формате К кг Г гр (например, 5 кг 600 гр). Упорядочить список участников по возрастанию веса.
 
@@ -16,7 +17,7 @@ SORT_UP_FILE = ' f_n_up.txt';
 SORT_DOWN_FILE = 'f_n_down.txt';
 SORT_UP_DOWN_FILE = 'f_n_up_and_down.txt';
 SORT_RANDOM_FILE = 'f_n_random.txt';
-THREE_DIGITS_STUDENT_NUMBER = 748;
+THREE_DIGITS_STUDENT_NUMBER = 738;
 
 type CatType = record
 	name: string; { кличка }
@@ -193,6 +194,10 @@ begin
 	end until k < 2;
 end;
 
+procedure sortMerge(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+begin
+end;
+
 procedure shuffleCats(var cats: CatsType; maxCats: integer);
 var randomIndex, i: integer;
 tmp: CatType;
@@ -207,32 +212,36 @@ begin
 end;
 
 var fileDesc: text;
-catsSortedSelection, catsSortedShell, catsRandom: CatsType;
+catsSortSelection, catsSortShell, catsSortMerge, catsRandom: CatsType;
 demo: integer;
-opsCounterSortSelection, opsCounterSortShell :OperationsCounterType;
+opsCounterSortSelection, opsCounterSortShell, opsCounterSortMerge :OperationsCounterType;
 begin
-	{writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);}
+	writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);
 	randomize;
 	{ инициализация переменных }
 	demo := 0;
 	clearOpsCounter(opsCounterSortSelection);
 	clearOpsCounter(opsCounterSortShell);
+	clearOpsCounter(opsCounterSortMerge);
 
 	{ инициализация котов }
 	openForRead(fileDesc, INITIAL_FILE);
-	readCats(fileDesc, catsSortedSelection, MAX_CATS);
+	readCats(fileDesc, catsSortSelection, MAX_CATS);
 	Close(fileDesc);
-	catsSortedShell := catsSortedSelection;
-	catsRandom := catsSortedSelection;
+	catsSortShell := catsSortSelection;
+	catsSortMerge := catsSortSelection;
+	catsRandom := catsSortSelection;
 
 	{ сортировка }
-	sortSelection(catsSortedSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
-	sortShell(catsSortedShell, MAX_CATS, opsCounterSortShell, demo);
+	sortSelection(catsSortSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
+	sortShell(catsSortShell, MAX_CATS, opsCounterSortShell, demo);
+	sortMerge(catsSortShell, MAX_CATS, opsCounterSortShell, demo);
 
-	writeCatsRating(catsSortedSelection, MAX_CATS);
-	writeCatsRating(catsSortedShell, MAX_CATS);
+	writeCatsRating(catsSortSelection, MAX_CATS);
+	writeCatsRating(catsSortShell, MAX_CATS);
 	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
 	writeOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
+	writeOpsCounter('Сортировка слиянием: ', opsCounterSortShell);
 	shuffleCats(catsRandom, MAX_CATS);
 	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE);
 end.
