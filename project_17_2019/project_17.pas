@@ -177,7 +177,7 @@ begin
 		indexMinElement := getIndexMinElement(cats, i, maxCats, step, opsCounters);
 		swapElements(cats[indexMinElement], cats[i], opsCounters);
 		if demo = 1 then begin
-			writeCats(output, cats, maxCats);
+			writeCatsRating(cats, maxCats);
 		end;
 		i := i + step;
 	end;
