@@ -1,13 +1,14 @@
 {
 Все методы сортировки.
 }
-const MAX_ELEMENTS = 20;
+const MAX_ELEMENTS = 10;
 type
 	ElementType = integer;
 	ElementsVectorType = array[1..MAX_ELEMENTS] of ElementType;
 	OperationsCounterType = record
 		swapOps, compareOps :integer;
 	end;
+ElementsVectorTypePtr = ^ElementsVectorType;
 
 procedure clearOpsCounter(var opsCounter :OperationsCounterType);
 begin
@@ -49,8 +50,8 @@ procedure fillElementsVector(var arr:ElementsVectorType);
 var i:integer;
 begin
 	for i := 1 to MAX_ELEMENTS do begin
-		arr[i] := MAX_ELEMENTS - i;
 		arr[i] := random(20 * 10);
+		arr[i] := MAX_ELEMENTS - i;
 	end;
 end;
 
@@ -189,14 +190,98 @@ begin
 	end;
 end;
 
+function findSortedSequenceFromEnd(var arr: ElementsVectorType; starti, endi: integer): integer;
+var i: integer;
+begin
+	{
+		Использую while вместо for, так как мне нужно знать номер итерации.
+		В for это значение после выхода может быть неопределено.
+	}
+	i := starti;
+	endi := endi + 1;
+	while i >= endi do
+	begin
+		if more(arr[i - 1], arr[i]) then break;
+		i := i - 1;
+	end;
+	findSortedSequenceFromEnd := i;
+end;
+
+function findSortedSequenceFromBegin(var arr: ElementsVectorType; starti, endi: integer): integer;
+var i: integer;
+begin
+	{
+		Использую while вместо for, так как мне нужно знать номер итерации.
+		В for это значение после выхода может быть неопределено.
+	}
+	i := starti;
+	endi := endi - 1;
+	while i <= endi do
+	begin
+		if more(arr[i], arr[i + 1]) then break;
+		i := i + 1;
+	end;
+	findSortedSequenceFromBegin := i;
+end;
+
+procedure merge(var arrTo: ElementsVectorType; starti1, endi1, starti2, endi2: integer; var arrFrom: ElementsVectorType; var i: integer);
+begin
+	writeln('-- index ', starti1, ' ', endi1, ' ', starti2, ' ', endi2);
+	while (endi2 <= starti2) or (starti1 <= endi1) do
+	begin
+		if (endi2 > starti2) or less(arrFrom[starti1], arrFrom[endi2]) then
+		begin
+			arrTo[i] := arrFrom[starti1];
+			starti1 := starti1 + 1;
+		end else begin
+			arrTo[i] := arrFrom[endi2];
+			endi2 := endi2 + 1;
+		end;
+		i := i + 1;
+	end;
+end;
+
+procedure sortMerge(
+	var result: ElementsVectorTypePtr;
+	var arr1, arr2: ElementsVectorType;
+	maxCats: integer;
+	var opsCounters: OperationsCounterType;
+	demo: integer);
+var starti1, starti2, endi1, endi2, currenti: integer;
+arrHelper, ptrTmp: ElementsVectorTypePtr;
+begin
+	result := @arr1;
+	arrHelper := @arr2;
+	starti1 := 1;
+	endi1 := maxCats;
+	starti2 := maxCats;
+	currenti := 1;
+	while true do
+	begin
+		endi1 := findSortedSequenceFromBegin(result^, starti1, endi1);
+		if endi1 >= maxCats then break;
+		endi2 := findSortedSequenceFromEnd(result^, starti2, endi1);
+		writeln('start merge');
+		merge(arrHelper^, starti1, endi1, starti2, endi2, result^, currenti);
+		starti1 := endi1 + 1;
+		endi1 := endi2 - 1;
+		starti2 := endi1;
+		break;
+	end;
+	result := arrHelper;
+end;
+
 var
 demo :integer;
 elementsOrig, sortedElements :ElementsVectorType;
 opsCounter :OperationsCounterType;
+arr1, arr2: ElementsVectorType;
+arrSortMerge: ElementsVectorTypePtr;
 begin
 	randomize;
-	write('Выберите демо режим, 1 - демо, 0 - нет: ');
-	read(demo);
+	{write('Выберите демо режим, 1 - демо, 0 - нет: ');}
+	demo := 0;
+	{read(demo);}
 	if (demo <> 1) and (demo <> 0) then begin
 		writeln('Должно быть 0 или 1');
 		exit
@@ -210,6 +295,15 @@ begin
 	end;
 	fillElementsVector(elementsOrig);
 	writeln('Всего элементов в массиве: ', MAX_ELEMENTS);
+
+	writeln(#10, '=== (1) Сортировка слиянием ===');
+	printElementsVector(elementsOrig); if demo = 1 then writeln();
+	clearOpsCounter(opsCounter);
+	arr1 := elementsOrig;
+	sortMerge(arrSortMerge, arr1, arr2, MAX_ELEMENTS, opsCounter, demo);
+	printElementsVector(arrSortMerge^);
+
+	exit;
 
 	writeln(#10, '=== (1) Сортировка простыми вставками ===');
 	printElementsVector(elementsOrig); if demo = 1 then writeln();
@@ -251,4 +345,5 @@ begin
 	printElementsVector(sortedElements);
 	printOpsCounter(opsCounter);
 end.
+
 
