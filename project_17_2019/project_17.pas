@@ -30,6 +30,7 @@ CatsType = array[1..MAX_CATS] of CatType;
 OperationsCounterType = record
 	swapOps, compareOps :integer;
 end;
+CatsTypePtr = ^CatsType;
 
 procedure writeOpsCounter(title: string; var opsCounter :OperationsCounterType);
 begin
@@ -194,8 +195,85 @@ begin
 	end until k < 2;
 end;
 
-procedure sortMerge(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+function findSortedSequenceFromEnd(var cats: CatsType; starti, endi: integer): integer;
+var i: integer;
 begin
+	{
+		Использую while вместо for, так как мне нужно знать номер итерации.
+		В for это значение после выхода может быть неопределено.
+	}
+	i := starti;
+	endi := endi + 1;
+	while i >= endi do
+	begin
+		if more(cats[i - 1], cats[i]) then break;
+		i := i - 1;
+	end;
+	findSortedSequenceFromEnd := i;
+end;
+
+function findSortedSequenceFromBegin(var cats: CatsType; starti, endi: integer): integer;
+var i: integer;
+begin
+	{
+		Использую while вместо for, так как мне нужно знать номер итерации.
+		В for это значение после выхода может быть неопределено.
+	}
+	i := starti;
+	endi := endi - 1;
+	while i <= endi do
+	begin
+		if more(cats[i], cats[i + 1]) then break;
+		i := i + 1;
+	end;
+	findSortedSequenceFromBegin := i;
+end;
+
+procedure merge(var catsTo: CatsType; starti1, endi1, starti2, endi2: integer; var catsFrom: CatsType; var i: integer);
+begin
+	writeln('-- index ', starti1, ' ', endi1, ' ', starti2, ' ', endi2);
+	while (endi2 <= starti2) or (starti1 <= endi1) do
+	begin
+		writeln('-- ', catsFrom[starti1].sumRating, ' ', catsFrom[endi2].sumRating);
+		if (endi2 > starti2) or less(catsFrom[starti1], catsFrom[endi2]) then
+		begin
+			catsTo[i] := catsFrom[starti1];
+			starti1 := starti1 + 1;
+		end else begin
+			catsTo[i] := catsFrom[endi2];
+			endi2 := endi2 + 1;
+		end;
+		i := i + 1;
+	end;
+end;
+
+procedure sortMerge(
+	var catsResult: CatsTypePtr;
+	var cats1, cats2: CatsType;
+	maxCats: integer;
+	var opsCounters: OperationsCounterType;
+	demo: integer);
+var starti1, starti2, endi1, endi2, currenti: integer;
+catsHelper, catsTmp: CatsTypePtr;
+begin
+	catsResult := @cats1;
+	catsHelper := @cats2;
+	starti1 := 1;
+	endi1 := maxCats;
+	starti2 := maxCats;
+	currenti := 1;
+	while true do
+	begin
+		endi1 := findSortedSequenceFromBegin(catsResult^, starti1, endi1);
+		if endi1 >= maxCats then break;
+		endi2 := findSortedSequenceFromEnd(catsResult^, starti2, endi1);
+		writeln('start merge');
+		merge(catsHelper^, starti1, endi1, starti2, endi2, catsResult^, currenti);
+		starti1 := endi1 + 1;
+		endi1 := endi2 - 1;
+		starti2 := endi1;
+	end;
+	catsResult := catsHelper;
 end;
 
 procedure shuffleCats(var cats: CatsType; maxCats: integer);
@@ -212,7 +290,8 @@ begin
 end;
 
 var fileDesc: text;
-catsSortSelection, catsSortShell, catsSortMerge, catsRandom: CatsType;
+catsSortSelection, catsSortShell, catsRandom, catsSortMerge1, catsSortMerge2: CatsType;
+catsSortMerge: CatsTypePtr;
 demo: integer;
 opsCounterSortSelection, opsCounterSortShell, opsCounterSortMerge :OperationsCounterType;
 begin
@@ -229,16 +308,18 @@ begin
 	readCats(fileDesc, catsSortSelection, MAX_CATS);
 	Close(fileDesc);
 	catsSortShell := catsSortSelection;
-	catsSortMerge := catsSortSelection;
+	catsSortMerge1 := catsSortSelection;
 	catsRandom := catsSortSelection;
 
 	{ сортировка }
 	sortSelection(catsSortSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
 	sortShell(catsSortShell, MAX_CATS, opsCounterSortShell, demo);
-	sortMerge(catsSortShell, MAX_CATS, opsCounterSortShell, demo);
+	writeCatsRating(catsSortMerge1, 10);
+	sortMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, 10, opsCounterSortShell, demo);
 
-	writeCatsRating(catsSortSelection, MAX_CATS);
-	writeCatsRating(catsSortShell, MAX_CATS);
+	{writeCatsRating(catsSortSelection, MAX_CATS);
+	writeCatsRating(catsSortShell, MAX_CATS);}
+	writeCatsRating(catsSortMerge^, 10);
 	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
 	writeOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
 	writeOpsCounter('Сортировка слиянием: ', opsCounterSortShell);
