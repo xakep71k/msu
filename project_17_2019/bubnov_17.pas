@@ -348,7 +348,7 @@ begin
 		{ выбираем случайный индекс из диапазона [i, maxCats] }
 		randomIndex := random(maxCats - i) + i;
 
-		{ переставляем его в на место i }
+		{ переставляем его на место i }
 		tmp := cats[i];
 		cats[i] := cats[randomIndex];
 		cats[randomIndex] := tmp;
