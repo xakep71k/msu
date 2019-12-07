@@ -124,6 +124,7 @@ begin
 	end;
 end;
 
+{ запись котов: нечётные элементы упорядочены по убыванию, чётные - по возрастанию }
 procedure writeCatsUpDown(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
 var i, j: integer;
 begin
@@ -141,6 +142,7 @@ begin
 	end;
 end;
 
+{ выдаёт по номеру студенческого номера заданий }
 procedure writeProjectTasksNumers(studentID: integer);
 begin
 	writeln('Простая сортировка: ', abs((studentID + 546) mod 5) + 1);
@@ -172,17 +174,25 @@ begin
 end;
 
 procedure writeCats2File(var cats: CatsType; maxCats: integer; fileName: string; writeCatsProc: WriteCatsProcedure);
-var fileDesc: text;
+var fd: text;
 begin
-	openForWrite(fileDesc, fileName);
-	writeCatsProc(fileDesc, cats, maxCats);
-	Close(fileDesc);
+	openForWrite(fd, fileName);
+	writeCatsProc(fd, cats, maxCats);
+	Close(fd);
 end;
 
 { перегруженная функция для CatsTypePtr }
 procedure writeCats2File(cats: CatsTypePtr; maxCats: integer; fileName: string; writeCatsProc: WriteCatsProcedure);
 begin
 	writeCats2File(cats^, maxCats, fileName, writeCatsProc);
+end;
+
+procedure readCatsFromFile(var cats: CatsType; maxCats: integer; fileName: string);
+var fd: text;
+begin
+	openForRead(fd, fileName);
+	readCats(fd, cats, maxCats);
+	Close(fd);
 end;
 
 function findMinElement(var cats: CatsType; starti, endi, step: integer; var opsCounters: OperationsCounterType): integer;
@@ -369,9 +379,7 @@ begin
 	clearOpsCounter(opsCounterSortMerge);
 
 	{ инициализация котов }
-	openForRead(fd, INITIAL_FILE);
-	readCats(fd, catsSortSelection, MAX_CATS);
-	Close(fd);
+	readCatsFromFile(catsSortSelection, MAX_CATS, INITIAL_FILE);
 	catsSortMerge1 := catsSortSelection;
 	catsRandom := catsSortSelection;
 
