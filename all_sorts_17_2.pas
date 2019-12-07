@@ -1,7 +1,8 @@
 {
 Все методы сортировки.
 }
-const MAX_ELEMENTS = 10;
+Uses math;
+const MAX_ELEMENTS = 20;
 type
 	ElementType = integer;
 	ElementsVectorType = array[1..MAX_ELEMENTS] of ElementType;
@@ -50,8 +51,8 @@ procedure fillElementsVector(var arr:ElementsVectorType);
 var i:integer;
 begin
 	for i := 1 to MAX_ELEMENTS do begin
-		arr[i] := random(20 * 10);
 		arr[i] := MAX_ELEMENTS - i;
+		arr[i] := random(20 * 10);
 	end;
 end;
 
@@ -230,19 +231,16 @@ begin
 	findSortedSequenceFromBegin := i;
 end;
 
-procedure merge(var arrTo: ElementsVectorType; startLeft, endLeft, startRight, endRight: integer; var arrFrom: ElementsVectorType; var i: integer; var opsCounters: OperationsCounterType);
+procedure naturalMerge(var arrTo: ElementsVectorType; startLeft, endLeft, startRight, endRight: integer; var arrFrom: ElementsVectorType; var i: integer; var opsCounters: OperationsCounterType);
 begin
-	writeln('=== index ', startLeft, ' ', endLeft, ' ', endRight, ' ', startRight);
 	while (endRight <= startRight) or (startLeft <= endLeft) do
 	begin
 		opsCounters.compareOps := opsCounters.compareOps + 1;
 		if ((startLeft <= endLeft) and less(arrFrom[startLeft], arrFrom[endRight])) or (endRight > startRight) then
 		begin
-			writeln('=== arrTo[', i, '] := arrFrom[', startLeft, '] = ', arrFrom[startLeft]);
 			arrTo[i] := arrFrom[startLeft];
 			startLeft := startLeft + 1;
 		end else begin
-			writeln('=== arrTo[', i, '] := arrFrom[', endRight, '] = ', arrFrom[endRight]);
 			arrTo[i] := arrFrom[endRight];
 			endRight := endRight + 1;
 		end;
@@ -254,7 +252,7 @@ end;
 procedure sortNatureMerge(
 	var arrResult: ElementsVectorTypePtr;
 	var arr1, arr2: ElementsVectorType;
-	maxCats: integer;
+	maxElems: integer;
 	var opsCounters: OperationsCounterType;
 	demo: integer);
 var startLeft, startRight, endLeft, endRight, currenti: integer;
@@ -263,18 +261,18 @@ begin
 	arrResult := @arr1;
 	arrHelper := @arr2;
 	startLeft := 1;
-	endLeft := maxCats;
-	startRight := maxCats;
+	endLeft := maxElems;
+	startRight := maxElems;
 	currenti := 1;
 	while true do
 	begin
 		endLeft := findSortedSequenceFromBegin(arrResult^, startLeft, endLeft, opsCounters);
-		if endLeft >= maxCats then
+		if endLeft >= maxElems then
 		begin
 			break;
 		end;
 		endRight := findSortedSequenceFromEnd(arrResult^, startRight, endLeft + 1, opsCounters);
-		merge(arrHelper^, startLeft, endLeft, startRight, endRight, arrResult^, currenti, opsCounters);
+		naturalMerge(arrHelper^, startLeft, endLeft, startRight, endRight, arrResult^, currenti, opsCounters);
 		startLeft := endLeft + 1;
 		if startLeft >= startRight then
 		begin
@@ -282,8 +280,8 @@ begin
 			arrHelper := arrResult;
 			arrResult := ptrTmp;
 			startLeft := 1;
-			endLeft := maxCats;
-			startRight := maxCats;
+			endLeft := maxElems;
+			startRight := maxElems;
 			currenti := 1;
 			if demo = 1 then
 			begin
@@ -296,52 +294,84 @@ begin
 	end;
 end;
 
+procedure simpleMerge(
+	var arrTo, arrFrom: ElementsVectorType;
+	var mergeIndex: integer;
+	start1, end1, start2, end2: integer;
+	var opsCounters: OperationsCounterType);
+begin
+	while (start1 < end1) and (start2 < end2) do
+	begin
+		opsCounters.compareOps := opsCounters.compareOps + 2;
+		if less(arrFrom[start1], arrFrom[start2]) then begin
+			arrTo[mergeIndex] := arrFrom[start1];
+			start1 := start1 + 1;
+		end else begin
+			arrTo[mergeIndex] := arrFrom[start2];
+			start2 := start2 + 1;
+		end;
+		mergeIndex := mergeIndex + 1;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
+	end;
+	while (start1 < end1) do
+	begin
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		arrTo[mergeIndex] := arrFrom[start1];
+		start1 := start1 + 1;
+		mergeIndex := mergeIndex + 1;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
+	end;
+	while (start2 < end2) do
+	begin
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		arrTo[mergeIndex] := arrFrom[start2];
+		start2 := start2 + 1;
+		mergeIndex := mergeIndex + 1;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
+	end;
+end;
+
 procedure sortSimpleMerge(
 	var arrResult: ElementsVectorTypePtr;
 	var arr1, arr2: ElementsVectorType;
-	maxCats: integer;
+	maxElems: integer;
 	var opsCounters: OperationsCounterType;
 	demo: integer);
-var startLeft, startRight, endLeft, endRight, currenti, step: integer;
+var start1, start2, end1, end2, mergeIndex, step: integer;
 arrHelper, ptrTmp: ElementsVectorTypePtr;
 begin
 	arrResult := @arr1;
 	arrHelper := @arr2;
-	startLeft := 1;
-	endLeft := 1;
-	startRight := maxCats;
-	endRight := maxCats;
-	currenti := 1;
 	step := 1;
-	while true do
-	begin
-		if endLeft >= maxCats then
-		begin
-			break;
-		end;
-		merge(arrHelper^, startLeft, endLeft, startRight, endRight, arrResult^, currenti, opsCounters);
-		startLeft := startLeft + step;
-		if startLeft >= startRight then
-		begin
-			writeln('=== swap');
-			ptrTmp := arrHelper;
-			arrHelper := arrResult;
-			arrResult := ptrTmp;
-			startLeft := 1;
-			startRight := maxCats;
-			currenti := 1;
-			step := step * 2;
-			endLeft := startLeft + step - 1;
-			endRight := startRight - step + 1;
-			if demo = 1 then
-			begin
-				printElementsVector(arrResult^);
-			end;
-		end else begin
-			writeln('=== next step');
-			endLeft := endLeft + step;
-			startRight := startRight - step;
-			endRight := endRight - step;
+	while step < maxElems do begin
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		ptrTmp := arrHelper;
+		arrHelper := arrResult;
+		arrResult := ptrTmp;
+		mergeIndex := 1;
+		start1 := 1;
+		end1 := start1 + step;
+		start2 := end1;
+		end2 := start2 + step;
+		repeat begin
+			simpleMerge(
+				arrResult^,
+				arrHelper^,
+				mergeIndex,
+				start1,
+				Min(end1, maxElems + 1),
+				start2,
+				Min(end2, maxElems + 1),
+				opsCounters);
+			start1 := end2;
+			end1 := start1 + step;
+			start2 := end1;
+			end2 := start2 + step;
+			opsCounters.compareOps := opsCounters.compareOps + 1;
+		end until start1 > maxElems;
+		step := step * 2;
+		if demo = 1 then begin
+			printElementsVector(arrResult^);
 		end;
 	end;
 end;
@@ -355,7 +385,7 @@ arrSortMerge: ElementsVectorTypePtr;
 begin
 	randomize;
 	{write('Выберите демо режим, 1 - демо, 0 - нет: ');}
-	demo := 1;
+	demo := 0;
 	{read(demo);}
 	if (demo <> 1) and (demo <> 0) then begin
 		writeln('Должно быть 0 или 1');
@@ -420,7 +450,6 @@ begin
 	printElementsVector(arrSortMerge^);
 	printOpsCounter(opsCounter);
 
-	exit;
 	writeln(#10, '=== (9) Сортировка естественное слияние ===');
 	printElementsVector(elementsOrig); if demo = 1 then writeln();
 	clearOpsCounter(opsCounter);
