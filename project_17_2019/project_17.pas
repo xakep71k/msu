@@ -3,17 +3,22 @@
 Бубнов Александр.
 Номер студенческого билета 02190738.
 Виды сортировки:
-	1. Простой выбор.
-	2. Шелла.
-	3. Простое слияние.
+	- Простой выбор.
+	- Простое слияние.
 Данные:
-	Участники выставки кошек: имя животного, порода, пол, вес в формате К кг Г гр (например, 5 кг 600 гр). Упорядочить список участников по возрастанию веса.
-
+	Участники выставки кошек:
+		имя животного,
+		порода,
+		пол,
+		вес в формате К кг Г гр (например, 5 кг 600 гр).
+	Упорядочить список участников по возрастанию веса.
 }
 {$R+}
+Uses math;
+
 const MAX_CATS = 100;
 INITIAL_FILE = 'f_n_initial.txt';
-SORT_UP_FILE = ' f_n_up.txt';
+SORT_UP_FILE = 'f_n_up.txt';
 SORT_DOWN_FILE = 'f_n_down.txt';
 SORT_UP_DOWN_FILE = 'f_n_up_and_down.txt';
 SORT_RANDOM_FILE = 'f_n_random.txt';
@@ -31,6 +36,7 @@ OperationsCounterType = record
 	swapOps, compareOps :integer;
 end;
 CatsTypePtr = ^CatsType;
+WriteCatsProcedure = procedure(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
 
 procedure writeOpsCounter(title: string; var opsCounter :OperationsCounterType);
 begin
@@ -109,6 +115,32 @@ begin
 	end;
 end;
 
+procedure writeCatsDown(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
+var i: integer;
+begin
+	for i:= maxCats downto 1 do
+	begin
+		writeCat(fileReadFrom, cats[i]);
+	end;
+end;
+
+procedure writeCatsUpDown(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
+var i, j: integer;
+begin
+	i := 1;
+	if (maxCats mod 2) = 0 then j := maxCats else j := maxCats - 1;
+	while (i <= maxCats) or (j >=1 ) do begin
+		if i <= maxCats then begin
+			writeCat(fileReadFrom, cats[i]);
+			i := i + 2;
+		end;
+		if j >= 1 then begin 
+			writeCat(fileReadFrom, cats[j]);
+			j := j - 2;
+		end;
+	end;
+end;
+
 procedure writeProjectTasksNumers(studentID: integer);
 begin
 	writeln('Простая сортировка: ', abs((studentID + 546) mod 5) + 1);
@@ -139,15 +171,21 @@ begin
 	Rewrite(fd);
 end;
 
-procedure writeCats2File(var cats: CatsType; maxCats: integer; fileName: string);
+procedure writeCats2File(var cats: CatsType; maxCats: integer; fileName: string; writeCatsProc: WriteCatsProcedure);
 var fileDesc: text;
 begin
 	openForWrite(fileDesc, fileName);
-	writeCats(fileDesc, cats, maxCats);
+	writeCatsProc(fileDesc, cats, maxCats);
 	Close(fileDesc);
 end;
 
-function getIndexMinElement(var cats: CatsType; starti, endi, step: integer; var opsCounters: OperationsCounterType): integer;
+{ перегруженная функция для CatsTypePtr }
+procedure writeCats2File(cats: CatsTypePtr; maxCats: integer; fileName: string; writeCatsProc: WriteCatsProcedure);
+begin
+	writeCats2File(cats^, maxCats, fileName, writeCatsProc);
+end;
+
+function findMinElement(var cats: CatsType; starti, endi, step: integer; var opsCounters: OperationsCounterType): integer;
 var i, minElementIndex :integer;
 begin
 	minElementIndex := starti;
@@ -159,7 +197,7 @@ begin
 		end;
 		i := i + step;
 	end;	
-	getIndexMinElement := minElementIndex;
+	findMinElement := minElementIndex;
 end;
 
 procedure swapElements(var cat1, cat2: CatType; var opsCounters: OperationsCounterType);
@@ -171,12 +209,20 @@ begin
 	opsCounters.swapOps := opsCounters.swapOps + 1;
 end;
 
+{
+Выдержка из http://arch32.cs.msu.su/semestr2/%C1%EE%F0%E4%E0%F7%E5%ED%EA%EE%E2%E0%20%C5.%C0.%2C%20%CF%E0%ED%F4%B8%F0%EE%E2%20%C0.%C0.%20%C7%E0%E4%E0%ED%E8%FF%20%EF%F0%E0%EA%F2%E8%EA%F3%EC%E0.%202%20%F1%E5%EC%E5%F1%F2%F0.pdf страница 29.
+Сортировка посредством простого выбора.
+В массиве X1, ..., Xn отыскивается минимальный элемент. Наи̮денный элемент меняется местами с первым элементом массива. Затем так же обрабатывается подмассив X2, ..., Xn. Когда обработан подмассив Xn-1, ..., Xn, сортировка оканчивается.
+}
 procedure sortSelection(var cats: CatsType; step, maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
 var i, indexMinElement: integer;
 begin
+	if demo = 1 then begin
+		writeln('Сортировка простым выбором');
+	end;
 	i := 1;
 	while i <= maxCats-1 do begin
-		indexMinElement := getIndexMinElement(cats, i, maxCats, step, opsCounters);
+		indexMinElement := findMinElement(cats, i, maxCats, step, opsCounters);
 		swapElements(cats[indexMinElement], cats[i], opsCounters);
 		if demo = 1 then begin
 			writeCatsRating(cats, maxCats);
@@ -185,95 +231,112 @@ begin
 	end;
 end;
 
-procedure sortShell(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
-var k: integer;
+procedure copyFromTo(var catsTo, catsFrom: CatsType; var mergeIndex, starti: integer);
 begin
-	k := maxCats;
-	repeat begin
-		k := k div 2;
-		sortSelection(cats, k, maxCats, opsCounters, demo);
-	end until k < 2;
+	catsTo[mergeIndex] := catsFrom[starti];
+	starti := starti + 1;
+	mergeIndex := mergeIndex + 1;
 end;
 
-function findSortedSequenceFromEnd(var cats: CatsType; starti, endi: integer): integer;
-var i: integer;
+procedure merge(
+	var catsTo, catsFrom: CatsType;
+	var mergeIndex: integer;
+	start1, end1, start2, end2: integer;
+	var opsCounters: OperationsCounterType);
 begin
-	{
-		Использую while вместо for, так как мне нужно знать номер итерации.
-		В for это значение после выхода может быть неопределено.
-	}
-	i := starti;
-	endi := endi + 1;
-	while i >= endi do
-	begin
-		if more(cats[i - 1], cats[i]) then break;
-		i := i - 1;
-	end;
-	findSortedSequenceFromEnd := i;
-end;
+	{ [start1, end1] и [start2, end2] отрезки, см. sortSimpleMerge() }
 
-function findSortedSequenceFromBegin(var cats: CatsType; starti, endi: integer): integer;
-var i: integer;
-begin
-	{
-		Использую while вместо for, так как мне нужно знать номер итерации.
-		В for это значение после выхода может быть неопределено.
-	}
-	i := starti;
-	endi := endi - 1;
-	while i <= endi do
+	{ производим слияние сразу из двух отрезков учитываю отсортированный порядок }
+	while (start1 < end1) and (start2 < end2) do
 	begin
-		if more(cats[i], cats[i + 1]) then break;
-		i := i + 1;
-	end;
-	findSortedSequenceFromBegin := i;
-end;
-
-procedure merge(var catsTo: CatsType; starti1, endi1, starti2, endi2: integer; var catsFrom: CatsType; var i: integer);
-begin
-	writeln('-- index ', starti1, ' ', endi1, ' ', starti2, ' ', endi2);
-	while (endi2 <= starti2) or (starti1 <= endi1) do
-	begin
-		writeln('-- ', catsFrom[starti1].sumRating, ' ', catsFrom[endi2].sumRating);
-		if (endi2 > starti2) or less(catsFrom[starti1], catsFrom[endi2]) then
-		begin
-			catsTo[i] := catsFrom[starti1];
-			starti1 := starti1 + 1;
+		if less(catsFrom[start1], catsFrom[start2]) then begin
+			copyFromTo(catsTo, catsFrom, mergeIndex, start1);
 		end else begin
-			catsTo[i] := catsFrom[endi2];
-			endi2 := endi2 + 1;
+			copyFromTo(catsTo, catsFrom, mergeIndex, start2);
 		end;
-		i := i + 1;
+		opsCounters.compareOps := opsCounters.compareOps + 2;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
+	end;
+
+	{ производим слияние оставшихся элементов }
+	{ из левого отрезка }
+	while (start1 < end1) do
+	begin
+		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
+	end;
+	{ из правого отрезка отрезка }
+	while (start2 < end2) do
+	begin
+		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
 end;
 
-procedure sortMerge(
-	var catsResult: CatsTypePtr;
-	var cats1, cats2: CatsType;
+{
+Выдержка из http://arch32.cs.msu.su/semestr2/%C1%EE%F0%E4%E0%F7%E5%ED%EA%EE%E2%E0%20%C5.%C0.%2C%20%CF%E0%ED%F4%B8%F0%EE%E2%20%C0.%C0.%20%C7%E0%E4%E0%ED%E8%FF%20%EF%F0%E0%EA%F2%E8%EA%F3%EC%E0.%202%20%F1%E5%EC%E5%F1%F2%F0.pdf страница 31.
+Сортировка слиянием.
+Основная идея такой сортировки — разделить последовательность на уже упорядоченные подпоследовательности (назовем их «отрезками») и затем объединять эти отрезки во всё более длинные упорядоченные отрезки, пока не получится единая упорядоченная последовательность. Отметим, что при этом необходима дополнительная память (массив Y[1..n]).
+Простое слияние.
+Считается, что в начале отрезки состоят только из одного элемента, они сливаются в отрезки из двух элементов (из X1 и X2, из X3 и X4, ...), которые переносятся в массив Y.На втором этапе соседние двухэлементные отрезки (Y1, Y2 и Y3, Y4; Y5, Y6 и Y7, Y8; ...) объединяются в отрезки из 4 элементов, которые записываются в массив X. На третьем этапе строятся отрезки из 8 элементов, которые заносятся в массив Y, и т.д.
+}
+procedure sortSimpleMerge(
+	var arrResult: CatsTypePtr;
+	var arr1, arr2: CatsType;
 	maxCats: integer;
 	var opsCounters: OperationsCounterType;
 	demo: integer);
-var starti1, starti2, endi1, endi2, currenti: integer;
-catsHelper, catsTmp: CatsTypePtr;
+var start1, start2, end1, end2, mergeIndex, step: integer;
+arrHelper, ptrTmp: CatsTypePtr;
 begin
-	catsResult := @cats1;
-	catsHelper := @cats2;
-	starti1 := 1;
-	endi1 := maxCats;
-	starti2 := maxCats;
-	currenti := 1;
-	while true do
-	begin
-		endi1 := findSortedSequenceFromBegin(catsResult^, starti1, endi1);
-		if endi1 >= maxCats then break;
-		endi2 := findSortedSequenceFromEnd(catsResult^, starti2, endi1);
-		writeln('start merge');
-		merge(catsHelper^, starti1, endi1, starti2, endi2, catsResult^, currenti);
-		starti1 := endi1 + 1;
-		endi1 := endi2 - 1;
-		starti2 := endi1;
+	{ [start1, end1] и [start2, end2] отрезки }
+	{
+		arr1, arr2 - вспомогательные массивы.
+		Первый изначально содержит данные для сортировка.
+		Второй используется как дополнительный для слияния.
+		Затем они меняются местами.
+	}
+	{ mergeIndex - индекс в массиве куда происходит слияние отрезков }
+	if demo = 1 then begin
+		writeln('Сортировка простым слиянием');
 	end;
-	catsResult := catsHelper;
+	arrResult := @arr1;
+	arrHelper := @arr2;
+	step := 1; { шаг сортировки, который в последствие каждый раз удваивается }
+	while step < maxCats do begin
+		opsCounters.compareOps := opsCounters.compareOps + 1;
+		{ меняем вспомогательный массив с основым местами, }
+		{ из вспомогательного мы вычитываем отрезки, в основой мы производим слияние }
+		ptrTmp := arrHelper; arrHelper := arrResult; arrResult := ptrTmp;
+
+		mergeIndex := 1;
+		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
+		start1 := 1;
+		end1 := start1 + step;
+		start2 := end1;
+		end2 := start2 + step;
+		repeat begin { производим слияние всех отрезков }
+			merge(
+				arrResult^,
+				arrHelper^,
+				mergeIndex,
+				start1,
+				Min(end1, maxCats + 1),
+				start2,
+				Min(end2, maxCats + 1),
+				opsCounters);
+			{ пререходим к следующей паре отрезков }
+			start1 := end2; end1 := start1 + step;
+			start2 := end1; end2 := start2 + step;
+			opsCounters.compareOps := opsCounters.compareOps + 1;
+		end until start1 > maxCats;
+		step := step * 2;
+		if demo = 1 then begin
+			writeCatsRating(arrResult^, maxCats);
+		end;
+	end;
 end;
 
 procedure shuffleCats(var cats: CatsType; maxCats: integer);
@@ -282,49 +345,50 @@ tmp: CatType;
 begin
 	for i:= 1 to maxCats do
 	begin
+		{ выбираем случайный индекс из диапазона [i, maxCats] }
 		randomIndex := random(maxCats - i) + i;
+
+		{ переставляем его в на место i }
 		tmp := cats[i];
 		cats[i] := cats[randomIndex];
 		cats[randomIndex] := tmp;
 	end;
 end;
 
-var fileDesc: text;
-catsSortSelection, catsSortShell, catsRandom, catsSortMerge1, catsSortMerge2: CatsType;
+var fd: text;
+catsSortSelection, catsRandom, catsSortMerge1, catsSortMerge2: CatsType;
 catsSortMerge: CatsTypePtr;
 demo: integer;
-opsCounterSortSelection, opsCounterSortShell, opsCounterSortMerge :OperationsCounterType;
+opsCounterSortSelection, opsCounterSortMerge :OperationsCounterType;
 begin
 	writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);
 	randomize;
 	{ инициализация переменных }
 	demo := 0;
 	clearOpsCounter(opsCounterSortSelection);
-	clearOpsCounter(opsCounterSortShell);
 	clearOpsCounter(opsCounterSortMerge);
 
 	{ инициализация котов }
-	openForRead(fileDesc, INITIAL_FILE);
-	readCats(fileDesc, catsSortSelection, MAX_CATS);
-	Close(fileDesc);
-	catsSortShell := catsSortSelection;
+	openForRead(fd, INITIAL_FILE);
+	readCats(fd, catsSortSelection, MAX_CATS);
+	Close(fd);
 	catsSortMerge1 := catsSortSelection;
 	catsRandom := catsSortSelection;
 
 	{ сортировка }
 	sortSelection(catsSortSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
-	sortShell(catsSortShell, MAX_CATS, opsCounterSortShell, demo);
-	writeCatsRating(catsSortMerge1, 10);
-	sortMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, 10, opsCounterSortShell, demo);
-
-	{writeCatsRating(catsSortSelection, MAX_CATS);
-	writeCatsRating(catsSortShell, MAX_CATS);}
-	writeCatsRating(catsSortMerge^, 10);
-	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
-	writeOpsCounter('Сортировка методом Шелла: ', opsCounterSortShell);
-	writeOpsCounter('Сортировка слиянием: ', opsCounterSortShell);
+	sortSimpleMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, MAX_CATS, opsCounterSortMerge, demo);
 	shuffleCats(catsRandom, MAX_CATS);
-	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE);
+
+	{ вывод результата операций }
+	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
+	writeOpsCounter('Сортировка слиянием: ', opsCounterSortMerge);
+
+	{ запись в файл }
+	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE, @writeCats);
+	writeCats2File(catsSortMerge, MAX_CATS, SORT_UP_FILE, @writeCats);
+	writeCats2File(catsSortMerge, MAX_CATS, SORT_DOWN_FILE, @writeCatsDown);
+	writeCats2File(catsSortMerge, MAX_CATS, SORT_UP_DOWN_FILE, @writeCatsUpDown);
 end.
 
 
