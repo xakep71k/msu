@@ -195,17 +195,15 @@ begin
 	Close(fd);
 end;
 
-function findMinElement(var cats: CatsType; starti, endi, step: integer; var opsCounters: OperationsCounterType): integer;
+function findMinElement(var cats: CatsType; starti, endi: integer; var opsCounters: OperationsCounterType): integer;
 var i, minElementIndex :integer;
 begin
 	minElementIndex := starti;
-	i := starti;
-	while i <= endi do begin
+	for i := starti to endi do begin
 		opsCounters.compareOps := opsCounters.compareOps  + 1;
 		if more(cats[minElementIndex], cats[i]) then begin
 			minElementIndex := i;
 		end;
-		i := i + step;
 	end;	
 	findMinElement := minElementIndex;
 end;
@@ -222,22 +220,20 @@ end;
 {
 Выдержка из http://arch32.cs.msu.su/semestr2/%C1%EE%F0%E4%E0%F7%E5%ED%EA%EE%E2%E0%20%C5.%C0.%2C%20%CF%E0%ED%F4%B8%F0%EE%E2%20%C0.%C0.%20%C7%E0%E4%E0%ED%E8%FF%20%EF%F0%E0%EA%F2%E8%EA%F3%EC%E0.%202%20%F1%E5%EC%E5%F1%F2%F0.pdf страница 29.
 Сортировка посредством простого выбора.
-В массиве X1, ..., Xn отыскивается минимальный элемент. Наи̮денный элемент меняется местами с первым элементом массива. Затем так же обрабатывается подмассив X2, ..., Xn. Когда обработан подмассив Xn-1, ..., Xn, сортировка оканчивается.
+В массиве X1, ..., Xn отыскивается минимальный элемент. Найденный элемент меняется местами с первым элементом массива. Затем так же обрабатывается подмассив X2, ..., Xn. Когда обработан подмассив Xn-1, Xn, сортировка оканчивается.
 }
-procedure sortSelection(var cats: CatsType; step, maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
+procedure sortSelection(var cats: CatsType; maxCats: integer; var opsCounters: OperationsCounterType; demo: integer);
 var i, indexMinElement: integer;
 begin
 	if demo = 1 then begin
 		writeln('Сортировка простым выбором');
 	end;
-	i := 1;
-	while i <= maxCats-1 do begin
-		indexMinElement := findMinElement(cats, i, maxCats, step, opsCounters);
+	for i := 1 to maxCats - 1 do begin
+		indexMinElement := findMinElement(cats, i, maxCats, opsCounters);
 		swapElements(cats[indexMinElement], cats[i], opsCounters);
 		if demo = 1 then begin
 			writeCatsRating(cats, maxCats);
 		end;
-		i := i + step;
 	end;
 end;
 
@@ -273,14 +269,12 @@ begin
 	while (start1 < end1) do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
-		opsCounters.compareOps := opsCounters.compareOps + 1;
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
 	{ из правого отрезка отрезка }
 	while (start2 < end2) do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
-		opsCounters.compareOps := opsCounters.compareOps + 1;
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
 end;
@@ -316,7 +310,6 @@ begin
 	arrHelper := @arr2;
 	step := 1; { шаг сортировки, который в последствие каждый раз удваивается }
 	while step < maxCats do begin
-		opsCounters.compareOps := opsCounters.compareOps + 1;
 		{ меняем вспомогательный массив с основым местами, }
 		{ из вспомогательного мы вычитываем отрезки, в основой мы производим слияние }
 		ptrTmp := arrHelper; arrHelper := arrResult; arrResult := ptrTmp;
@@ -365,6 +358,12 @@ begin
 	end;
 end;
 
+function isDemo(): integer;
+begin
+	if (ParamCount() = 1) and (ParamStr(1) = '1') then isDemo := 1
+	else isDemo := 0;
+end;
+
 var fd: text;
 catsSortSelection, catsRandom, catsSortMerge1, catsSortMerge2: CatsType;
 catsSortMerge: CatsTypePtr;
@@ -374,7 +373,7 @@ begin
 	writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);
 	randomize;
 	{ инициализация переменных }
-	demo := 0;
+	demo := isDemo();
 	clearOpsCounter(opsCounterSortSelection);
 	clearOpsCounter(opsCounterSortMerge);
 
@@ -384,7 +383,7 @@ begin
 	catsRandom := catsSortSelection;
 
 	{ сортировка }
-	sortSelection(catsSortSelection, 1, MAX_CATS, opsCounterSortSelection, demo);
+	sortSelection(catsSortSelection, MAX_CATS, opsCounterSortSelection, demo);
 	sortSimpleMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, MAX_CATS, opsCounterSortMerge, demo);
 	shuffleCats(catsRandom, MAX_CATS);
 
