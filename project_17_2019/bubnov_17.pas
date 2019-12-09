@@ -325,7 +325,8 @@ begin
 		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
 		start1 := 1; end1 := start1 + step;
 		start2 := end1; end2 := start2 + step;
-		repeat begin { производим слияние всех отрезков }
+		while start1 < maxCats do { производим слияние всех отрезков }
+		begin
 			merge(
 				arrResult^,             { куда происходит слияние }
 				arrHelper^,             { откуда происходит слияние }
@@ -340,7 +341,7 @@ begin
 			start1 := end2; end1 := start1 + step;
 			start2 := end1; end2 := start2 + step;
 			opsCounters.compareOps := opsCounters.compareOps + 1;
-		end until start1 > maxCats;
+		end;
 		step := step * 2;
 		if demo = 1 then begin
 			writeCatsRating(arrResult, maxCats);

@@ -2,7 +2,7 @@
 Все методы сортировки.
 }
 Uses math;
-const MAX_ELEMENTS = 20;
+const MAX_ELEMENTS = 10;
 type
 	ElementType = integer;
 	ElementsVectorType = array[1..MAX_ELEMENTS] of ElementType;
@@ -51,8 +51,8 @@ procedure fillElementsVector(var arr:ElementsVectorType);
 var i:integer;
 begin
 	for i := 1 to MAX_ELEMENTS do begin
-		arr[i] := MAX_ELEMENTS - i;
 		arr[i] := random(20 * 10);
+		arr[i] := MAX_ELEMENTS - i;
 	end;
 end;
 
@@ -294,86 +294,108 @@ begin
 	end;
 end;
 
-procedure simpleMerge(
-	var arrTo, arrFrom: ElementsVectorType;
+procedure copyFromTo(var catsTo, catsFrom: ElementsVectorType; var mergeIndex, starti: integer);
+begin
+	catsTo[mergeIndex] := catsFrom[starti];
+	starti := starti + 1;
+	mergeIndex := mergeIndex + 1;
+end;
+
+procedure merge(
+	var catsTo, catsFrom: ElementsVectorType;
 	var mergeIndex: integer;
 	start1, end1, start2, end2: integer;
 	var opsCounters: OperationsCounterType);
+var i: integer;
 begin
+	{ [start1, end1] и [start2, end2] отрезки, см. sortSimpleMerge() }
+
+	{ производим слияние сразу из двух отрезков учитываю отсортированный порядок }
 	while (start1 < end1) and (start2 < end2) do
 	begin
-		opsCounters.compareOps := opsCounters.compareOps + 2;
-		if less(arrFrom[start1], arrFrom[start2]) then begin
-			arrTo[mergeIndex] := arrFrom[start1];
-			start1 := start1 + 1;
+		if less(catsFrom[start1], catsFrom[start2]) then begin
+			copyFromTo(catsTo, catsFrom, mergeIndex, start1);
 		end else begin
-			arrTo[mergeIndex] := arrFrom[start2];
-			start2 := start2 + 1;
+			copyFromTo(catsTo, catsFrom, mergeIndex, start2);
 		end;
-		mergeIndex := mergeIndex + 1;
+		opsCounters.compareOps := opsCounters.compareOps + 2;
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
-	while (start1 < end1) do
+
+	{ производим слияние оставшихся элементов }
+	{ из левого отрезка }
+	for i := start1 to end1 - 1 do
 	begin
-		opsCounters.compareOps := opsCounters.compareOps + 1;
-		arrTo[mergeIndex] := arrFrom[start1];
-		start1 := start1 + 1;
-		mergeIndex := mergeIndex + 1;
+		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
-	while (start2 < end2) do
+	{ производим слияние оставшихся элементов }
+	{ из правого отрезка }
+	for i := start2 to end2 - 1 do
 	begin
-		opsCounters.compareOps := opsCounters.compareOps + 1;
-		arrTo[mergeIndex] := arrFrom[start2];
-		start2 := start2 + 1;
-		mergeIndex := mergeIndex + 1;
+		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
 end;
-
 procedure sortSimpleMerge(
 	var arrResult: ElementsVectorTypePtr;
 	var arr1, arr2: ElementsVectorType;
-	maxElems: integer;
+	maxCats: integer;
 	var opsCounters: OperationsCounterType;
 	demo: integer);
 var start1, start2, end1, end2, mergeIndex, step: integer;
 arrHelper, ptrTmp: ElementsVectorTypePtr;
+i: integer;
 begin
+	{ [start1, end1] и [start2, end2] отрезки }
+	{
+		arr1, arr2 - вспомогательные массивы.
+		Первый изначально содержит данные для сортировка.
+		Второй используется как дополнительный для слияния.
+		Затем они меняются местами.
+	}
+	{ mergeIndex - индекс в массиве куда происходит слияние отрезков }
+	if demo = 1 then begin
+		writeln('Сортировка простым слиянием');
+	end;
+	i := 0;
 	arrResult := @arr1;
 	arrHelper := @arr2;
-	step := 1;
-	while step < maxElems do begin
-		opsCounters.compareOps := opsCounters.compareOps + 1;
-		ptrTmp := arrHelper;
-		arrHelper := arrResult;
-		arrResult := ptrTmp;
+	step := 1; { шаг сортировки, который в последствие каждый раз удваивается }
+	while step < maxCats do begin
+		{ меняем вспомогательный массив с основым местами, }
+		{ из вспомогательного мы вычитываем отрезки, в основой мы производим слияние }
+		ptrTmp := arrHelper; arrHelper := arrResult; arrResult := ptrTmp;
+
 		mergeIndex := 1;
-		start1 := 1;
-		end1 := start1 + step;
-		start2 := end1;
-		end2 := start2 + step;
-		repeat begin
-			simpleMerge(
-				arrResult^,
-				arrHelper^,
-				mergeIndex,
-				start1,
-				Min(end1, maxElems + 1),
-				start2,
-				Min(end2, maxElems + 1),
+		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
+		start1 := 1; end1 := start1 + step;
+		start2 := end1; end2 := start2 + step;
+		while start1 < maxCats do { производим слияние всех отрезков }
+		begin
+			writeln('=== ', start1, ' ', end1, ' ', start2, ' ', end2);
+			i := i + 1;
+			merge(
+				arrResult^,             { куда происходит слияние }
+				arrHelper^,             { откуда происходит слияние }
+				mergeIndex,             { индекс массива куда происходит слияние }
+				start1,                 { начало первого отрезка }
+				Min(end1, maxCats + 1), { конец первого отрезка }
+				start2,                 { начало второго отрезка }
+				Min(end2, maxCats + 1), { конец второго отрезка }
 				opsCounters);
-			start1 := end2;
-			end1 := start1 + step;
-			start2 := end1;
-			end2 := start2 + step;
+
+			{ пререходим к следующей паре отрезков }
+			start1 := end2; end1 := start1 + step;
+			start2 := end1; end2 := start2 + step;
 			opsCounters.compareOps := opsCounters.compareOps + 1;
-		end until start1 > maxElems;
+		end;
 		step := step * 2;
 		if demo = 1 then begin
 			printElementsVector(arrResult^);
 		end;
 	end;
+	writeln('=== ', i);
 end;
 
 var
