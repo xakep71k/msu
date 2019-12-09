@@ -161,7 +161,7 @@ begin
 	Writeln();
 end;
 
-procedure writeCatsRating(var cats: CatsTypePtr; maxCats: integer);
+procedure writeCatsRating(cats: CatsTypePtr; maxCats: integer);
 begin
 	writeCatsRating(cats^, maxCats);
 end;
@@ -222,6 +222,21 @@ begin
 	Inc(opsCounters.swapOps);
 end;
 
+
+procedure clearRating(var arr: CatsType);
+var i: integer;
+begin
+	for i := Low(arr) to High(arr) do
+	begin
+		arr[i].sumRating := -1;
+	end;
+end;
+
+procedure clearRating(var arr: CatsTypePtr);
+begin
+	clearRating(arr^);
+end;
+
 {
 Выдержка из http://arch32.cs.msu.su/semestr2/%C1%EE%F0%E4%E0%F7%E5%ED%EA%EE%E2%E0%20%C5.%C0.%2C%20%CF%E0%ED%F4%B8%F0%EE%E2%20%C0.%C0.%20%C7%E0%E4%E0%ED%E8%FF%20%EF%F0%E0%EA%F2%E8%EA%F3%EC%E0.%202%20%F1%E5%EC%E5%F1%F2%F0.pdf страница 29.
 Сортировка посредством простого выбора.
@@ -231,7 +246,7 @@ procedure sortSelection(var cats: CatsType; maxCats: integer; var opsCounters: O
 var i, indexMinElement: integer;
 begin
 	if demo = 1 then begin
-		writeln('Сортировка простым выбором');
+		writeln(#10, 'Сортировка простым выбором');
 	end;
 	for i := 1 to maxCats - 1 do begin
 		indexMinElement := findMinElement(cats, i, maxCats, opsCounters);
@@ -311,7 +326,7 @@ begin
 	}
 	{ mergeIndex - индекс в массиве куда происходит слияние отрезков }
 	if demo = 1 then begin
-		writeln('Сортировка простым слиянием');
+		writeln(#10, 'Сортировка простым слиянием');
 	end;
 	arrResult := @arr1;
 	arrHelper := @arr2;
@@ -325,6 +340,10 @@ begin
 		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
 		start1 := 1; end1 := start1 + step;
 		start2 := end1; end2 := start2 + step;
+		if demo = 1 then begin
+			clearRating(arrResult);
+			writeCatsRating(arrHelper, maxCats);
+		end;
 		while start1 <= maxCats do { производим слияние всех отрезков }
 		begin
 			merge(
@@ -341,11 +360,11 @@ begin
 			start1 := end2; end1 := start1 + step;
 			start2 := end1; end2 := start2 + step;
 			Inc(opsCounters.compareOps);
+			if demo = 1 then begin
+			       writeCatsRating(arrResult, maxCats);
+		       end;
 		end;
 		step := step * 2;
-		if demo = 1 then begin
-			writeCatsRating(arrResult, maxCats);
-		end;
 	end;
 end;
 
