@@ -22,7 +22,7 @@ SORT_UP_FILE = 'f_n_up.txt';
 SORT_DOWN_FILE = 'f_n_down.txt';
 SORT_UP_DOWN_FILE = 'f_n_up_and_down.txt';
 SORT_RANDOM_FILE = 'f_n_random.txt';
-THREE_DIGITS_STUDENT_NUMBER = 738;
+LAST_3_DIGITS_STUDENT_NUMBER = 738;
 
 type CatType = record
 	name: string; { кличка }
@@ -254,6 +254,7 @@ procedure merge(
 	var mergeIndex: integer;
 	start1, end1, start2, end2: integer;
 	var opsCounters: OperationsCounterType);
+var i: integer;
 begin
 	{ [start1, end1] и [start2, end2] отрезки, см. sortSimpleMerge() }
 
@@ -271,14 +272,14 @@ begin
 
 	{ производим слияние оставшихся элементов }
 	{ из левого отрезка }
-	while (start1 < end1) do
+	for i := start1 to end1 - 1 do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
 	{ производим слияние оставшихся элементов }
 	{ из правого отрезка }
-	while (start2 < end2) do
+	for i := start2 to end2 - 1 do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
 		opsCounters.swapOps := opsCounters.swapOps + 1;
@@ -375,7 +376,7 @@ catsSortMerge: CatsTypePtr;
 demo: integer;
 opsCounterSortSelection, opsCounterSortMerge :OperationsCounterType;
 begin
-	writeProjectTasksNumers(THREE_DIGITS_STUDENT_NUMBER);
+	writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
 	randomize;
 	{ инициализация переменных }
 	demo := isDemo();
