@@ -359,10 +359,9 @@ begin
 			{ пререходим к следующей паре отрезков }
 			start1 := end2; end1 := start1 + step;
 			start2 := end1; end2 := start2 + step;
-			Inc(opsCounters.compareOps);
 			if demo = 1 then begin
-			       writeCatsRating(arrResult, maxCats);
-		       end;
+				writeCatsRating(arrResult, maxCats);
+			end;
 		end;
 		step := step * 2;
 	end;
