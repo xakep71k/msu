@@ -161,6 +161,11 @@ begin
 	Writeln();
 end;
 
+procedure writeCatsRating(var cats: CatsTypePtr; maxCats: integer);
+begin
+	writeCatsRating(cats^, maxCats);
+end;
+
 procedure openForRead(var fd: text; name: string);
 begin
 	assign(fd, name);
@@ -271,7 +276,8 @@ begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
 		opsCounters.swapOps := opsCounters.swapOps + 1;
 	end;
-	{ из правого отрезка отрезка }
+	{ производим слияние оставшихся элементов }
+	{ из правого отрезка }
 	while (start2 < end2) do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
@@ -316,20 +322,19 @@ begin
 
 		mergeIndex := 1;
 		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
-		start1 := 1;
-		end1 := start1 + step;
-		start2 := end1;
-		end2 := start2 + step;
+		start1 := 1; end1 := start1 + step;
+		start2 := end1; end2 := start2 + step;
 		repeat begin { производим слияние всех отрезков }
 			merge(
-				arrResult^,
-				arrHelper^,
-				mergeIndex,
-				start1,
-				Min(end1, maxCats + 1),
-				start2,
-				Min(end2, maxCats + 1),
+				arrResult^,             { куда происходит слияние }
+				arrHelper^,             { откуда происходит слияние }
+				mergeIndex,             { индекс массива куда происходит слияние }
+				start1,                 { начало первого отрезка }
+				Min(end1, maxCats + 1), { конец первого отрезка }
+				start2,                 { начало второго отрезка }
+				Min(end2, maxCats + 1), { конец второго отрезка }
 				opsCounters);
+
 			{ пререходим к следующей паре отрезков }
 			start1 := end2; end1 := start1 + step;
 			start2 := end1; end2 := start2 + step;
@@ -337,7 +342,7 @@ begin
 		end until start1 > maxCats;
 		step := step * 2;
 		if demo = 1 then begin
-			writeCatsRating(arrResult^, maxCats);
+			writeCatsRating(arrResult, maxCats);
 		end;
 	end;
 end;
@@ -383,7 +388,13 @@ begin
 	catsRandom := catsSortSelection;
 
 	{ сортировка }
+	if demo = 1 then begin
+		writeCatsRating(catsSortSelection, MAX_CATS);
+	end;
 	sortSelection(catsSortSelection, MAX_CATS, opsCounterSortSelection, demo);
+	if demo = 1 then begin
+		writeCatsRating(catsSortMerge1, MAX_CATS);
+	end;
 	sortSimpleMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, MAX_CATS, opsCounterSortMerge, demo);
 	shuffleCats(catsRandom, MAX_CATS);
 
