@@ -205,7 +205,7 @@ var i, minElementIndex :integer;
 begin
 	minElementIndex := starti;
 	for i := starti to endi do begin
-		opsCounters.compareOps := opsCounters.compareOps  + 1;
+		Inc(opsCounters.compareOps);
 		if more(cats[minElementIndex], cats[i]) then begin
 			minElementIndex := i;
 		end;
@@ -219,7 +219,7 @@ begin
 	tmp := cat1;
 	cat1 := cat2;
 	cat2 := tmp;
-	opsCounters.swapOps := opsCounters.swapOps + 1;
+	Inc(opsCounters.swapOps);
 end;
 
 {
@@ -266,8 +266,8 @@ begin
 		end else begin
 			copyFromTo(catsTo, catsFrom, mergeIndex, start2);
 		end;
-		opsCounters.compareOps := opsCounters.compareOps + 2;
-		opsCounters.swapOps := opsCounters.swapOps + 1;
+		Inc(opsCounters.compareOps);
+		Inc(opsCounters.swapOps);
 	end;
 
 	{ производим слияние оставшихся элементов }
@@ -275,14 +275,14 @@ begin
 	for i := start1 to end1 - 1 do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start1);
-		opsCounters.swapOps := opsCounters.swapOps + 1;
+		Inc(opsCounters.swapOps);
 	end;
 	{ производим слияние оставшихся элементов }
 	{ из правого отрезка }
 	for i := start2 to end2 - 1 do
 	begin
 		copyFromTo(catsTo, catsFrom, mergeIndex, start2);
-		opsCounters.swapOps := opsCounters.swapOps + 1;
+		Inc(opsCounters.swapOps);
 	end;
 end;
 
@@ -340,7 +340,7 @@ begin
 			{ пререходим к следующей паре отрезков }
 			start1 := end2; end1 := start1 + step;
 			start2 := end1; end2 := start2 + step;
-			opsCounters.compareOps := opsCounters.compareOps + 1;
+			Inc(opsCounters.compareOps);
 		end;
 		step := step * 2;
 		if demo = 1 then begin
