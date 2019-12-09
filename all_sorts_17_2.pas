@@ -2,7 +2,7 @@
 Все методы сортировки.
 }
 Uses math;
-const MAX_ELEMENTS = 10;
+const MAX_ELEMENTS = 4;
 type
 	ElementType = integer;
 	ElementsVectorType = array[1..MAX_ELEMENTS] of ElementType;
@@ -52,7 +52,7 @@ var i:integer;
 begin
 	for i := 1 to MAX_ELEMENTS do begin
 		arr[i] := random(20 * 10);
-		arr[i] := MAX_ELEMENTS - i;
+		arr[i] := MAX_ELEMENTS - i + 1;
 	end;
 end;
 
@@ -371,7 +371,7 @@ begin
 		{ инициализируем границы отрезков [start1, end1], [start2, end2] }
 		start1 := 1; end1 := start1 + step;
 		start2 := end1; end2 := start2 + step;
-		while start1 < maxCats do { производим слияние всех отрезков }
+		while start1 <= maxCats do { производим слияние всех отрезков }
 		begin
 			writeln('=== ', start1, ' ', end1, ' ', start2, ' ', end2);
 			i := i + 1;
