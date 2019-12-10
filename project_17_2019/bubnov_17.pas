@@ -40,7 +40,7 @@ WriteCatsProcedure = procedure(var fileReadFrom: text; var cats: CatsType; maxCa
 
 procedure writeSummary(title: string; filename: string; maxCats: integer; var opsCounter :OperationsCounterType);
 begin
-	writeln(title, 'Имя файла - ', fileName, ', всего элементов - ', maxCats, ', число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
+	writeln(title, 'Имя файла - ', fileName, ', всего элементов - ', maxCats, ', число сравнений - ', opsCounter.compareOps, ', число перестановок - ', opsCounter.swapOps);
 end;
 
 procedure clearOpsCounter(var opsCounter :OperationsCounterType);
@@ -146,7 +146,6 @@ begin
 	writeln('Простая сортировка: ', abs((studentID + 546) mod 5) + 1);
 	writeln('Сложная сортировка: ', abs((studentID + 212) mod 4) + 6);
 	writeln('Входные данные:     ', abs((studentID + 123) mod 11) + 1);
-	writeln();
 end;
 
 procedure writeCatsRating(var cats: CatsType; maxCats: integer);
@@ -402,53 +401,69 @@ begin
 	writeSummary('Сортировка слиянием: ', fileName, maxCats, opsCounter);
 end;
 
+procedure genFiles();
+var cats, catsRandom: CatsType;
+opsCounter:OperationsCounterType;
+begin
+	{ инициализация переменных }
+	clearOpsCounter(opsCounter);
+
+	{ инициализация котов }
+	readCatsFromFile(cats, MAX_CATS, INITIAL_FILE);
+	catsRandom := cats;
+
+	{ сортировка }
+	sortSelection(cats, MAX_CATS, opsCounter, 0);
+	shuffleCats(catsRandom, MAX_CATS);
+
+	{ запись в файл }
+	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE, @writeCats);
+	writeCats2File(cats, MAX_CATS, SORT_UP_FILE, @writeCats);
+	writeCats2File(cats, MAX_CATS, SORT_DOWN_FILE, @writeCatsDown);
+	writeCats2File(cats, MAX_CATS, SORT_UP_DOWN_FILE, @writeCatsUpDown);
+end;
+
+procedure sort(fileName: string; maxCats, demo: integer);
+begin
+	sortSelectionAndPrintResult(fileName, maxCats, demo);
+	sortSimpleMergeAndPrintResult(fileName, maxCats, demo);
+end;
+
+procedure writeTable(fileName: string);
+begin
+end;
+
 procedure writeHelp();
 begin
 	writeln('неверное количество аргументов, варианты запуска');
+	writeln(ParamStr(0), ' -tasks', ' печатает номера заданий');
 	writeln(ParamStr(0), ' -gen', ' генерит нужные файлы');
-	writeln(ParamStr(0), ' -sort <имя файла> -n <количество котов>', ' запускает два алгоритма сортировки с N элементами');
+	writeln(ParamStr(0), ' -sort <имя файла> -n <количество котов> [-demo 1|0]', ' запускает два алгоритма сортировки с N элементами');
+	writeln(ParamStr(0), ' -table', ' генерит таблицу');
 	Halt;
 end;
 
-var fd: text;
-cats, catsRandom: CatsType;
-demo: integer;
-opsCounter:OperationsCounterType;
-files: array[1..5] of string;
-j: integer;
-key: string;
+var fileName: string;
 maxCats, err: integer;
-fileName: string;
+demo: integer;
 begin
-	writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
-	demo := 0;
-	if ParamCount() = 0 then writeHelp();
-	if (ParamCount() = 1) and (ParamStr(1) = '-gen') then begin
-		randomize;
-		{ инициализация переменных }
-		clearOpsCounter(opsCounter);
-
-		{ инициализация котов }
-		readCatsFromFile(cats, MAX_CATS, INITIAL_FILE);
-		catsRandom := cats;
-
-		{ сортировка }
-		sortSelection(cats, MAX_CATS, opsCounter, 0);
-		shuffleCats(catsRandom, MAX_CATS);
-
-		{ запись в файл }
-		writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE, @writeCats);
-		writeCats2File(cats, MAX_CATS, SORT_UP_FILE, @writeCats);
-		writeCats2File(cats, MAX_CATS, SORT_DOWN_FILE, @writeCatsDown);
-		writeCats2File(cats, MAX_CATS, SORT_UP_DOWN_FILE, @writeCatsUpDown);
-	end else if(ParamCount() = 4) and (ParamStr(1) = '-sort') and (ParamStr(3) = '-n') then begin
-		fileName := ParamStr(2);
+	randomize;
+	if (ParamCount() = 1) and (ParamStr(1) = '-tasks') then begin
+		writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
+	end else if (ParamCount() = 1) and (ParamStr(1) = '-gen') then begin
+		genFiles();
+	end else if((ParamCount() = 4) or (ParamCount() = 6)) and (ParamStr(1) = '-sort') and (ParamStr(3) = '-n')
+	then begin
 		Val(ParamStr(4), maxCats, err);
 		if err <> 0 then begin
 			Writeln('Ошибка конвертации числа указанного в -n: ', err);
 		end;
-		sortSelectionAndPrintResult(fileName, maxCats, demo);
-		sortSimpleMergeAndPrintResult(fileName, maxCats, demo);
+		demo := 0;
+		if (ParamCount() = 6) and (ParamStr(6) = '1') then demo := 1;
+
+		sort(ParamStr(2), maxCats, demo);
+	end else if (ParamCount() = 2) and (ParamStr(1) = '-table') then begin
+		writeTable(ParamStr(2));
 	end else writeHelp();
 end.
 
