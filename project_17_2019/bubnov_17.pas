@@ -38,9 +38,9 @@ end;
 CatsTypePtr = ^CatsType;
 WriteCatsProcedure = procedure(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
 
-procedure writeOpsCounter(title: string; var opsCounter :OperationsCounterType);
+procedure writeSummary(title: string; filename: string; maxCats: integer; var opsCounter :OperationsCounterType);
 begin
-	writeln(title, 'число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
+	writeln(title, 'Имя файла - ', fileName, ', всего элементов - ', maxCats, ', число перестановок - ', opsCounter.swapOps, ', число сравнений - ', opsCounter.compareOps);
 end;
 
 procedure clearOpsCounter(var opsCounter :OperationsCounterType);
@@ -93,16 +93,14 @@ end;
 procedure writeCat(var fileWriteTo: text; var cat: CatType);
 var i: integer;
 begin
-	writeln(fileWriteTo, 'Имя:              ', cat.name);
-	writeln(fileWriteTo, 'Порода:           ', cat.breed);
-	writeln(fileWriteTo, 'Вес:              ', cat.weight div 1000, ' кг ', cat.weight mod 1000, ' гр');
-	Write(fileWriteTo, 'Оценки:           ');
+	writeln(fileWriteTo, cat.name);
+	writeln(fileWriteTo, cat.breed);
+	writeln(fileWriteTo, cat.weight);
 	for i := 1 to 5 do
 	begin
 		write(fileWriteTo, cat.rating[i], ' ');
 	end;
 	writeln(fileWriteTo);
-	writeln(fileWriteTo, 'Суммарная оценка: ', cat.sumRating);
 	writeln(fileWriteTo);
 end;
 
@@ -184,12 +182,6 @@ begin
 	openForWrite(fd, fileName);
 	writeCatsProc(fd, cats, maxCats);
 	Close(fd);
-end;
-
-{ перегруженная функция для CatsTypePtr }
-procedure writeCats2File(cats: CatsTypePtr; maxCats: integer; fileName: string; writeCatsProc: WriteCatsProcedure);
-begin
-	writeCats2File(cats^, maxCats, fileName, writeCatsProc);
 end;
 
 procedure readCatsFromFile(var cats: CatsType; maxCats: integer; fileName: string);
@@ -389,44 +381,74 @@ begin
 	else isDemo := 0;
 end;
 
+procedure sortSelectionAndPrintResult(fileName: string; maxCats: integer; demo: integer);
+var cats: CatsType;
+opsCounter: OperationsCounterType;
+begin
+	clearOpsCounter(opsCounter);
+	readCatsFromFile(cats, maxCats, fileName);
+	sortSelection(cats, maxCats, opsCounter, demo);
+	writeSummary('Сортировка простым выбором: ', fileName, maxCats, opsCounter);
+end;
+
+procedure sortSimpleMergeAndPrintResult(fileName: string; maxCats: integer; demo: integer);
+var catsBuf1, catsBuf2: CatsType;
+cats: CatsTypePtr;
+opsCounter: OperationsCounterType;
+begin
+	clearOpsCounter(opsCounter);
+	readCatsFromFile(catsBuf1, maxCats, fileName);
+	sortSimpleMerge(cats, catsBuf1, catsBuf2, maxCats, opsCounter, demo);
+	writeSummary('Сортировка слиянием: ', fileName, maxCats, opsCounter);
+end;
+
+procedure writeHelp();
+begin
+	writeln('неверное количество аргументов, варианты запуска');
+	writeln(ParamStr(0), ' -gen', ' генерит нужные файлы');
+	writeln(ParamStr(0), ' -sort <имя файла> -n <количество котов>', ' запускает два алгоритма сортировки с N элементами');
+	Halt;
+end;
+
 var fd: text;
-catsSortSelection, catsRandom, catsSortMerge1, catsSortMerge2: CatsType;
-catsSortMerge: CatsTypePtr;
+cats, catsRandom: CatsType;
 demo: integer;
-opsCounterSortSelection, opsCounterSortMerge :OperationsCounterType;
+opsCounter:OperationsCounterType;
+files: array[1..5] of string;
+j: integer;
+key: string;
+maxCats, err: integer;
+fileName: string;
 begin
 	writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
-	randomize;
-	{ инициализация переменных }
-	demo := isDemo();
-	clearOpsCounter(opsCounterSortSelection);
-	clearOpsCounter(opsCounterSortMerge);
+	demo := 0;
+	if ParamCount() = 0 then writeHelp();
+	if (ParamCount() = 1) and (ParamStr(1) = '-gen') then begin
+		randomize;
+		{ инициализация переменных }
+		clearOpsCounter(opsCounter);
 
-	{ инициализация котов }
-	readCatsFromFile(catsSortSelection, MAX_CATS, INITIAL_FILE);
-	catsSortMerge1 := catsSortSelection;
-	catsRandom := catsSortSelection;
+		{ инициализация котов }
+		readCatsFromFile(cats, MAX_CATS, INITIAL_FILE);
+		catsRandom := cats;
 
-	{ сортировка }
-	if demo = 1 then begin
-		writeCatsRating(catsSortSelection, MAX_CATS);
-	end;
-	sortSelection(catsSortSelection, MAX_CATS, opsCounterSortSelection, demo);
-	if demo = 1 then begin
-		writeCatsRating(catsSortMerge1, MAX_CATS);
-	end;
-	sortSimpleMerge(catsSortMerge, catsSortMerge1, catsSortMerge2, MAX_CATS, opsCounterSortMerge, demo);
-	shuffleCats(catsRandom, MAX_CATS);
+		{ сортировка }
+		sortSelection(cats, MAX_CATS, opsCounter, 0);
+		shuffleCats(catsRandom, MAX_CATS);
 
-	{ вывод результата операций }
-	writeOpsCounter('Сортировка простым выбором: ', opsCounterSortSelection);
-	writeOpsCounter('Сортировка слиянием: ', opsCounterSortMerge);
-
-	{ запись в файл }
-	writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE, @writeCats);
-	writeCats2File(catsSortMerge, MAX_CATS, SORT_UP_FILE, @writeCats);
-	writeCats2File(catsSortMerge, MAX_CATS, SORT_DOWN_FILE, @writeCatsDown);
-	writeCats2File(catsSortMerge, MAX_CATS, SORT_UP_DOWN_FILE, @writeCatsUpDown);
+		{ запись в файл }
+		writeCats2File(catsRandom, MAX_CATS, SORT_RANDOM_FILE, @writeCats);
+		writeCats2File(cats, MAX_CATS, SORT_UP_FILE, @writeCats);
+		writeCats2File(cats, MAX_CATS, SORT_DOWN_FILE, @writeCatsDown);
+		writeCats2File(cats, MAX_CATS, SORT_UP_DOWN_FILE, @writeCatsUpDown);
+	end else if(ParamCount() = 4) and (ParamStr(1) = '-sort') and (ParamStr(3) = '-n') then begin
+		fileName := ParamStr(2);
+		Val(ParamStr(4), maxCats, err);
+		if err <> 0 then begin
+			Writeln('Ошибка конвертации числа указанного в -n: ', err);
+		end;
+		sortSelectionAndPrintResult(fileName, maxCats, demo);
+		sortSimpleMergeAndPrintResult(fileName, maxCats, demo);
+	end else writeHelp();
 end.
-
 
