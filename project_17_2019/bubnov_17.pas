@@ -505,46 +505,48 @@ end;
 
 procedure writeHelp();
 begin
-	writeln('Неверное количество аргументов, варианты запуска!!!');
-	writeln(#10, 'Печатает номера заданий');
+	writeln('!!!Неверное количество аргументов!!!');
+       	writeln('Варианты запуска:');
+	writeln(#10, '(1) Печатает номера заданий');
 	writeln(ParamStr(0), ' -tasks');
-	writeln(#10, 'Генерит нужные файлы');
+	writeln(#10, '(2) Генерит нужные файлы');
 	writeln(ParamStr(0), ' -gen');
-	writeln(#10, 'Запускает два алгоритма сортировки с N элементами. -demo опциональный параметр.');
+	writeln(#10, '(3) Запускает два алгоритма сортировки с N элементами. -demo опциональный параметр.');
 	writeln(ParamStr(0), ' -sort <имя файла> -n <количество котов> [-demo 1|0]');
-	writeln(#10, 'Генерит таблицу');
-	writeln(ParamStr(0), ' -table', ' генерит таблицу');
+	writeln(#10, '(4) Генерит таблицу');
+	writeln(ParamStr(0), ' -table');
 	Halt;
 end;
 
 var fileName: string;
 maxCats, err: integer;
 demo: integer;
-fd: text;
 begin
 	randomize;
-	if (ParamCount() = 1) and (ParamStr(1) = '-tasks') then begin
+	if (ParamCount() = 1) and (ParamStr(1) = '-tasks') then
+	begin
 		writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
-	end else if (ParamCount() = 1) and (ParamStr(1) = '-gen') then begin
+	end else if (ParamCount() = 1) and (ParamStr(1) = '-gen') then
+	begin
 		genFiles();
-	end else if((ParamCount() = 4) or (ParamCount() = 6)) and (ParamStr(1) = '-sort') and (ParamStr(3) = '-n')
-	then begin
+	end else if((ParamCount() = 4) or (ParamCount() = 6)) and (ParamStr(1) = '-sort') and (ParamStr(3) = '-n') then
+	begin
 		Val(ParamStr(4), maxCats, err);
 		if err <> 0 then begin
 			Writeln('Ошибка конвертации числа указанного в -n: ', err);
 		end;
-		demo := 0;
-		if (ParamCount() = 6) and (ParamStr(6) = '1') then demo := 1;
-
+		if (ParamCount() = 6) and (ParamStr(6) = '1') then  begin
+			demo := 1;
+		end else begin
+			demo := 0;
+		end;
 		sort(ParamStr(2), maxCats, demo);
 	end else if (ParamCount() = 1) and (ParamStr(1) = '-table') then begin
-		fd := stdout;
-		writeln(fd, 'Таблица сортировки выбором');
-		writeTable(fd, @sortCatsSelection);
-		writeln(fd);
-		writeln(fd, 'Таблица сортировки простым слиянием');
-		writeTable(fd, @sortCatsSimpleMerge);
-		Close(fd);
+		writeln('Таблица сортировки выбором');
+		writeTable(stdout, @sortCatsSelection);
+		writeln();
+		writeln('Таблица сортировки простым слиянием');
+		writeTable(stdout, @sortCatsSimpleMerge);
 	end else writeHelp();
 end.
 
