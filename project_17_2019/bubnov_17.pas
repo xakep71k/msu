@@ -243,7 +243,9 @@ begin
 	end;
 	for i := 1 to maxCats - 1 do begin
 		indexMinElement := findMinElement(cats, i, maxCats, opsCounters);
-		swapElements(cats[indexMinElement], cats[i], opsCounters);
+		if i <> indexMinElement then begin
+			swapElements(cats[indexMinElement], cats[i], opsCounters);
+		end;
 		if demo = 1 then begin
 			writeCatsRating(cats, maxCats);
 		end;
@@ -463,10 +465,18 @@ begin
 	maxCats[3] := 50;
 	maxCats[4] := 75;
 	maxCats[5] := 100;
-	sep := '----------------------------------------------------------------------------';
+	writeln('Последовательность');
+	for i := 1 to MAX_ACTIONS do begin
+		writeln(i, ' - ', files[i]);
+	end;
+	sep := '-------------------------------------------------------------------------';
 	writeln(fd, sep);
-	writeln(fd, '| n     ', '| параметр    | номер последовательности        | среднее значение |');
-	writeln(fd, '|       ', '|             |', 1:5, 2:5, 3:5, 4:5, 5:5, '        |                  |');
+	writeln(fd, '| n     ', '|  параметр   | номер последовательности     | среднее значение |');
+	write(fd, '|       ', '|             |');
+	for i := 1 to MAX_ACTIONS do begin
+		write(i:5);
+	end;
+	writeln(fd, '     |                  |');
 	writeln(fd, sep);
 	for i := 1 to MAX_ACTIONS do begin
 		for j := 1 to MAX_ACTIONS do begin
@@ -480,7 +490,7 @@ begin
 			Inc(mean, opsCounters[j].compareOps);
 		end;
 		mean := mean div MAX_ACTIONS;
-		writeln(fd, '       |', mean:10, '        |');
+		writeln(fd, '    |', mean:10, '        |');
 		write(fd, '|       ', '| перемещение | ');
 		mean := 0;
 		for j := 1 to MAX_ACTIONS do begin
@@ -488,7 +498,7 @@ begin
 			Inc(mean, opsCounters[j].swapOps);
 		end;
 		mean := mean div MAX_ACTIONS;
-		writeln(fd, '       |', mean:10, #9, '   |');
+		writeln(fd, '    |', mean:10, '        |');
 		writeln(fd, sep);
 	end;
 end;
