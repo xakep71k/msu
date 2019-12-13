@@ -507,8 +507,8 @@ procedure writeHelp();
 begin
 	writeln('!!!Неверное количество аргументов!!!');
        	writeln('Варианты запуска:');
-	writeln(#10, '(1) Печатает номера заданий');
-	writeln(ParamStr(0), ' -tasks');
+	writeln(#10, '(1) Печатает номера заданий. Номер студенческого опционален. Если не указан, то печатает задания по моему студенческому.');
+	writeln(ParamStr(0), ' -tasks [номер студенческого или три его цифры]');
 	writeln(#10, '(2) Генерит нужные файлы');
 	writeln(ParamStr(0), ' -gen');
 	writeln(#10, '(3) Запускает два алгоритма сортировки с N элементами. -demo опциональный параметр.');
@@ -518,14 +518,32 @@ begin
 	Halt;
 end;
 
-var fileName: string;
+var studentIDStr: string;
 maxCats, err: integer;
-demo: integer;
+demo, studentID: integer;
 begin
 	randomize;
-	if (ParamCount() = 1) and (ParamStr(1) = '-tasks') then
+	if ((ParamCount() = 1) or (ParamCount() = 2)) and (ParamStr(1) = '-tasks') then
 	begin
-		writeProjectTasksNumers(LAST_3_DIGITS_STUDENT_NUMBER);
+		if ParamCount() = 2 then
+		begin
+			studentIDStr := ParamStr(2);
+			if Length(studentIDStr) < 3 then
+			begin
+				Writeln('Номер студенческого должен быть выше трёх цифр');
+				Halt;
+			end;
+			{ берём три последнии цифры }
+			studentIDStr := Copy(studentIDStr, Length(studentIDStr) - 2, 3);
+			Val(studentIDStr, studentID, err);
+			if err <> 0 then begin
+				Writeln('Ошибка конвертации студенческого: ', ParamStr(2));
+			end;
+		end else
+		begin
+			studentID := LAST_3_DIGITS_STUDENT_NUMBER;
+		end;
+		writeProjectTasksNumers(studentID);
 	end else if (ParamCount() = 1) and (ParamStr(1) = '-gen') then
 	begin
 		genFiles();
