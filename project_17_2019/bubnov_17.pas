@@ -567,7 +567,7 @@ begin
 		end;
 		sort(ParamStr(2), maxCats, demo);
 	end else if (ParamCount() = 1) and (ParamStr(1) = '-table') then begin
-		writeln('Таблица сортировки выбором');
+		writeln('Таблица сортировки простым выбором');
 		writeTable(stdout, @sortCatsSelection);
 		writeln();
 		writeln('Таблица сортировки простым слиянием');
