@@ -40,9 +40,11 @@ CatsTypePtr = ^CatsType;
 WriteCatsProcedure = procedure(var fileReadFrom: text; var cats: CatsType; maxCats: integer);
 SortCatsProcedure = procedure(var fileReadFrom: string; maxCats: integer; var opsCounter: OperationsCounterType);
 
-procedure writeSummary(title: string; filename: string; maxCats: integer; var opsCounter :OperationsCounterType);
+procedure writeSummary(title: string; var opsCounter :OperationsCounterType);
 begin
-	writeln(title, 'Имя файла - ', fileName, ', всего элементов - ', maxCats, ', число сравнений - ', opsCounter.compareOps, ', число перестановок - ', opsCounter.swapOps);
+	writeln('=== ', title, ' ===');
+	writeln('количество сравнений    - ', opsCounter.compareOps);
+	writeln('количество перестановок - ', opsCounter.swapOps);
 end;
 
 procedure clearOpsCounter(var opsCounter :OperationsCounterType);
@@ -391,7 +393,7 @@ begin
 	clearOpsCounter(opsCounter);
 	readCatsFromFile(cats, maxCats, fileName);
 	sortSelection(cats, maxCats, opsCounter, demo);
-	writeSummary('Сортировка простым выбором: ', fileName, maxCats, opsCounter);
+	writeSummary('Сортировка простым выбором', opsCounter);
 end;
 
 procedure sortSimpleMergeAndPrintResult(fileName: string; maxCats: integer; demo: integer);
@@ -402,7 +404,7 @@ begin
 	clearOpsCounter(opsCounter);
 	readCatsFromFile(catsBuf1, maxCats, fileName);
 	sortSimpleMerge(cats, catsBuf1, catsBuf2, maxCats, opsCounter, demo);
-	writeSummary('Сортировка слиянием: ', fileName, maxCats, opsCounter);
+	writeSummary('Сортировка слиянием', opsCounter);
 end;
 
 procedure genFiles();
@@ -429,8 +431,11 @@ end;
 
 procedure sort(fileName: string; maxCats, demo: integer);
 begin
+	writeln();
 	sortSelectionAndPrintResult(fileName, maxCats, demo);
+	writeln();
 	sortSimpleMergeAndPrintResult(fileName, maxCats, demo);
+	writeln();
 end;
 
 procedure sortCatsSelection(var fileReadFrom: string; maxCats: integer; var opsCounter: OperationsCounterType);
@@ -537,7 +542,8 @@ begin
 			studentIDStr := Copy(studentIDStr, Length(studentIDStr) - 2, 3);
 			Val(studentIDStr, studentID, err);
 			if err <> 0 then begin
-				Writeln('Ошибка конвертации студенческого: ', ParamStr(2));
+				Writeln('Номер студенческого должен состоять из цифр');
+				Halt;
 			end;
 		end else
 		begin
@@ -551,7 +557,8 @@ begin
 	begin
 		Val(ParamStr(4), maxCats, err);
 		if err <> 0 then begin
-			Writeln('Ошибка конвертации числа указанного в -n: ', err);
+			Writeln('Количество котов должно быть числом');
+			Halt;
 		end;
 		if (ParamCount() = 6) and (ParamStr(6) = '1') then  begin
 			demo := 1;
