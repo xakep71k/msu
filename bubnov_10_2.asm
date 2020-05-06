@@ -1454,7 +1454,47 @@ bornNewSolutions proc
 	ret
 bornNewSolutions endp
 
-initPopulation proc
+inputX proc
+	push ebp
+	mov ebp, esp
+	push ebx
+	push ecx
+	push edx
+.data
+fmt_x db "x%d ",0
+.code
+numberX equ dword ptr[ebp+8]
+
+@repeat:
+	outstr "input "
+	mov ebx, esp
+	push numberX
+	push offset fmt_x
+	call crt_printf
+	mov esp, ebx
+	outstr "in range [0; 255]: "
+	
+	inint eax
+	
+	jc @repeat
+	jz @repeat
+	js @repeat
+	
+	cmp eax, 255
+	ja @repeat
+	
+	pop edx
+	pop ecx
+	pop ebx
+	mov esp, ebp
+	pop ebp
+	ret 4
+inputX endp
+
+printIndividialTitle proc
+.data
+fmt_ind db "individual %d: ",10,0
+.code
 	push ebp
 	mov ebp, esp
 	push eax
@@ -1462,30 +1502,92 @@ initPopulation proc
 	push ecx
 	push edx
 	
-	mov PopulationNum, 3
-	mov ecx, offset solutions
+	mov ebx, esp
+	push [ebp+8]
+	push offset fmt_ind
+	call crt_printf
+	mov esp, ebx
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret 4
+printIndividialTitle endp
 
-assume eax:ptr Float
-assume ebx:ptr Float
-assume ecx:ptr Solution
+inputIndividuals proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+
+	movzx ecx, PopulationNum
+	lea ebx, solutions
+	mov edx, 1
+
+@repeat:
+	push edx
+	call printIndividialTitle
 	
-	mov [ecx].x1, 248
-	mov [ecx].x2, 0
-	mov [ecx].x3, 0
+	push 1
+	call inputX
 	
-	add ecx, sizeof Solution
-	mov [ecx].x1, 248
-	mov [ecx].x2, 0
-	mov [ecx].x3, 0
+	mov (Solution ptr[ebx]).x1, al
 	
-	add ecx, sizeof Solution
-	mov [ecx].x1, 240
-	mov [ecx].x2, 6
-	mov [ecx].x3, 0
+	push 2
+	call inputX
+	mov (Solution ptr[ebx]).x2, al
 	
-assume eax:nothing
-assume ebx:nothing
-assume ecx:nothing
+	push 3
+	call inputX
+	mov (Solution ptr[ebx]).x3, al
+	
+	add ebx, sizeof Solution
+	inc edx
+	loop @repeat
+
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputIndividuals endp
+
+inputPopulationNum proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+.data
+fmt_popnum db "input max population number in range [4; %u]: ",0
+.code
+@repeat:
+	mov ebx, esp
+	push PopulationMaxNum
+	push offset fmt_popnum
+	call crt_printf
+	mov esp, ebx
+	
+	inint eax
+	jc @repeat
+	jz @repeat
+	js @repeat
+	
+	cmp eax, PopulationMaxNum
+	ja @repeat
+	
+	cmp eax, 4
+	jb @repeat
+	
+	mov PopulationNum, al
 	
 	pop edx
 	pop ecx
@@ -1494,7 +1596,191 @@ assume ecx:nothing
 	mov esp, ebp
 	pop ebp
 	ret
-initPopulation endp
+inputPopulationNum endp
+
+inputA proc
+	push ebp
+	mov ebp, esp
+	push ebx
+	push ecx
+	push edx
+.data
+fmt_a db "A%d ",0
+.code
+numberA equ dword ptr[ebp+8]
+
+@repeat:
+	outstr "input "
+	mov ebx, esp
+	push numberA
+	push offset fmt_a
+	call crt_printf
+	mov esp, ebx
+	outstr "in range [0; 255]: "
+	
+	inint eax
+	
+	jc @repeat
+	jz @repeat
+	js @repeat
+	
+	cmp eax, 255
+	ja @repeat
+	
+	pop edx
+	pop ecx
+	pop ebx
+	mov esp, ebp
+	pop ebp
+	ret 4
+inputA endp
+
+inputEquationParams proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	push 1
+	call inputA
+	mov A1, al
+	
+	push 2
+	call inputA
+	mov A1, al
+	
+	push 3
+	call inputA
+	mov A1, al
+	
+	call inputD
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputEquationParams endp
+
+inputD proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+
+@repeat:
+	outstr "input D: "
+	
+	inint eax
+	
+	jc @repeat
+	jz @repeat
+	js @repeat
+	
+	cmp eax, 255
+	ja @repeat
+	
+	mov D, al
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputD endp
+
+generateRandomInput proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	mov A1, 1
+	mov A2, 1
+	mov A3, 1
+	
+	push 0
+	push 255
+	call rand
+	mov D, al
+	
+	push 4
+	push 10
+	call rand
+	mov PopulationNum, al
+	
+	push 10
+	push 100
+	call rand
+	mov MutationChance, al
+	
+	movzx ecx, PopulationNum
+	lea ebx, solutions
+
+@repeat:
+	push 1
+	push 255
+	call rand
+	mov (Solution ptr[ebx]).x1, al
+	
+	push 1
+	push 255
+	call rand
+	mov (Solution ptr[ebx]).x2, al
+	
+	push 1
+	push 255
+	call rand
+	mov (Solution ptr[ebx]).x3, al
+	
+	add ebx, sizeof Solution
+	loop @repeat
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+generateRandomInput endp
+
+printStrEquatation proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	outnum A1,,u,
+	outstr "*x_1 + "
+	outnum A2,,u,
+	outstr "*x_2 + "
+	outnum A3,,u,
+	outstr "*x_3 = "
+	outnum D,,u,
+	newline
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+printStrEquatation endp
+
 
 pressAnyKey proc
 	push ebp
@@ -1515,33 +1801,182 @@ pressAnyKey proc
 	ret
 pressAnyKey endp
 
+inputMutation proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+@repeat:
+	outstr "input mutation chance [0; 100]: "
+	inint eax
+	
+	jc @repeat
+	jz @repeat
+	js @repeat
+	
+	cmp eax, 100
+	ja @repeat
+	
+	mov MutationChance, al
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputMutation endp
+
+inputIterationMax proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+@repeat:
+	outstr "input max iterations [1; 4294967295]: "
+	inint eax
+	
+	jc @repeat
+	jz @repeat
+	js @repeat
+	cmp eax, 0
+	je @repeat
+	
+	mov IterationMaxNum, al
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputIterationMax endp
+
+inputManaulAllParams proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	call inputPopulationNum
+	call inputEquationParams
+	call inputMutation
+	call inputIndividuals
+	call inputIterationMax
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+inputManaulAllParams endp
+
+printAllParams proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	outnumln PopulationNum,,u,"population number: "
+	outnumln MutationChance,,u,"mutation chance in %: "
+	call printAllSolutions
+	call printStrEquatation
+	movzx ecx, IterationMaxNum
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+printAllParams endp
+
+inManualOrRandom proc
+	push ebp
+	mov ebp, esp
+	push ebx
+	push ecx
+	push edx
+	
+@repeat:
+	outstr "manual input press - 0, random press - 1: "
+	inint eax
+	jc @repeat
+	jz @repeat
+	js @repeat
+	cmp eax, 1
+	ja @repeat
+	
+	pop edx
+	pop ecx
+	pop ebx
+	mov esp, ebp
+	pop ebp
+	ret
+inManualOrRandom endp
+
+initPopulation proc
+	push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	call inManualOrRandom
+	cmp eax, 0
+	je @manual
+	jmp @random_
+	
+@random_:
+	call generateRandomInput
+	jmp @end
+@manual:
+	call inputManaulAllParams
+@end:
+	call printAllParams
+	outstr "press any key to continue ..."
+	call pressAnyKey
+	
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+initPopulation endp
+
 .data
 averageFloatPtr Float<>
 
 .code
 start:
-	mov D, 247
 	;
 	; Инициализируем начальное значение случайного числа текущим временем
 	;
 	rdtsc
 	invoke nseed, eax
-
-	mov ebp, esp
-	;sub esp, 4
-
-;averageFloatPtr equ ebp-4
-
-	;outstrln "start?"
-	;call pressAnyKey
 	
 	lea ebx, [averageFloatPtr]
-	push ebx
-	call printIntLn
 
-	mov IterationMaxNum, 0
+	mov IterationMaxNum, 10
 	call initPopulation
-	movzx ecx, IterationMaxNum
 	
 	call IsAnswerReady
 	cmp eax, 0
