@@ -4,6 +4,7 @@ include console.inc
 PopulationNum db 1
 IterationMaxNum db 0
 MutationChance db 10 ; в процентах
+IterationCounter dd 0
 
 ; порядок A3 - A1 имеет значение, он используется в calcEquation
 A3 db 1
@@ -59,11 +60,9 @@ floatPtr equ dword ptr[ebp+12]
 	mov ecx, 100
 	div ecx
 		
-assume ebx:ptr Float
 	mov ebx, floatPtr
-	mov [ebx].decimal, al
-	mov [ebx].fract, dl
-assume ebx:nothing
+	mov (Float ptr[ebx]).decimal, al
+	mov (Float ptr[ebx]).fract, dl
 	
 	pop edx
 	pop ecx
@@ -84,16 +83,14 @@ convertFloat2Dec proc
 	push edx
 float1Ptr equ dword ptr[ebp+8]
 
-assume ebx:ptr Float
 	mov ebx, float1Ptr
-	movzx ecx, [ebx].decimal
+	movzx ecx, (Float ptr[ebx]).decimal
 	
 	mov eax, 100
 	mul ecx
 	
-	movzx ecx, [ebx].fract
+	movzx ecx, (Float ptr[ebx]).fract
 	add eax, ecx
-assume ebx:nothing
 	
 	pop edx
 	pop ecx
@@ -369,15 +366,13 @@ printFloat proc
 	push edx
 
 	mov eax, [ebp+8]
-assume eax:ptr Float
 	xor ecx, ecx
-	mov cl, [eax].fract
+	mov cl, (Float ptr[eax]).fract
 	push ecx
 	
 	xor ecx, ecx
-	mov cl, [eax].decimal
+	mov cl, (Float ptr[eax]).decimal
 	push ecx
-assume eax:nothing
 	
 	pop ecx
 	outnum ecx,,03u
@@ -533,14 +528,12 @@ calcFitnessScore proc
 solutionPtr equ dword ptr[ebp+8]
 
 	mov eax, solutionPtr
-assume eax:ptr Solution
-	movzx ebx, [eax].x1
+	movzx ebx, (Solution ptr[eax]).x1
 	push ebx
-	movzx ebx, [eax].x2
+	movzx ebx, (Solution ptr[eax]).x2
 	push ebx
-	movzx ebx, [eax].x3
+	movzx ebx, (Solution ptr[eax]).x3
 	push ebx
-assume eax:nothing
 	call calcEquation
 	cmp ah, 0
 	mov ecx, 255
@@ -1555,45 +1548,21 @@ start:
 	jne @solution_found
 
 .data
-avgTitle db "average:",0
-chParTitle db "chosen parents:",0
-childrenTitle db "children:",0
 curSolTitle db "current solutions:",0
 .code
 @repeat:
+	inc IterationCounter
+	
 	call calcAllFitnessScore
-	;call printAllSolutions
-
-	;push offset avgTitle
-	;call printStr
 	push ebx
 	call calcFintessScoreAverage
 	
-	;call printAllSolutions
-	
 	push ebx
 	call calcChanceSpreadGens
-	
-	;call printAllSolutions
-	
 	call chooseParents
-	
-	;push offset chParTitle
-	;call printStrLn
-	
-	;call printChosenParents
-	
-	call splitGens	
-	
-	;call printGensX1
+	call splitGens
 	call shuffleGens
-	;call printGensX1
-	
 	call bornNewSolutions
-	
-	;push offset childrenTitle
-	;call printStrLn
-	
 	call IsAnswerReady
 	cmp eax, 0
 	jne @solution_found
@@ -1617,5 +1586,6 @@ curSolTitle db "current solutions:",0
 	call printSolutionln
 	movzx eax, D
 	outintln eax,,"D = "
+	outintln IterationCounter,,"iteration = "
 	exit
 end start
