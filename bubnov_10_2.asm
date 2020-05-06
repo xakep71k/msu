@@ -1997,14 +1997,15 @@ curSolTitle db "current solutions:",0
 	call chooseParents
 	call splitGens
 	call shuffleGens
+	
+	push offset curSolTitle
+	call printStrLn
+	call printAllSolutions
+	
 	call bornNewSolutions
 	call IsAnswerReady
 	cmp eax, 0
 	jne @solution_found
-
-	push offset curSolTitle
-	call printStrLn
-	call printAllSolutions
 
 	loop @repeat
 
@@ -2017,6 +2018,7 @@ curSolTitle db "current solutions:",0
 
 @solution_found:
 	outstrln "solution found!"
+	call printStrEquatation
 	push eax
 	call printSolutionln
 	movzx eax, D
