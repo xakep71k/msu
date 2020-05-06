@@ -2,7 +2,7 @@ include console.inc
 
 .data
 PopulationNum db 1
-IterationMaxNum db 0
+IterationMaxNum dd 0
 MutationChance db 10 ; в процентах
 IterationCounter dd 0
 
@@ -221,7 +221,8 @@ printSolution proc
 	push ebx
 	push ecx
 	push edx
-	
+
+printOnlyX equ dword ptr[ebp+12]
 solutionPtr equ ebp+8
 
 	mov eax, [solutionPtr]
@@ -238,6 +239,10 @@ solutionPtr equ ebp+8
 	outnum ecx,,03u, " | x_2 = "
 	pop ecx
 	outnum ecx,,03u, " | x_3 = "
+	
+	mov ecx, printOnlyX
+	cmp ecx, 0
+	jne @skip
 	outstr " | score = "
 	
 	mov eax, [solutionPtr]
@@ -250,6 +255,7 @@ solutionPtr equ ebp+8
 	lea ebx, (Solution ptr [eax]).chance
 	push ebx
 	call printFloat
+@skip:
 	
 	pop edx
 	pop ecx
@@ -257,7 +263,7 @@ solutionPtr equ ebp+8
 	pop eax
 	mov esp, ebp
 	pop ebp
-	ret 4
+	ret 4*2
 printSolution endp
 
 printSolutionln proc
@@ -267,6 +273,7 @@ printSolutionln proc
 	push ebx
 	push ecx
 	push edx
+	push [ebp+12]
 	push [ebp+8]
 	call printSolution
 	newline
@@ -276,7 +283,7 @@ printSolutionln proc
 	pop eax
 	mov esp, ebp
 	pop ebp
-	ret 4
+	ret 4*2
 printSolutionln endp
 
 printSolutions proc
@@ -288,8 +295,9 @@ printSolutions proc
 	push edx
 	
 	mov ecx, [ebp+8]; size
-	mov eax, [ebp+12]; pointer
+	mov eax, [ebp+12]; pointer 
 @repeat:
+	push [ebp+16]
 	push eax
 	call printSolutionln
 	add eax, sizeof Solution
@@ -301,7 +309,7 @@ loop @repeat
 	pop eax
 	mov esp, ebp
 	pop ebp
-	ret 4*2
+	ret 4*3
 printSolutions endp
 
 printAllSolutions proc
@@ -313,6 +321,7 @@ printAllSolutions proc
 	push edx
 	
 	
+	push 0
 	lea ebx, solutions
 	push ebx
 	movzx ebx, PopulationNum
@@ -328,6 +337,31 @@ printAllSolutions proc
 	ret
 printAllSolutions endp
 
+printNewSolutions proc
+		push ebp
+	mov ebp, esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	
+	
+	push 1
+	lea ebx, solutions
+	push ebx
+	movzx ebx, PopulationNum
+	push ebx
+	call printSolutions
+
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	mov esp, ebp
+	pop ebp
+	ret
+printNewSolutions endp
+
 printChosenParents proc
 	push ebp
 	mov ebp, esp
@@ -342,6 +376,7 @@ printChosenParents proc
 	mov eax, parentOffsets[ebx]
 	cmp eax, 0
 	je @continue
+	push 0
 	push eax
 	call printSolutionln
 	add ebx, 4
@@ -1810,7 +1845,7 @@ inputMutation proc
 	push edx
 	
 @repeat:
-	outstr "input mutation chance [0; 100]: "
+	outstr "input mutation chance in % [0; 100]: "
 	inint eax
 	
 	jc @repeat
@@ -1849,7 +1884,7 @@ inputIterationMax proc
 	cmp eax, 0
 	je @repeat
 	
-	mov IterationMaxNum, al
+	mov IterationMaxNum, eax
 	
 	pop edx
 	pop ecx
@@ -1895,7 +1930,7 @@ printAllParams proc
 	outnumln MutationChance,,u,"mutation chance in %: "
 	call printAllSolutions
 	call printStrEquatation
-	movzx ecx, IterationMaxNum
+	outnumln IterationMaxNum,,u,"max iterations: "
 	
 	pop edx
 	pop ecx
@@ -1952,6 +1987,7 @@ initPopulation proc
 	call printAllParams
 	outstr "press any key to continue ..."
 	call pressAnyKey
+	newline
 	
 	pop edx
 	pop ecx
@@ -1984,8 +2020,13 @@ start:
 
 .data
 curSolTitle db "current solutions:",0
+newSolTitle db "new solutions:",0
 .code
 @repeat:
+	mov edx, IterationCounter
+	cmp edx, IterationMaxNum
+	jae @solution_not_found
+	
 	inc IterationCounter
 	
 	call calcAllFitnessScore
@@ -2003,15 +2044,20 @@ curSolTitle db "current solutions:",0
 	call printAllSolutions
 	
 	call bornNewSolutions
+	
+	push offset newSolTitle
+	call printStrLn
+	call printNewSolutions
+	
 	call IsAnswerReady
 	cmp eax, 0
 	jne @solution_found
 
 	loop @repeat
+@solution_not_found:
 
 	outstrln "solutions not found"
-	call printAllSolutions
-	
+	call printStrEquatation
 	movzx eax, D
 	outintln eax,,"D = "
 	exit
@@ -2019,6 +2065,7 @@ curSolTitle db "current solutions:",0
 @solution_found:
 	outstrln "solution found!"
 	call printStrEquatation
+	push 1
 	push eax
 	call printSolutionln
 	movzx eax, D
