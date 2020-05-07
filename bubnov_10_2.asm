@@ -3,10 +3,10 @@ include console.inc
 .data
 PopulationNum db 1
 IterationMaxNum dd 0
-MutationChance db 10 ; РІ РїСЂРѕС†РµРЅС‚Р°С…
+MutationChance db 10 ; в процентах
 IterationCounter dd 0
 
-; РїРѕСЂСЏРґРѕРє A3 - A1 РёРјРµРµС‚ Р·РЅР°С‡РµРЅРёРµ, РѕРЅ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РІ calcEquation
+; порядок A3 - A1 имеет значение, он используется в calcEquation
 A3 db 1
 A2 db 1
 A1 db 1
@@ -21,17 +21,17 @@ Solution struc
 	x1 db 0 
 	x2 db 0
 	x3 db 0
-	score Float<>; Р·РЅР°С‡РµРЅРёРµ С†РµР»РµРІРѕР№ С„СѓРЅРєС†РёРё F_i
-	chance Float<>; С€Р°РЅСЃ СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅРёС‚СЊ РіРµРЅС‹ F_i/F_СЃСЂ
+	score Float<>; значение целевой функции F_i
+	chance Float<>; шанс распространить гены F_i/F_ср
 Solution ends
 
 PopulationMaxNum equ 10
-solutions Solution PopulationMaxNum dup(<>); С‚РµРєСѓС‰РёРµ СЂРµС€РµРЅРёСЏ
-parentOffsets dd PopulationMaxNum dup(0); С…СЂР°РЅРёС‚ СЃРјРµС‰РµРЅРёСЏ РІ РјР°СЃСЃРёРІРµ solutions - СЂРµС€РµРЅРёР№, РєРѕС‚РѕСЂС‹Рµ Р±СѓРґСѓС‚ СЂРѕРґРёС‚РµР»СЏРјРё
+solutions Solution PopulationMaxNum dup(<>); текущие решения
+parentOffsets dd PopulationMaxNum dup(0); хранит смещения в массиве solutions - решений, которые будут родителями
 
 
 ;
-; Р’СЂРµРјРµРЅРЅРѕРµ С…СЂР°РЅРёР»РёС‰Рµ С‡Р°СЃС‚РµР№ РіРµРЅРѕРІ РїСЂРё РѕРґРЅРѕС‚РѕС‡РµС‡РЅРѕРј СЃРєСЂРµС‰РёРІР°РЅРёРё
+; Временное хранилище частей генов при одноточечном скрещивании
 ;
 x1LeftPart db PopulationMaxNum dup(0)
 x1RightPart db PopulationMaxNum dup(0)
@@ -42,8 +42,8 @@ x3RightPart db PopulationMaxNum dup(0)
 
 .code
 
-; РџРµСЂРµРІРѕРґРёС‚ РґРµСЃСЏС‚РёС‡РЅРѕРµ С‡РёСЃР»Рѕ РІРѕ float РґРµР»РµРЅРёРµРј РЅР° 100.
-; Р’ РєР°С‡РµСЃС‚РІРµ РїР°СЂР°РјРµС‚СЂР° РїСЂРёРЅРёРјР°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° float Рё РґРµСЃСЏС‚РёС‡РЅРѕРµ С‡РёСЃР»Рѕ
+; Переводит десятичное число во float делением на 100.
+; В качестве параметра принимает указатель на float и десятичное число
 convertDec2Float proc
 	push ebp
 	mov ebp, esp
@@ -73,8 +73,8 @@ floatPtr equ dword ptr[ebp+12]
 	ret 4*2
 convertDec2Float endp
 
-; РџРµСЂРµРІРѕРґРёС‚ float РІ РґРµСЃСЏС‚РёС‡РЅРѕРµ С‡РёСЃР»Рѕ СѓРјРЅРѕР¶РµРЅРёРµРј РЅР° 100.
-; Р’ РєР°С‡РµСЃС‚РІРµ РїР°СЂР°РјРµС‚СЂР° РїСЂРёРЅРёРјР°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° float, РѕС‚РІРµС‚ РІРѕР·СЂР°С‰Р°РµС‚ РІ eax
+; Переводит float в десятичное число умножением на 100.
+; В качестве параметра принимает указатель на float, ответ возращает в eax
 convertFloat2Dec proc
 	push ebp
 	mov ebp, esp
@@ -100,8 +100,8 @@ float1Ptr equ dword ptr[ebp+8]
 	ret 4
 convertFloat2Dec endp
 
-; Р”РµР»РёС‚ РґРІР° float Рё РІ РїРµСЂРІС‹Р№ РїР°СЂР°РјРµС‚СЂ Р·Р°РїРёСЃС‹РІР°РµС‚ СЂРµР·СѓР»СЊС‚.
-; Р’ РєР°С‡РµСЃС‚РІРµ РїР°СЂР°РјРµС‚СЂРѕРІ РѕР¶РёРґР°РµС‚ РґРІР° СѓРєР°Р·Р°С‚РµР»СЏ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ Float
+; Делит два float и в первый параметр записывает результ.
+; В качестве параметров ожидает два указателя на структуру Float
 divFloat proc
 	push ebp
 	mov ebp, esp
@@ -123,7 +123,7 @@ float2Ptr equ dword ptr[ebp+12]
 	call convertFloat2Dec
 	push eax
 
-; РґРµР»РёРј float1/float2
+; делим float1/float2
 
 	pop ecx
 	pop eax
@@ -143,8 +143,8 @@ float2Ptr equ dword ptr[ebp+12]
 	ret 4*2
 divFloat endp
 
-; Р”РµР»РёС‚ float РЅР° РґРµСЃСЏС‚РёС‡РЅРѕРµ С‡РёСЃР»Рѕ СЂР°Р·РјРµСЂРѕРј РІ Р±Р°Р№С‚.
-; РџСЂРёРЅРёРјР°РµС‚ СѓРєР°Р·Р°С‚РµР»СЊ РЅР° float Рё РґРµСЃСЏС‚РёС‡РЅРѕРµ С‡РёСЃР»Рѕ. Р РµР·СѓР»СЊС‚Р°С‚ Р·Р°РїРёСЃС‹РІР°С‚ РїР°СЂР°РјРµС‚СЂ float.
+; Делит float на десятичное число размером в байт.
+; Принимает указатель на float и десятичное число. Результат записыват параметр float.
 divFloatByDec proc
 	push ebp
 	mov ebp, esp
@@ -177,8 +177,8 @@ tmpFloatPtr equ ebp-4
 	ret 4*2
 divFloatByDec endp
 
-; РЎРєР»Р°РґС‹РІР°РµС‚ РґРІР° Float Рё РІ РїРµСЂРІС‹Р№ РїР°СЂР°РјРµС‚СЂ РєР»Р°РґС‘Рј СЂРµР·СѓР»СЊС‚.
-; Р’ РєР°С‡РµСЃС‚РІРµ РїР°СЂР°РјРµС‚СЂРѕРІ РѕР¶РёРґР°РµС‚ РґРІР° СѓРєР°Р·Р°С‚РµР»СЏ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ Float
+; Складывает два Float и в первый параметр кладём результ.
+; В качестве параметров ожидает два указателя на структуру Float
 addFloat proc
 	push ebp
 	mov ebp, esp
@@ -214,6 +214,68 @@ float2Ptr equ dword ptr[ebp+12]
 	ret 4*2
 addFloat endp
 
+; вычисляет A1*x1 + A2*x2 + A3*x3  = D
+; Возврат:
+; ah - 0 - не было переполнения, иначе было переполнение и результат не верен
+; al - результат D
+calcEquation proc
+	push ebp
+	mov ebp, esp
+	push ecx
+	push ebx
+	push edx
+
+; проходим все x1 - x3 и A1 - A3 в цикле, умножая и складывая
+	mov ecx, 3
+	xor ebx, ebx
+@calc:
+	xor ax, ax
+	mov al, byte ptr[offset A3 + ecx - 1]
+	mul byte ptr[ebp + 4 + ecx*4]
+	jo @overflow
+	
+	add bl, al
+	jc @overflow
+loop @calc
+	mov al, bl
+@overflow:
+	mov ah, cl
+
+	pop edx
+	pop ebx
+	pop ecx
+	pop ebp
+	ret 3*4
+calcEquation endp
+
+calcResidual proc
+	push ebp
+	mov ebp, esp
+	push ecx
+	push ebx
+	push edx
+	
+	push [ebp+16]
+	push [ebp+12]
+	push [ebp+8]
+	call calcEquation
+	
+	cmp ah, 0
+	jne @answer_not_correct
+	movzx ecx, al
+	push ecx
+	movzx ecx, D
+	push ecx
+	call subAbs
+@answer_not_correct:
+	
+	pop edx
+	pop ebx
+	pop ecx
+	pop ebp
+	ret 3*4
+calcResidual endp
+
 printSolution proc
 	push ebp
 	mov ebp, esp
@@ -243,18 +305,34 @@ solutionPtr equ ebp+8
 	mov ecx, printOnlyX
 	cmp ecx, 0
 	jne @skip
-	outstr " | score = "
+	outstr " | целевое значение = "
 	
 	mov eax, [solutionPtr]
 	lea ebx, (Solution ptr [eax]).score
 	push ebx
 	call printFloat
 	
-	outstr " | chance = "
+	outstr " | скрещивание = "
 	mov eax, [solutionPtr]
 	lea ebx, (Solution ptr [eax]).chance
 	push ebx
 	call printFloat
+	
+	mov eax, [solutionPtr]
+	movzx ecx, (Solution ptr[eax]).x1
+	push ecx
+	movzx ecx, (Solution ptr[eax]).x2
+	push ecx
+	movzx ecx, (Solution ptr[eax]).x3
+	push ecx
+	call calcResidual
+	and ah, 1
+	
+	outstr " | невязка = "
+	outnum al,,03u,
+	outstr " | переполнение = "
+	outnum ah,,u,
+	
 @skip:
 	
 	pop edx
@@ -442,43 +520,9 @@ printFloatln proc
 	ret 4
 printFloatln endp
 
-; РІС‹С‡РёСЃР»СЏРµС‚ A1*x1 + A2*x2 + A3*x3  = D
-; Р’РѕР·РІСЂР°С‚:
-; ah - 0 - РЅРµ Р±С‹Р»Рѕ РїРµСЂРµРїРѕР»РЅРµРЅРёСЏ, РёРЅР°С‡Рµ Р±С‹Р»Рѕ РїРµСЂРµРїРѕР»РЅРµРЅРёРµ Рё СЂРµР·СѓР»СЊС‚Р°С‚ РЅРµ РІРµСЂРµРЅ
-; al - СЂРµР·СѓР»СЊС‚Р°С‚ D
-calcEquation proc
-	push ebp
-	mov ebp, esp
-	push ecx
-	push ebx
-	push edx
-
-; РїСЂРѕС…РѕРґРёРј РІСЃРµ x1 - x3 Рё A1 - A3 РІ С†РёРєР»Рµ, СѓРјРЅРѕР¶Р°СЏ Рё СЃРєР»Р°РґС‹РІР°СЏ
-	mov ecx, 3
-	xor ebx, ebx
-@calc:
-	xor ax, ax
-	mov al, byte ptr[offset A3 + ecx - 1]
-	mul byte ptr[ebp + 4 + ecx*4]
-	jo @overflow
-	
-	add bl, al
-	jc @overflow
-loop @calc
-	mov al, bl
-@overflow:
-	mov ah, cl
-
-	pop edx
-	pop ebx
-	pop ecx
-	pop ebp
-	ret 3*4
-calcEquation endp
-
 ;
-; РІРѕР·РІСЂР°С‰Р°РµС‚ РІ eax 0 - РµСЃР»Рё РЅРµ РЅР°Р№РґРµРЅРѕ РїРѕРґС…РѕРґСЏС‰РёС… СЂРµС€РµРЅРёРµ
-; РёР»Рё Р°РґСЂРµСЃ СЂРµС€РµРЅРёСЏ
+; возвращает в eax 0 - если не найдено подходящих решение
+; или адрес решения
 IsAnswerReady proc
 	push ebp
 	mov ebp, esp
@@ -489,8 +533,8 @@ IsAnswerReady proc
 	movzx ecx, PopulationNum
 	lea ebx, solutions
 
-; ah - 0 - РЅРµ Р±С‹Р»Рѕ РїРµСЂРµРїРѕР»РЅРµРЅРёСЏ, РёРЅР°С‡Рµ Р±С‹Р»Рѕ РїРµСЂРµРїРѕР»РЅРµРЅРёРµ Рё СЂРµР·СѓР»СЊС‚Р°С‚ РЅРµ РІРµСЂРµРЅ
-; al - СЂРµР·СѓР»СЊС‚Р°С‚ D
+; ah - 0 - не было переполнения, иначе было переполнение и результат не верен
+; al - результат D
 
 @repeat:
 	movzx edx, (Solution ptr[ebx]).x1
@@ -520,9 +564,9 @@ IsAnswerReady proc
 	ret
 IsAnswerReady endp
 
-; Р¤СѓРЅРєС†РёСЏ РІС‹С‡РёС‚Р°РµС‚ РёР· Р±РѕР»СЊС€РµРіРѕ РјРµРЅСЊС€РµРµ, С‡С‚Рѕ Р±С‹ РїРѕР»СѓС‡РёР»РѕСЃСЊ РЅРµ РѕС‚СЂРёС†Р°С‚РµР»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ
-; РџСЂРёРЅРёРјР°РµС‚ РґРІР° Р°СЂРіСѓРјРµРЅС‚Р° СЂР°Р·РјРµСЂРѕРј РІ Р±Р°Р№С‚.
-; Р РµР·СѓР»СЊС‚Р°С‚ РІ al
+; Функция вычитает из большего меньшее, что бы получилось не отрицательное значение
+; Принимает два аргумента размером в байт.
+; Результат в al
 subAbs proc
 	push ebp
 	mov ebp, esp
@@ -550,8 +594,8 @@ val2 equ byte ptr[ebp+12]
 	ret 4*2
 subAbs endp
 
-; Р¦РµР»РµРІР°СЏ С„СѓРЅРєС†РёСЏ. РћРїСЂРµРґРµР»СЏРµС‚ РЅР°СЃРєРѕР»СЊРєРѕ СЂРµС€РµРЅРёРµ Р±Р»РёР·РєРѕ Рє РѕС‚РІРµС‚Сѓ Рё РїСЂРёСЃРІР°РёРІР°РµС‚ Р·Р° СЌС‚Рѕ РѕС‡РєРё. Р§РµРј Р±РѕР»СЊС€Рµ РѕС‡РєРѕРІ, С‚РµРј Р±Р»РёР¶Рµ Рє РѕС‚РІРµС‚Сѓ. РњР°РєСЃРёРјСѓРј 255.
-; РџСЂРёРЅРёРјР°РµС‚ СѓРєР°Р·Р°С‚РµР»Рё РЅР° Solution РІ Solution score РІРѕР·РІСЂР°С‰Р°РµС‚ РѕС‚РІРµС‚.
+; Целевая функция. Определяет насколько решение близко к ответу и присваивает за это очки. Чем больше очков, тем ближе к ответу. Максимум 255.
+; Принимает указатели на Solution в Solution score возвращает ответ.
 calcFitnessScore proc
 	push ebp
 	mov ebp, esp
@@ -569,19 +613,14 @@ solutionPtr equ dword ptr[ebp+8]
 	push ebx
 	movzx ebx, (Solution ptr[eax]).x3
 	push ebx
-	call calcEquation
+	call calcResidual
 	cmp ah, 0
 	mov ecx, 255
 	jne @answer_not_correct
 	movzx ecx, al
-	push ecx
-	movzx ecx, D
-	push ecx
-	call subAbs
-	movzx ecx, al
 @answer_not_correct:
 
-; РїСЂРёР±Р°РІР»СЏРµС‚СЃСЏ РµРґРёРЅРёС†Р°, С‚Р°Рє РєР°Рє РґР°Р»РµРµ Р±СѓРґРµС‚ РїСЂРѕРёСЃС…РѕРґРёС‚СЊ РґРµР»РµРЅРёРµ, Р° РЅР° РЅРѕР»СЊ РґРµР»РёС‚СЊ РЅРµР»СЊР·СЏ
+; прибавляется единица, так как далее будет происходить деление, а на ноль делить нельзя
 	cmp ecx, 255
 	je @skip_inc
 	inc ecx
@@ -633,10 +672,10 @@ calcAllFitnessScore proc
 	ret
 calcAllFitnessScore endp
 
-; РІС‹СЃС‡РёС‚С‹РІР°РµС‚ СЃСЂРµРґРЅРµРµ Р·РЅР°С‡РµРЅРёРµ С†РµР»РµРІС‹С… Р·РЅР°С‡РµРЅРёР№.
-; РџСЂРёРЅРёРјР°РµС‚ РІ РєР°С‡РµСЃС‚РІРµ Р°СЂРіСѓРјРµРЅС‚Р° СѓРєР°Р·Р°С‚РµР»СЊ РєСѓРґР° Р±СѓРґРµС‚ Р·Р°РїРёСЃР°РЅ РѕС‚РІРµС‚.
-; РњР°СЃСЃРёРІ Р·РЅР°С‡РµРЅРёР№ Р±РµСЂС‘С‚ РѕС‚СЃСЋРґР° solutions РІ РіР»РѕР±Р°Р»СЊРЅРѕР№ РїРµСЂРµРјРµРЅРЅРѕР№.
-; Рђ РєРѕР»РёС‡РµСЃС‚РІРѕ РѕС‚ СЃСЋРґР° PopulationNum
+; высчитывает среднее значение целевых значений.
+; Принимает в качестве аргумента указатель куда будет записан ответ.
+; Массив значений берёт отсюда solutions в глобальной переменной.
+; А количество от сюда PopulationNum
 calcFintessScoreAverage proc
 	push ebp
 	mov ebp, esp
@@ -694,9 +733,9 @@ tmpFloatPtr equ ebp-4
 	ret 4
 calcFintessScoreAverage endp
 
-; Р’С‹СЃС‡РёС‚РІР°РµС‚ С€Р°РЅСЃ РЅР° СЂР°СЃРїСЂРѕСЃС‚СЂР°РЅРµРЅРёРµ РіРµРЅРѕРІ.
-; РџСЂРёРЅРёРјР°РµС‚ F_СЃСЂ С‚РёРїР° СѓРєР°Р·Р°С‚РµР»СЏ РЅР° Float.
-; Р—Р°РїРёСЃС‹РІР°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚ РІ solutions РїРѕР»Рµ chance
+; Высчитвает шанс на распространение генов.
+; Принимает F_ср типа указателя на Float.
+; Записывает результат в solutions поле chance
 calcChanceSpreadGens proc
 	push ebp
 	mov ebp, esp
@@ -816,7 +855,7 @@ printBits proc
 	
 	mov al, byte ptr[ebp+8]
 	outnum al,,b,
-	add esp, 4; bugfix, outnum РЅРµ РІРѕР·РІСЂР°С‰Р°РµС‚ СЃС‚СЌРє РІ РёСЃС…РѕРґРЅРѕРµ РїРѕР»РѕР¶РµРЅРёРµ
+	add esp, 4; bugfix, outnum не возвращает стэк в исходное положение
 	
 	pop edx
 	pop ecx
@@ -909,8 +948,8 @@ printGensX1 proc
 printGensX1 endp
 
 ;
-; РіРµРЅРµСЂРёСЂСѓРµС‚ СЃР»СѓС‡Р°Р№РЅС‹Рµ С‡РёСЃР»Р° РІ РґРёР°РїРѕР·РѕРЅРµ [startVal; endVal]
-; СЂРµР·СѓР»СЊС‚Р°С‚ РІ eax
+; генерирует случайные числа в диапозоне [startVal; endVal]
+; результат в eax
 rand proc
 	push ebp
 	mov ebp, esp
@@ -937,8 +976,8 @@ endVal equ dword ptr[ebp+8]
 	ret 4*2
 rand endp
 
-; РІС‹Р±РёСЂР°РµС‚ СЂРѕРґРёС‚РµР»РµР№ Р±СѓРґСѓС‰РёС… СЂРµС€РµРЅРёР№ РёР· РјР°СЃСЃРёРІР° solutions РїРѕ РїРѕР»СЏРј chance
-; Рё РєР»Р°РґС‘С‚ РёРЅРґРµРєСЃС‹ Р±СѓРґСѓС‰РёС… СЂРѕРґРёС‚РµР»РµР№ РІ parentOffsets
+; выбирает родителей будущих решений из массива solutions по полям chance
+; и кладёт индексы будущих родителей в parentOffsets
 chooseParents proc
 	push ebp
 	mov ebp, esp
@@ -954,7 +993,7 @@ chooseParents proc
 	mov esi, 0
 	mov edi, 0
 ;
-; РѕС‚Р±РёСЂР°РµРј СЂРµС€РµРЅРёСЏ, РіРґРµ (F_i/F_СЃСЂ) >= 1, С‚Рѕ РµСЃС‚СЊ С‚Рµ, РіРґРµ decimal С‡Р°СЃС‚СЊ > 0
+; отбираем решения, где (F_i/F_ср) >= 1, то есть те, где decimal часть > 0
 ;
 @repeat:
 	push ecx
@@ -977,7 +1016,7 @@ chooseParents proc
 	loop @repeat
 	
 ;
-; РѕС‚Р±РёСЂР°РµРј СЂРµС€РµРЅРёСЏ, РіРґРµ fract С‡Р°СЃС‚СЊ > 0
+; отбираем решения, где fract часть > 0
 ;
 	push ebp
 	mov ebp, esp
@@ -1003,7 +1042,7 @@ chooseParents proc
 	add eax, sizeof Solution
 	loop @repeat_
 	
-; СЃР»СѓС‡Р°Р№РЅС‹Рј РѕР±СЂР°Р·РѕРј РІС‹Р±РёСЂР°РµРј СЂРѕРґРёС‚РµР»СЏ РїРѕ РµРіРѕ РґРѕР»Рµ fract
+; случайным образом выбираем родителя по его доле fract
 	movzx ecx, PopulationNum
 	sub ecx, edi
 	jz @end
@@ -1063,9 +1102,9 @@ generateRandomMask proc
 	ret
 generateRandomMask endp
 
-; СЂР°Р·РґРµР»СЏРµС‚ РіРµРЅ РЅР° РґРІРµ С‡Р°СЃС‚Рё
-; РїРѕ РјРµС‚РѕРґСѓ РѕРґРЅРѕРєР»РµС‚РѕС‡РЅРѕРіРѕ СЃРєСЂРµС‰РёРІР°РЅРёСЏ
-; РїР°СЂРµРјРµС‚СЂС‹: РјР°СЃРєР° Рё РіРµРЅ (x1 РёР»Рё x2 РёР»Рё x3)
+; разделяет ген на две части
+; по методу одноклеточного скрещивания
+; пареметры: маска и ген (x1 или x2 или x3)
 splitGen proc
 	push ebp
 	mov ebp, esp
@@ -1090,7 +1129,7 @@ gen equ byte ptr[ebp+12]
 	ret 4*2
 splitGen endp
 
-; СЂР°Р·РґРµР»СЏРµС‚ РіРµРЅС‹ РёР· С…СЂРѕРјРѕСЃРѕРј, РґР»СЏ РґР°Р»СЊРЅРµР№С€РµРіРѕ СЃРєСЂРµС‰РёРІР°РЅРёСЏ
+; разделяет гены из хромосом, для дальнейшего скрещивания
 splitGens proc
 	push ebp
 	mov ebp, esp
@@ -1118,7 +1157,7 @@ maskX3 equ byte ptr[ebp-12]
 
 @repeat:
 	;
-	; СЂР°Р·РґРµР»СЏРµРј РіРµРЅ x1 РїРѕ РјРµС‚РѕРґСѓ РѕРґРЅРѕРєР»РµС‚РѕС‡РЅРѕРіРѕ СЃРєСЂРµС‰РёРІР°РЅРёРё
+	; разделяем ген x1 по методу одноклеточного скрещивании
 	;
 	mov eax, [edx]
 	movzx eax, (Solution ptr [eax]).x1
@@ -1130,7 +1169,7 @@ maskX3 equ byte ptr[ebp-12]
 	mov x1RightPart[esi], al
 	
 	;
-	; СЂР°Р·РґРµР»СЏРµРј РіРµРЅ x2 РїРѕ РјРµС‚РѕРґСѓ РѕРґРЅРѕРєР»РµС‚РѕС‡РЅРѕРіРѕ СЃРєСЂРµС‰РёРІР°РЅРёРё
+	; разделяем ген x2 по методу одноклеточного скрещивании
 	;
 	mov eax, [edx]
 	movzx eax, (Solution ptr [eax]).x2
@@ -1142,7 +1181,7 @@ maskX3 equ byte ptr[ebp-12]
 	mov x2RightPart[esi], al
 	
 	;
-	; СЂР°Р·РґРµР»СЏРµРј РіРµРЅ x3 РїРѕ РјРµС‚РѕРґСѓ РѕРґРЅРѕРєР»РµС‚РѕС‡РЅРѕРіРѕ СЃРєСЂРµС‰РёРІР°РЅРёРё
+	; разделяем ген x3 по методу одноклеточного скрещивании
 	;
 	mov eax, [edx]
 	movzx eax, (Solution ptr [eax]).x3
@@ -1186,11 +1225,11 @@ arrPtr equ dword ptr[ebp+12]
 	dec ecx
 	
 	mov esi, arrSize
-	sub esi, 2 ; РёРЅРґРµРєСЃ РЅР° РїСЂРµРґРїРѕСЃР»РµРґРЅРёР№ СЌР»РµРјРµРЅС‚
-	mov edx, arrPtr ; СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РЅР°С‡Р°Р»Рѕ РјР°СЃСЃРёРІР°
+	sub esi, 2 ; индекс на предпоследний элемент
+	mov edx, arrPtr ; указатель на начало массива
 	mov ebx, arrSize
 	dec ebx
-	add ebx, edx; ebx СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РєРѕРЅРµС† РјР°СЃСЃРёРІР°
+	add ebx, edx; ebx указатель на конец массива
 @repeat:
 	push ecx
 	
@@ -1501,13 +1540,13 @@ fmt_x db "x%d ",0
 numberX equ dword ptr[ebp+8]
 
 @repeat:
-	outstr "input "
+	outstr "введите "
 	mov ebx, esp
 	push numberX
 	push offset fmt_x
 	call crt_printf
 	mov esp, ebx
-	outstr "in range [0; 255]: "
+	outstr "в диапозоне [0; 255]: "
 	
 	inint eax
 	
@@ -1528,8 +1567,9 @@ inputX endp
 
 printIndividialTitle proc
 .data
-fmt_ind db "individual %d: ",10,0
+fmt_ind db "%d: ",10,0
 .code
+	outstr "особь "
 	push ebp
 	mov ebp, esp
 	push eax
@@ -1602,9 +1642,11 @@ inputPopulationNum proc
 	push ecx
 	push edx
 .data
-fmt_popnum db "input max population number in range [4; %u]: ",0
+fmt_popnum db "[4; %u]: ",0
 .code
 @repeat:
+	
+	outstr "введите количество популяций в диапозоне "
 	mov ebx, esp
 	push PopulationMaxNum
 	push offset fmt_popnum
@@ -1645,13 +1687,13 @@ fmt_a db "A%d ",0
 numberA equ dword ptr[ebp+8]
 
 @repeat:
-	outstr "input "
+	outstr "введите "
 	mov ebx, esp
 	push numberA
 	push offset fmt_a
 	call crt_printf
 	mov esp, ebx
-	outstr "in range [0; 255]: "
+	outstr "в диапозоне [0; 255]: "
 	
 	inint eax
 	
@@ -1710,7 +1752,7 @@ inputD proc
 	push edx
 
 @repeat:
-	outstr "input D: "
+	outstr "введите D: "
 	
 	inint eax
 	
@@ -1739,6 +1781,8 @@ generateRandomInput proc
 	push ebx
 	push ecx
 	push edx
+	
+	mov IterationMaxNum, -1
 	
 	mov A1, 1
 	mov A2, 1
@@ -1845,7 +1889,7 @@ inputMutation proc
 	push edx
 	
 @repeat:
-	outstr "input mutation chance in % [0; 100]: "
+	outstr "введите шанс мутации в % [0; 100]: "
 	inint eax
 	
 	jc @repeat
@@ -1875,7 +1919,7 @@ inputIterationMax proc
 	push edx
 	
 @repeat:
-	outstr "input max iterations [1; 4294967295]: "
+	outstr "введите максимальное число итераций [1; 4294967295]: "
 	inint eax
 	
 	jc @repeat
@@ -1926,11 +1970,11 @@ printAllParams proc
 	push ecx
 	push edx
 	
-	outnumln PopulationNum,,u,"population number: "
-	outnumln MutationChance,,u,"mutation chance in %: "
-	call printAllSolutions
+	outnumln PopulationNum,,u,"количество популяций: "
+	outnumln MutationChance,,u,"шанс мутации в %: "
+	call printNewSolutions
 	call printStrEquatation
-	outnumln IterationMaxNum,,u,"max iterations: "
+	outnumln IterationMaxNum,,u,"максимальное количество итераций: "
 	
 	pop edx
 	pop ecx
@@ -1949,7 +1993,7 @@ inManualOrRandom proc
 	push edx
 	
 @repeat:
-	outstr "manual input press - 0, random press - 1: "
+	outstr "ручной ввод параметров - 0, случайные параметры - 1: "
 	inint eax
 	jc @repeat
 	jz @repeat
@@ -1985,7 +2029,7 @@ initPopulation proc
 	call inputManaulAllParams
 @end:
 	call printAllParams
-	outstr "press any key to continue ..."
+	outstr "что бы продолжить нажмите любую клавишу ..."
 	call pressAnyKey
 	newline
 	
@@ -2004,14 +2048,13 @@ averageFloatPtr Float<>
 .code
 start:
 	;
-	; РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РЅР°С‡Р°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ СЃР»СѓС‡Р°Р№РЅРѕРіРѕ С‡РёСЃР»Р° С‚РµРєСѓС‰РёРј РІСЂРµРјРµРЅРµРј
+	; Инициализируем начальное значение случайного числа текущим временем
 	;
 	rdtsc
 	invoke nseed, eax
 	
 	lea ebx, [averageFloatPtr]
 
-	mov IterationMaxNum, 10
 	call initPopulation
 	
 	call IsAnswerReady
@@ -2019,8 +2062,8 @@ start:
 	jne @solution_found
 
 .data
-curSolTitle db "current solutions:",0
-newSolTitle db "new solutions:",0
+curSolTitle db "текущие решения:",0
+newSolTitle db "новые решения:",0
 .code
 @repeat:
 	mov edx, IterationCounter
@@ -2056,20 +2099,20 @@ newSolTitle db "new solutions:",0
 	loop @repeat
 @solution_not_found:
 
-	outstrln "solutions not found"
+	outstrln "нет подходящих решений"
 	call printStrEquatation
 	movzx eax, D
 	outintln eax,,"D = "
 	exit
 
 @solution_found:
-	outstrln "solution found!"
+	outstrln "решение найдено!"
 	call printStrEquatation
 	push 1
 	push eax
 	call printSolutionln
 	movzx eax, D
 	outintln eax,,"D = "
-	outintln IterationCounter,,"iteration = "
+	outintln IterationCounter,,"было количество итераций = "
 	exit
 end start
