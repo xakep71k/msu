@@ -1569,7 +1569,7 @@ printIndividialTitle proc
 .data
 fmt_ind db "%d: ",10,0
 .code
-	outstr "особь "
+	outstr "решение "
 	push ebp
 	mov ebp, esp
 	push eax
@@ -1646,7 +1646,7 @@ fmt_popnum db "[4; %u]: ",0
 .code
 @repeat:
 	
-	outstr "введите количество популяций в диапозоне "
+	outstr "введите количество решений в диапозоне "
 	mov ebx, esp
 	push PopulationMaxNum
 	push offset fmt_popnum
@@ -1970,7 +1970,7 @@ printAllParams proc
 	push ecx
 	push edx
 	
-	outnumln PopulationNum,,u,"количество популяций: "
+	outnumln PopulationNum,,u,"количество решений: "
 	outnumln MutationChance,,u,"шанс мутации в %: "
 	call printNewSolutions
 	call printStrEquatation
@@ -2113,6 +2113,6 @@ newSolTitle db "новые решения:",0
 	call printSolutionln
 	movzx eax, D
 	outintln eax,,"D = "
-	outintln IterationCounter,,"было количество итераций = "
+	outintln IterationCounter,,"пройдено количество итераций = "
 	exit
 end start
