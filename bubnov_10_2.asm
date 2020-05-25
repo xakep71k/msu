@@ -1726,11 +1726,11 @@ inputEquationParams proc
 	
 	push 2
 	call inputA
-	mov A1, al
+	mov A2, al
 	
 	push 3
 	call inputA
-	mov A1, al
+	mov A3, al
 	
 	call inputD
 	
