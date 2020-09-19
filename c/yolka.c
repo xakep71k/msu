@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 void printChars(char c, int length) {
     int i;
@@ -29,25 +30,25 @@ int main(int c, char**opts) {
     int height;
     if(c != 2) {
         printf("%s <n>\n", opts[0]);
-        return 1;
+        return EXIT_FAILURE;
     }
 
     if (1 != sscanf(opts[1], "%d", &countTreePart)) {
         puts("wrong number");
-        return 1;
+        return EXIT_FAILURE;
     }
     if(countTreePart < 0) {
         puts("the number cannot be negative");
-        return 1;
+        return EXIT_FAILURE;
     }
     if(countTreePart > 100) {
         puts("parts of tree cannot be more then 100");
-        return 1;
+        return EXIT_FAILURE;
     }
 
     const int maxWidth = 1+(countTreePart)*2;
     for(i = 0, height = 2; i < countTreePart; ++i, ++height) {
         printTreePart(height, maxWidth);
     }
-    return 0;
+    return EXIT_SUCCESS;
 }
