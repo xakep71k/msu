@@ -49,9 +49,9 @@ void printLine(int starsLength, int fullLength) {
     puts("");
 }
 
-void printTreePart(int heightPart, int maxWidth) {
+void printTreePart(int height, int maxWidth) {
     int starsCount;
-    for(starsCount = 1; heightPart; heightPart--, starsCount += 2){
+    for(starsCount = 1; height; height--, starsCount += 2){
         printLine(starsCount, maxWidth);
     }
 }
