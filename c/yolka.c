@@ -1,0 +1,53 @@
+#include <stdio.h>
+
+void printChars(char c, int length) {
+    int i;
+    for(i = 0; i < length; ++i) {
+        printf("%c", c);
+    }
+}
+
+void printLine(int starsLength, int fullLength) {
+    const int padding = (fullLength-starsLength)/2;
+    printChars(' ', padding);
+    printChars('*', starsLength);
+    printChars(' ', padding);
+    puts("");
+}
+
+void printTreePart(int heightPart, int maxWidth) {
+    int starsCount = 1;
+    for(;heightPart;heightPart--, starsCount += 2){
+        printLine(starsCount, maxWidth);
+    }
+}
+
+
+int main(int c, char**opts) {
+    int countTreePart;
+    int i;
+    int height;
+    if(c != 2) {
+        printf("%s <n>\n", opts[0]);
+        return 1;
+    }
+
+    if (1 != sscanf(opts[1], "%d", &countTreePart)) {
+        puts("wrong number");
+        return 1;
+    }
+    if(countTreePart < 0) {
+        puts("the number cannot be negative");
+        return 1;
+    }
+    if(countTreePart > 100) {
+        puts("parts of tree cannot be more then 100");
+        return 1;
+    }
+
+    const int maxWidth = 1+(countTreePart)*2;
+    for(i = 0, height = 2; i < countTreePart; ++i, ++height) {
+        printTreePart(height, maxWidth);
+    }
+    return 0;
+}
