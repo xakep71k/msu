@@ -1,28 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void printChars(char c, int length) {
-    int i;
-    for(i = 0; i < length; ++i) {
-        printf("%c", c);
-    }
-}
-
-void printLine(int starsLength, int fullLength) {
-    const int padding = (fullLength-starsLength)/2;
-    printChars(' ', padding);
-    printChars('*', starsLength);
-    printChars(' ', padding);
-    puts("");
-}
-
-void printTreePart(int heightPart, int maxWidth) {
-    int starsCount;
-    for(starsCount = 1; heightPart; heightPart--, starsCount += 2){
-        printLine(starsCount, maxWidth);
-    }
-}
-
+void printChars(char c, int length);
+void printLine(int starsLength, int fullLength);
+void printTreePart(int heightPart, int maxWidth);
 
 int main(int c, char**opts) {
     int countTreePart;
@@ -51,4 +32,26 @@ int main(int c, char**opts) {
         printTreePart(height, maxWidth);
     }
     return EXIT_SUCCESS;
+}
+
+void printChars(char c, int length) {
+    int i;
+    for(i = 0; i < length; ++i) {
+        printf("%c", c);
+    }
+}
+
+void printLine(int starsLength, int fullLength) {
+    const int padding = (fullLength-starsLength)/2;
+    printChars(' ', padding);
+    printChars('*', starsLength);
+    printChars(' ', padding);
+    puts("");
+}
+
+void printTreePart(int heightPart, int maxWidth) {
+    int starsCount;
+    for(starsCount = 1; heightPart; heightPart--, starsCount += 2){
+        printLine(starsCount, maxWidth);
+    }
 }
