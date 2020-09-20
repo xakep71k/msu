@@ -33,7 +33,7 @@ void printBits(unsigned int x) {
         } else {
             printf("0");
         }
-        x = x << 1;
+        x <<= 1;
     }
 }
 
