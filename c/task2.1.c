@@ -1,3 +1,6 @@
+/*
+ * task 2.1 Подсчитать корень методом Ньютона
+ */
 #include <stdio.h>
 #include <stdlib.h>
 
