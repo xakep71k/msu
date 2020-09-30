@@ -1,5 +1,5 @@
 /*
- * task 2.1 Подсчитать корень методом Ньютона
+ * task 2.1 Подсчитать корень методом Ньютона. Не использовать функции из math.h.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +13,7 @@ int main() {
 
     res = scanf("%lf", &eps);
     if(res != 1) {
+        fputs("incorrect input\n", stderr);
         return EXIT_FAILURE;
     }
 
@@ -22,6 +23,7 @@ int main() {
             return EXIT_SUCCESS;
         }
         if(res != 1) {
+            fputs("incorrect input\n", stderr);
             return EXIT_FAILURE;
         }
         printf("%.10f\n", mysqrt(eps, x));
