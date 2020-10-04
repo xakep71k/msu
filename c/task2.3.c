@@ -31,11 +31,14 @@ uint64_t iteration(int i) {
 }
 
 int main() {
-    int i;
-    if(1 != scanf("%d", &i) || i < 0 || i > MAX_I) {
-        fprintf(stderr, "incorrect input, value must be in range [0; %u]\n", MAX_I);
-        return EXIT_FAILURE;
+    int i, ret;
+    while(EOF != (ret = scanf("%d", &i))) {
+        if(ret != 1 || i < 0 || i > MAX_I) {
+            fprintf(stderr, "incorrect input, value must be in range [0; %u]\n", MAX_I);
+            return EXIT_FAILURE;
+        }
+        printf("%lu\n", iteration(i));
+        printf("%lu\n", recursion(i));
     }
-    printf("%lu\n", iteration(i));
-    printf("%lu\n", recursion(i));
+    return 0;
 }
