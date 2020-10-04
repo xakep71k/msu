@@ -21,12 +21,11 @@ uint64_t iteration(int i) {
     int k;
     if(i <= 1) {
         return i;
-    } else {
-        for(k = 2; k <= i ; ++k) {
-            f_i = f_0 + f_1;
-            f_0 = f_1;
-            f_1 = f_i;
-        }
+    }
+    for(k = 2; k <= i ; ++k) {
+        f_i = f_0 + f_1;
+        f_0 = f_1;
+        f_1 = f_i;
     }
     return f_i;
 }
