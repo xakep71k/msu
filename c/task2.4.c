@@ -3,17 +3,20 @@
  */
 
 #include <stdio.h>
-#define MAX_BUF_SIZE 4096
-#define MAX_BUF_SIZE_STR "4096"
+#include <stdlib.h>
+
+#define MAX_BUF_SIZE 4097
+#define MAX_BUF_SIZE_STR "4097"
 
 int main() {
+    int len;
     char buf[MAX_BUF_SIZE];
-    /*
-    while(fgets(buf, MAX_BUF_SIZE, stdin) != NULL) {
+    while(EOF != scanf("%"MAX_BUF_SIZE_STR"s%n", buf, &len)) {
+        if(len == MAX_BUF_SIZE) {
+            fputs("cannot read so big string\n", stderr);
+            return EXIT_FAILURE;
+        }
         puts(buf);
     }
-    */
-    scanf("%"MAX_BUF_SIZE_STR"s", buf);
-    puts(buf);
-    return 0;
+    return EXIT_SUCCESS;
 }
