@@ -32,7 +32,7 @@ uint64_t iteration(int i) {
 
 int main() {
     int i;
-    if(1 != scanf("%d", &i) || i > MAX_I) {
+    if(1 != scanf("%d", &i) || i < 0 || i > MAX_I) {
         fprintf(stderr, "incorrect input, value must be in range [0; %u]\n", MAX_I);
         return EXIT_FAILURE;
     }
