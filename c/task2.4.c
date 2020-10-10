@@ -44,7 +44,6 @@ int myisdigit(int ch) {
     return ch >= '0' && ch <= '9';
 }
 
-
 int eofString(const char* str) {
     while(isFloatSign(*str)) {
         ++str;
