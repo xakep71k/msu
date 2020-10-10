@@ -5,8 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define MAX_BUF_SIZE 4097
-#define MAX_BUF_SIZE_STR "4097"
+#define MAX_BUF_SIZE 256
+#define MAX_BUF_SIZE_STR "256"
+#define MAX_NUMBER_LEN 100
 
 double str2double(const char* str);
 void error(const char* msg);
@@ -59,6 +60,9 @@ Digit extractNumber(const char* str) {
     while(!eofstring(str) && myisdigit(*str)) {
        digit.value = digit.value * 10 + *str - '0';
        digit.counter++;
+       if(digit.counter > MAX_NUMBER_LEN) {
+           error("too long number");
+       }
        ++str;
     }
     return digit;
