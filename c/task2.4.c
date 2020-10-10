@@ -38,7 +38,7 @@ int isFloatSign(char ch) {
 typedef struct {
     double value;
     int counter;
-} Digit;
+} Number;
 
 int myisdigit(int ch) {
     return ch >= '0' && ch <= '9';
@@ -54,17 +54,17 @@ int eofString(const char* str) {
 //
 // extracting number until not digit character and representing it as a decimal value
 // 
-Digit extractNumber(const char* str) {
-    Digit digit = {0};
+Number extractNumber(const char* str) {
+    Number number = {0};
     while(!eofString(str) && myisdigit(*str)) {
-       digit.value = digit.value * 10 + *str - '0';
-       digit.counter++;
-       if(digit.counter > MAX_NUMBER_LEN) {
+       number.value = number.value * 10 + *str - '0';
+       number.counter++;
+       if(number.counter > MAX_NUMBER_LEN) {
            error("too long number");
        }
        ++str;
     }
-    return digit;
+    return number;
 }
 
 void error(const char* msg) {
@@ -75,7 +75,7 @@ void error(const char* msg) {
 double str2double(const char* str) {
     int depth;
     int isMantisaPositive = 0;
-    Digit result = {0}, afterDot = {0}, mantisa = {0};
+    Number result = {0}, afterDot = {0}, mantisa = {0};
 
 
     //
