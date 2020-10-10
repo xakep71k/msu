@@ -17,9 +17,9 @@ int main () {
     // типа char signed или unsigned
     //
     if((char)-1 < 0) {
-        puts("char is sign");
+        puts("char is signed");
     } else {
-        puts("char is unsign");
+        puts("char is unsigned");
     }
     return 0;
 }
