@@ -24,7 +24,7 @@ int main() {
     return EXIT_SUCCESS;
 }
 
-int isfloatsign(char ch) {
+int isFloatSign(char ch) {
     switch(ch) {
         case 'F':
         case 'f':
@@ -45,8 +45,8 @@ int myisdigit(int ch) {
 }
 
 
-int eofstring(const char* str) {
-    while(isfloatsign(*str)) {
+int eofString(const char* str) {
+    while(isFloatSign(*str)) {
         ++str;
     }
     return *str == 0;
@@ -57,7 +57,7 @@ int eofstring(const char* str) {
 // 
 Digit extractNumber(const char* str) {
     Digit digit = {0};
-    while(!eofstring(str) && myisdigit(*str)) {
+    while(!eofString(str) && myisdigit(*str)) {
        digit.value = digit.value * 10 + *str - '0';
        digit.counter++;
        if(digit.counter > MAX_NUMBER_LEN) {
@@ -140,7 +140,7 @@ double str2double(const char* str) {
     // checking for wrong format
     //
 
-    if(!eofstring(str)) {
+    if(!eofString(str)) {
         error("wrong float constant format");
     }
 
