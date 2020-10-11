@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <float.h>
 
+#define STR_INDIR(x) #x
+#define STR(x) STR_INDIR(x)
 #define MAX_BUF_SIZE 256
-#define MAX_BUF_SIZE_STR "256"
 #define MAX_NUMBER_LEN 100
 #define MAX_MATISSA 300
 
@@ -17,7 +18,7 @@ void error(const char* msg);
 int main() {
     int len;
     char buf[MAX_BUF_SIZE];
-    while(EOF != scanf("%"MAX_BUF_SIZE_STR"s%n", buf, &len)) {
+    while(EOF != scanf("%"STR(MAX_BUF_SIZE)"s%n", buf, &len)) {
         if(len == MAX_BUF_SIZE) {
             error("cannot read so big string");
         }
