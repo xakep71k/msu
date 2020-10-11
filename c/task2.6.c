@@ -42,7 +42,7 @@ int main() {
                 }
                 break;
             default:
-                return EXIT_SUCCESS;
+                error("BUG: action not found");
         }
     }
     return EXIT_SUCCESS;
