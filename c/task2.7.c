@@ -6,7 +6,9 @@ char curlex;
 void getlex(void);
 int expr(void);
 int add(void);
+int sub(void);
 int mult(void);
+int div(void);
 void error();
 
 int main() {
@@ -44,6 +46,15 @@ int expr() {
 }
 
 int add() {
+    int a = sub();
+    while (curlex == '-') {
+        getlex();
+        a -= sub();
+    }
+    return a;
+}
+
+int sub() {
     int a = mult();
     while (curlex == '*') {
         getlex();
@@ -52,7 +63,16 @@ int add() {
     return a;
 }
 
-int mult()
+int mult() {
+    int a = div();
+    while (curlex == '/') {
+        getlex();
+        a /= div();
+    }
+    return a;
+}
+
+int div()
 {
     int m;
     switch(curlex){
