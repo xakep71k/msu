@@ -18,6 +18,7 @@ int main() {
     getlex();
     result = expr();
     if(curlex != '\n') {
+        printf("=== %c\n", curlex);
         error();
     }
     printf("\n%d\n", result);
@@ -58,7 +59,7 @@ int sub() {
     int a = div();
     while (curlex == '/') {
         getlex();
-        a /= mult();
+        a /= div();
     }
     return a;
 }
@@ -67,7 +68,7 @@ int div() {
     int a = mult();
     while (curlex == '*') {
         getlex();
-        a *= div();
+        a *= mult();
     }
     return a;
 }
@@ -95,6 +96,7 @@ int mult()
                 break;
             }
         default:
+            printf("=== %c\n", curlex);
             error();
     }
     getlex(); 
