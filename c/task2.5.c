@@ -1,3 +1,6 @@
+/*
+ * удалить слова совпадающие с последним словом
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -122,6 +125,8 @@ StrList *deleteItemsEqual2Latest(StrList *list) {
 
     if(newList == NULL) {
         newList = latest;
+    } else {
+        newList->next = latest;
     }
 
     return newList;
