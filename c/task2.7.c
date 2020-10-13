@@ -55,24 +55,24 @@ int add() {
 }
 
 int sub() {
-    int a = mult();
-    while (curlex == '*') {
-        getlex();
-        a *= mult();
-    }
-    return a;
-}
-
-int mult() {
     int a = div();
     while (curlex == '/') {
         getlex();
-        a /= div();
+        a /= mult();
     }
     return a;
 }
 
-int div()
+int div() {
+    int a = mult();
+    while (curlex == '*') {
+        getlex();
+        a *= div();
+    }
+    return a;
+}
+
+int mult()
 {
     int m;
     switch(curlex){
