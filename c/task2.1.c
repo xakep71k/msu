@@ -17,6 +17,11 @@ int main() {
         return EXIT_FAILURE;
     }
 
+    if(eps <= 0) {
+        fputs("incorrect epsilon\n", stderr);
+        return EXIT_FAILURE;
+    }
+
     while(1) {
         res = scanf("%lf", &x);
         if(res == EOF) {
