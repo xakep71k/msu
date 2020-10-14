@@ -126,7 +126,7 @@ StrList *deleteItemsEqual2Latest(StrList *list) {
     if(newList == NULL) {
         newList = latest;
     } else {
-        newList->next = latest;
+        next->next = latest;
     }
 
     return newList;
