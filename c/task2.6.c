@@ -125,11 +125,10 @@ Tree *find(Tree *tree, unsigned int value) {
     return tree;
 }
 
-Do createDo(const char *line) {
-    int i;
+Do createDo(char ch, unsigned int value) {
     Do action;
 
-    switch(line[0]) {
+    switch(ch) {
         case '?':
             action.action = FIND;
             break;
@@ -143,37 +142,43 @@ Do createDo(const char *line) {
             error("not supported action");
     }
 
-    line++;
-    for(i = 0; line[i]; ++i) {
-        if(!isdigit(line[i]) && line[i] != '\n' && line[i] != '\r') {
-            error("wrong number");
-        }
-    }
-    action.value = strtoul(line, 0L, 10);
+    action.value = value;
     return action;
 }
 
 Do nextAction() {
-    static char buf[4096];
-    const size_t bufSize = sizeof(buf) * sizeof(char);
-    size_t len;
-    char *line;
+    int ret;
+    char ch;
+    unsigned int value;
     Do action;
+    action.action = STOP;
 
-    line = fgets(buf, bufSize, stdin);
-    if(line == NULL) {
-        action.action = STOP;
-    } else {
-        len = strlen(line);
-        if(len == 1) {
-            error("line empty");
+    do {
+        ret = scanf("%c", &ch);
+
+        if(ret == EOF) {
+            return action;
         }
-        if(len == bufSize - 1) {
-            error("line too long");
+
+        if(ret == 0) {
+            fputs("incorrect input\n", stderr);
+            exit(EXIT_FAILURE);
         }
-        action = createDo(line);
+    } while(isspace(ch) || ch == '\n');
+
+
+    ret = scanf("%u", &value);
+
+    if(ret == EOF) {
+        return action;
     }
-    return action;
+
+    if(ret != 1) {
+        fputs("incorrect input\n", stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    return createDo(ch, value);
 }
 
 void error(const char* msg) {
