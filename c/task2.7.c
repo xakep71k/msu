@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <setjmp.h>
 
 jmp_buf begin;
@@ -8,7 +9,9 @@ int expr(void);
 int add(void);
 int sub(void);
 int mult(void);
+int next(void);
 int div(void);
+int mypow(void);
 void error();
 
 int main() {
@@ -32,7 +35,7 @@ void getlex()
 void error(void)
 {
     printf("\nОШИБКА!\n");
-    while(getchar() != '\n');
+    //while(getchar() != '\n');
     longjmp(begin, 1);
 }
 
@@ -69,15 +72,29 @@ int sub() {
 }
 
 int div() {
-    int a = mult();
+    int a = mypow();
     while (curlex == '*') {
         getlex();
-        a *= mult();
+        a *= mypow();
     }
     return a;
 }
 
-int mult()
+int mypow() {
+    int b;
+    int a = next();
+    if(curlex == '^') {
+        getlex();
+        b = mypow();
+        if(b < 0) {
+            error();
+        }
+        a = (int)pow(a, b);
+    }
+    return a;
+}
+
+int next()
 {
     int m;
     switch(curlex){
