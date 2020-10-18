@@ -3,12 +3,12 @@
 
 class Body
 {
-    public:
+public:
     virtual int Area() const = 0;
     virtual ~Body() {}
 };
 
-class Box: public Body
+class Box : public Body
 {
 public:
     friend Box operator+(const Box &box1, const Box &box2);
@@ -20,40 +20,46 @@ public:
     }
 
     Box(int width) : m_width(width),
-                          m_height(width),
-                          m_length(width)
+                     m_height(width),
+                     m_length(width)
     {
-        if(m_width < 0 ) {
+        if (m_width < 0)
+        {
             throw std::runtime_error("width invalid");
         }
     }
 
     Box(int width, int height) : m_width(width),
-                                           m_height(height),
-                                           m_length(width)
+                                 m_height(height),
+                                 m_length(width)
     {
-        if(width < 0 ) {
+        if (width < 0)
+        {
             throw std::runtime_error("width invalid");
         }
 
-        if(height < 0 ) {
+        if (height < 0)
+        {
             throw std::runtime_error("height invalid");
         }
     }
 
     Box(int width, int height, int length) : m_width(width),
-                                                            m_height(height),
-                                                            m_length(length)
+                                             m_height(height),
+                                             m_length(length)
     {
-        if(width < 0 ) {
+        if (width < 0)
+        {
             throw std::runtime_error("width invalid");
         }
 
-        if(height < 0 ) {
+        if (height < 0)
+        {
             throw std::runtime_error("height invalid");
         }
 
-        if(length < 0 ) {
+        if (length < 0)
+        {
             throw std::runtime_error("length invalid");
         }
     }
@@ -108,15 +114,18 @@ public:
     // --a
     Box &operator--()
     {
-        if(m_width-1 < 0 ) {
+        if (m_width - 1 < 0)
+        {
             throw std::runtime_error("width invalid");
         }
 
-        if(m_height-1 < 0 ) {
+        if (m_height - 1 < 0)
+        {
             throw std::runtime_error("height invalid");
         }
 
-        if(m_length-1 < 0 ) {
+        if (m_length - 1 < 0)
+        {
             throw std::runtime_error("length invalid");
         }
 
@@ -155,14 +164,16 @@ class WBox : virtual public Box
 {
 public:
     WBox(int width, int height, int length, int winHeight, int winWidth) : Box(width, height, length),
-                                                                                                    m_winHeight(winHeight),
-                                                                                                    m_winWidth(winWidth)
+                                                                           m_winHeight(winHeight),
+                                                                           m_winWidth(winWidth)
     {
-        if(winHeight < 0 || winHeight > height) {
+        if (winHeight < 0 || winHeight > height)
+        {
             throw std::runtime_error("window height invalid");
         }
 
-        if(winWidth < 0 || winWidth > width) {
+        if (winWidth < 0 || winWidth > width)
+        {
             throw std::runtime_error("window width invalid");
         }
     }
@@ -190,7 +201,7 @@ public:
         int height,
         int length,
         int coverHeight) : Box(width, height, length),
-                                m_coverHeight(coverHeight)
+                           m_coverHeight(coverHeight)
     {
     }
 
@@ -218,7 +229,7 @@ public:
         int winHeight,
         int winWidth,
         int coverHeight) : WBox(width, height, length, winHeight, winWidth),
-                                HBox(width, height, length, coverHeight)
+                           HBox(width, height, length, coverHeight)
     {
     }
 
