@@ -142,7 +142,13 @@ public:
 
     virtual ~Box()
     {
-        std::cout << "~Box()" << std::endl;
+        //std::cout << "~Box()" << std::endl;
+    }
+
+    std::ostream &write(std::ostream &os) const
+    {
+        std::cout << "width = " << m_width << ", height = " << m_height << ", length = " << m_length;
+        return os;
     }
 
 private:
@@ -185,7 +191,59 @@ public:
 
     virtual ~WBox()
     {
-        std::cout << "~WBox()" << std::endl;
+        //std::cout << "~WBox()" << std::endl;
+    }
+
+    // a++
+    WBox operator++(int)
+    {
+        WBox box(*this);
+        this->operator++();
+        return box;
+    }
+
+    // ++a
+    WBox &operator++()
+    {
+        Box::operator++();
+        this->m_winHeight++;
+        this->m_winWidth++;
+        return *this;
+    }
+
+    // a--
+    WBox operator--(int)
+    {
+        WBox box(*this);
+        this->operator--();
+        return box;
+    }
+
+    // --a
+    WBox &operator--()
+    {
+        if (m_winHeight - 1 < 0)
+        {
+            throw std::runtime_error("window width invalid");
+        }
+
+        if (m_winWidth - 1 < 0)
+        {
+            throw std::runtime_error("window height invalid");
+        }
+
+        Box::operator--();
+
+        this->m_winHeight--;
+        this->m_winWidth--;
+        return *this;
+    }
+
+    std::ostream &write(std::ostream &os) const
+    {
+        Box::write(os);
+        std::cout << ", window width = " << m_winWidth << ", window height = " << m_winHeight;
+        return os;
     }
 
 private:
@@ -205,6 +263,44 @@ public:
     {
     }
 
+    // a++
+    HBox operator++(int)
+    {
+        HBox box(*this);
+        this->operator++();
+        return box;
+    }
+
+    // ++a
+    HBox &operator++()
+    {
+        Box::operator++();
+        this->m_coverHeight++;
+        return *this;
+    }
+
+    // a--
+    HBox operator--(int)
+    {
+        HBox box(*this);
+        this->operator--();
+        return box;
+    }
+
+    // --a
+    HBox &operator--()
+    {
+        if (m_coverHeight - 1 < 0)
+        {
+            throw std::runtime_error("cover height invalid");
+        }
+
+        Box::operator--();
+
+        this->m_coverHeight--;
+        return *this;
+    }
+
     virtual int Area() const
     {
         return Box::Area() + 2 * GetWidth() * GetLength() + 2 * GetWidth() * GetHeight() + 2 * GetLength() * GetHeight();
@@ -212,7 +308,19 @@ public:
 
     virtual ~HBox()
     {
-        std::cout << "~HBox()" << std::endl;
+        //std::cout << "~HBox()" << std::endl;
+    }
+
+    std::ostream &write(std::ostream &os) const
+    {
+        Box::write(os);
+        std::cout << ", cover height = " << m_coverHeight;
+        return os;
+    }
+
+    int GetCoverHeight() const
+    {
+        return m_coverHeight;
     }
 
 private:
@@ -228,9 +336,44 @@ public:
         int length,
         int winHeight,
         int winWidth,
-        int coverHeight) : WBox(width, height, length, winHeight, winWidth),
+        int coverHeight) : Box(width, height, length),
+                           WBox(width, height, length, winHeight, winWidth),
                            HBox(width, height, length, coverHeight)
     {
+    }
+
+    // a++
+    WHBox operator++(int)
+    {
+        WHBox box(*this);
+        this->operator++();
+        return box;
+    }
+
+    // ++a
+    WHBox &operator++()
+    {
+        WBox::operator++();
+        Box::operator--();
+        HBox::operator++();
+        return *this;
+    }
+
+    // a--
+    WHBox operator--(int)
+    {
+        WHBox box(*this);
+        this->operator--();
+        return box;
+    }
+
+    // --a
+    WHBox &operator--()
+    {
+        WBox::operator--();
+        Box::operator++();
+        HBox::operator--();
+        return *this;
     }
 
     virtual int Area() const
@@ -240,11 +383,60 @@ public:
 
     virtual ~WHBox()
     {
-        std::cout << "~WHBox()" << std::endl;
+        //std::cout << "~WHBox()" << std::endl;
+    }
+
+    std::ostream &write(std::ostream &os) const
+    {
+        WBox::write(os);
+        std::cout << ", cover height = " << GetCoverHeight();
+        return os;
     }
 };
 
+std::ostream &operator<<(std::ostream &os, const Box &box)
+{
+    return box.write(os);
+}
+
+std::ostream &operator<<(std::ostream &os, const HBox &box)
+{
+    return box.write(os);
+}
+
+std::ostream &operator<<(std::ostream &os, const WBox &box)
+{
+    return box.write(os);
+}
+
+std::ostream &operator<<(std::ostream &os, const WHBox &box)
+{
+    return box.write(os);
+}
+
 int main()
 {
+    WHBox whbox(5, 6, 7, 2, 2, 3);
+    std::cout << "orig: " << whbox << std::endl;
+    std::cout << "--- postfix inc" << std::endl;
+    std::cout << whbox++ << std::endl;
+    std::cout << "--- after inc\n" << whbox << std::endl;
+
+    std::cout << "--- prefix inc" << std::endl;
+    std::cout << ++whbox << std::endl;
+    std::cout << "--- after inc\n" << whbox << std::endl;
+
+    std::cout << "area: " << whbox.Area() << std::endl;
+    std::cout << "area expected: 685" << std::endl;
+
+    Box boxDefault;
+    std::cout << "--- box default ctor\n" << boxDefault << std::endl;
+    Box box1(12);
+    std::cout << "--- box ctor with width\n" << box1 << std::endl;
+    std::cout << "--- box area: " << box1.Area() << " expected: 720" << std::endl;
+    Box box2(12, 13);
+    std::cout << "--- box ctor with width height\n" << box2 << std::endl;
+    Box box3(12, 13, 14);
+    std::cout << "--- box ctor with width height length\n" << box3 << std::endl;
     return 0;
 }
