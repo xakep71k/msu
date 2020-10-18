@@ -6,7 +6,9 @@ template <class T>
 class MyStack
 {
 public:
-    MyStack() : m_size(1), m_index(0), m_storage(new T[m_size])
+    MyStack() : m_size(1),
+                m_index(0),
+                m_storage(new T[m_size])
     {
     }
 
@@ -99,9 +101,9 @@ void TestMyStack(const char *title)
     T arr[] = {10, 11, 12, 13, 14};
 
     MyStack<T> stack;
-    
 
-    std::cout << std::endl << "==== pushing:" << std::endl;
+    std::cout << std::endl
+              << "==== pushing:" << std::endl;
     for (int i = 0; i < sizeof(arr) / sizeof(T); ++i)
     {
         std::cout << "push " << arr[i] << std::endl;
@@ -109,9 +111,10 @@ void TestMyStack(const char *title)
         PrintStackInfo(stack);
     }
 
-    MyStack<T> newstack(stack); 
+    MyStack<T> newstack(stack);
 
-    std::cout << std::endl << "==== poping:" << std::endl;
+    std::cout << std::endl
+              << "==== poping:" << std::endl;
     for (int i = 0; i < sizeof(arr) / sizeof(T); ++i)
     {
         std::cout << "pop " << stack.Pop() << std::endl;
@@ -127,7 +130,8 @@ void TestMyStack(const char *title)
         std::cerr << "error: " << e.what() << std::endl;
     }
 
-    std::cout << std::endl << "==== poping copy of stack:" << std::endl;
+    std::cout << std::endl
+              << "==== poping copy of stack:" << std::endl;
     for (int i = 0; i < sizeof(arr) / sizeof(T); ++i)
     {
         std::cout << "pop " << newstack.Pop() << std::endl;
