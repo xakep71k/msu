@@ -422,12 +422,15 @@ int main()
     std::cout << whbox++ << std::endl;
     std::cout << "--- after inc\n" << whbox << std::endl;
 
+    std::cout << whbox-- << std::endl;
+    std::cout << "--- after dec\n" << whbox << std::endl;
+
     std::cout << "--- prefix inc" << std::endl;
     std::cout << ++whbox << std::endl;
     std::cout << "--- after inc\n" << whbox << std::endl;
 
     std::cout << "area: " << whbox.Area() << std::endl;
-    std::cout << "area expected: 685" << std::endl;
+    std::cout << "area expected: 527" << std::endl;
 
     Box boxDefault;
     std::cout << "--- box default ctor\n" << boxDefault << std::endl;
