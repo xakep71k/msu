@@ -3,11 +3,12 @@
 
 class Body
 {
+    public:
     virtual int Area() const = 0;
     virtual ~Body() {}
 };
 
-class Box
+class Box: public Body
 {
 public:
     friend Box operator+(const Box &box1, const Box &box2);
