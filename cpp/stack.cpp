@@ -14,7 +14,7 @@ public:
                                     m_index(stack.m_index),
                                     m_storage(new T[m_size])
     {
-        std::copy(stack.m_storage, stack.m_storage + stack.m_size, m_storage);
+        std::copy(stack.m_storage, stack.m_storage + stack.m_index, m_storage);
     }
 
     const MyStack &operator=(const MyStack &stack)
@@ -22,7 +22,7 @@ public:
         delete[] m_storage;
         m_index = stack.m_index;
         m_size = stack.m_size;
-        std::copy(stack.m_storage, stack.m_storage + stack.m_size, m_storage);
+        std::copy(stack.m_storage, stack.m_storage + stack.m_index, m_storage);
     }
 
     void Push(const T &t)
@@ -71,7 +71,7 @@ private:
         }
 
         T *newstorage = new T[newsize];
-        std::copy(m_storage, m_storage + m_size, newstorage);
+        std::copy(m_storage, m_storage + m_index, newstorage);
 
         delete[] m_storage;
         m_storage = newstorage;
