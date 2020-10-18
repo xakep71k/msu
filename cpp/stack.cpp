@@ -22,6 +22,7 @@ public:
         delete[] m_storage;
         m_index = stack.m_index;
         m_size = stack.m_size;
+        m_storage = new T[m_size];
         std::copy(stack.m_storage, stack.m_storage + stack.m_index, m_storage);
     }
 
