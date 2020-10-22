@@ -2,5 +2,6 @@
 *.o
 all_sorts_17_2
 project_17_2019/bubnov_17
-a.out
+*.out
+obj
 
