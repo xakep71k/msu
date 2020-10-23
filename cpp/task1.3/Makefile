@@ -1,6 +1,6 @@
 CPPFLAGS := -g -O0 -Wall
-TARGET := task_1_3.out
-SRC := slist.cpp add_task_1.3.cpp
+TARGET := a.out
+SRC := sstack.cpp main.cpp
 OBJ_DIR := obj
 OBJECTS := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
 
