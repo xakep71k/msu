@@ -11,7 +11,7 @@ test: $(TARGET)
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
-$(OBJ_DIR)/%.o: %.cpp
+$(OBJ_DIR)/%.o: %.cpp sstack.h
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 

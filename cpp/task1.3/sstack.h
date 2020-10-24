@@ -1,3 +1,6 @@
+#ifndef __SSTACK_H__
+#define __SSTACK_H__
+
 #include <memory>
 
 class RuntimeError : public std::runtime_error {
@@ -31,7 +34,21 @@ class SStack {
         int length() const;
         int capacity() const;
 
+        bool contains(const char*, bool ignoreSpaces=false);
+
+        void write(std::ostream& os) const;
+
    private:
         SStackImplP m_impl;
 };
 
+inline std::ostream& operator<<(std::ostream& os, const SStack& stack) {
+    stack.write(os);
+    return os;
+}
+
+inline void operator>>(const char *s, SStack& stack) {
+    stack.push(s);
+}
+
+#endif
