@@ -7,6 +7,48 @@
 
 #define throw_error(msg) throw RuntimeError(std::string(msg) + " at " + __FILE__ + ":" + std::to_string(__LINE__))
 
+namespace {
+bool isEqual(const char *s1, const char *s2, bool ignoreSpace) {
+    if(!s1 || !s2) {
+        return false;
+    }
+
+    while(*s1 && *s2) {
+        if(ignoreSpace) {
+            while(isspace(*s1))++s1;
+            while(isspace(*s2))++s2;
+        }
+
+        if(*s1 != *s2) {
+            return false;
+        }
+
+        if(ignoreSpace) {
+            if(*s1) {
+                ++s1;
+            }
+            if(*s2) {
+                ++s2;
+            }
+        } else {
+            ++s1;
+            ++s2;
+        }
+    }
+
+    return true;
+}
+
+char *mystrdup(const char *s) {
+    const size_t len = strlen(s);
+    char *newstr = new char[len+1];
+    std::copy(s, s+len, newstr);
+    newstr[len] = 0;
+    return newstr;
+}
+
+}
+
 class SStackImpl {
     public:
         size_t m_index;
@@ -36,11 +78,7 @@ class SStackImpl {
                 realloc(newlength);
             }
 
-            const size_t len = strlen(s);
-            char *newstr = new char[len+1];
-            std::copy(s, s+len, newstr);
-            newstr[len] = 0;
-            m_storage[m_index] = newstr;
+            m_storage[m_index] = mystrdup(s);
             ++m_index;
         }
 
@@ -72,11 +110,7 @@ class SStackImpl {
 
         void copyAllStrings(const SStackImpl &impl) {
             for(size_t i = 0; i < impl.m_index; ++i) {
-                size_t len = strlen(impl.m_storage[i]);
-                char *s = new char[len+1];
-                std::copy(impl.m_storage[i], impl.m_storage[i]+len, s);
-                s[len] = 0;
-                m_storage[i] = s;
+               m_storage[i] = mystrdup(impl.m_storage[i]); 
             }
         }
 
@@ -185,39 +219,6 @@ SStack::operator char*() const {
     tmp[0] = 0;
 
     return res;
-}
-
-namespace {
-bool isEqual(const char *s1, const char *s2, bool ignoreSpace) {
-    if(!s1 || !s2) {
-        return false;
-    }
-
-    while(*s1 && *s2) {
-        if(ignoreSpace) {
-            while(isspace(*s1))++s1;
-            while(isspace(*s2))++s2;
-        }
-
-        if(*s1 != *s2) {
-            return false;
-        }
-
-        if(ignoreSpace) {
-            if(*s1) {
-                ++s1;
-            }
-            if(*s2) {
-                ++s2;
-            }
-        } else {
-            ++s1;
-            ++s2;
-        }
-    }
-
-    return true;
-}
 }
 
 bool SStack::contains(const char *s, bool ignoreSpaces) {
