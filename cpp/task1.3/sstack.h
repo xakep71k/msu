@@ -24,7 +24,7 @@ class SStack {
 
         void push(const char *s);
         char *pop();
-        const char *peek();
+        const char *peek() const;
 
         SStack &operator=(const SStack &);
         SStack &operator+=(const SStack &);
@@ -35,7 +35,7 @@ class SStack {
         size_t length() const;
         size_t capacity() const;
 
-        bool contains(const char*, bool ignoreSpaces=false);
+        bool contains(const char*, bool ignoreSpaces=false) const;
 
         void write(std::ostream& os) const;
 

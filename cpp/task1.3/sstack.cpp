@@ -91,7 +91,7 @@ class SStackImpl {
             return m_storage[m_index];
         }
 
-        const char *peek() {
+        const char *peek() const {
             if (m_index == 0) {
                 throw_error("stack empty");
             }
@@ -152,7 +152,7 @@ char *SStack::pop() {
     return m_impl->pop();
 }
 
-const char *SStack::peek() {
+const char *SStack::peek() const {
     return m_impl->peek();
 }
 
@@ -221,7 +221,7 @@ SStack::operator char*() const {
     return res;
 }
 
-bool SStack::contains(const char *s, bool ignoreSpaces) {
+bool SStack::contains(const char *s, bool ignoreSpaces) const {
     for(size_t i = 0; i < m_impl->m_index; ++i) {
         if(isEqual(m_impl->m_storage[i], s, ignoreSpaces)) {
             return true;
