@@ -163,7 +163,6 @@ size_t SStack::capacity() const {
     return m_impl->m_length;
 }
 
-
 SStack::operator char*() const {
     size_t maxlen = 1;
 
@@ -188,6 +187,7 @@ SStack::operator char*() const {
     return res;
 }
 
+namespace {
 bool isEqual(const char *s1, const char *s2, bool ignoreSpace) {
     if(!s1 || !s2) {
         return false;
@@ -217,6 +217,7 @@ bool isEqual(const char *s1, const char *s2, bool ignoreSpace) {
     }
 
     return true;
+}
 }
 
 bool SStack::contains(const char *s, bool ignoreSpaces) {

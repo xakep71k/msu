@@ -2,6 +2,7 @@
 #define __SSTACK_H__
 
 #include <memory>
+#include <string>
 
 class RuntimeError : public std::runtime_error {
     public:
