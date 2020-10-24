@@ -31,8 +31,8 @@ class SStack {
         char *operator-(char*);
         operator char*() const;
 
-        int length() const;
-        int capacity() const;
+        size_t length() const;
+        size_t capacity() const;
 
         bool contains(const char*, bool ignoreSpaces=false);
 

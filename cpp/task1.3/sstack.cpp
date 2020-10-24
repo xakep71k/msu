@@ -9,8 +9,8 @@
 
 class SStackImpl {
     public:
-        int m_index;
-        int m_length;
+        size_t m_index;
+        size_t m_length;
         char** m_storage;
 
         SStackImpl(): m_index(0), m_length(0), m_storage(nullptr){
@@ -32,11 +32,11 @@ class SStackImpl {
 
         void push(const char *s) {
             if (m_index == m_length) {
-                const int newlength = m_length == 0 ? 1 : m_length * 2;
+                const size_t newlength = m_length == 0 ? 1 : m_length * 2;
                 realloc(newlength);
             }
 
-            const int len = strlen(s);
+            const size_t len = strlen(s);
             char *newstr = new char[len+1];
             std::copy(s, s+len, newstr);
             newstr[len] = 0;
@@ -61,7 +61,7 @@ class SStackImpl {
             return m_storage[m_index-1];
         }
 
-        void realloc(int newlen) {
+        void realloc(size_t newlen) {
             char **newstorage = new char*[newlen];
             std::copy(m_storage, m_storage + std::min(m_index, newlen), newstorage);
 
@@ -71,8 +71,8 @@ class SStackImpl {
         }
 
         void copyAllStrings(const SStackImpl &impl) {
-            for(int i = 0; i < impl.m_index; ++i) {
-                int len = strlen(impl.m_storage[i]);
+            for(size_t i = 0; i < impl.m_index; ++i) {
+                size_t len = strlen(impl.m_storage[i]);
                 char *s = new char[len+1];
                 std::copy(impl.m_storage[i], impl.m_storage[i]+len, s);
                 s[len] = 0;
@@ -81,7 +81,7 @@ class SStackImpl {
         }
 
        void clear() {
-           for(int i = 0; i < m_index; i++) {
+           for(size_t i = 0; i < m_index; i++) {
                delete []m_storage[i];
            }
            delete []m_storage;
@@ -129,7 +129,7 @@ SStack &SStack::operator=(const SStack &stack) {
 }
 
 SStack &SStack::operator+=(const SStack &stack) {
-    for(int i = 0; i < stack.length(); ++i) {
+    for(size_t i = 0; i < stack.length(); ++i) {
         this->push(stack.m_impl->m_storage[i]);
     }
 
@@ -138,7 +138,7 @@ SStack &SStack::operator+=(const SStack &stack) {
 
 SStack SStack::operator+(const SStack &stack) const {
     SStack newstack(*this);
-    for(int i = 0; i < stack.length(); ++i) {
+    for(size_t i = 0; i < stack.length(); ++i) {
         newstack.push(stack.m_impl->m_storage[i]);
     }
     
@@ -147,7 +147,7 @@ SStack SStack::operator+(const SStack &stack) const {
 
 char *SStack::operator-(char *s) {
     const char *tmp = pop();
-    const int len = strlen(tmp);
+    const size_t len = strlen(tmp);
     std::copy(tmp, tmp + len, s);
     s[len] = 0;
     delete []tmp;
@@ -155,19 +155,19 @@ char *SStack::operator-(char *s) {
     return s;
 }
 
-int SStack::length() const {
+size_t SStack::length() const {
     return m_impl->m_index;
 }
 
-int SStack::capacity() const {
+size_t SStack::capacity() const {
     return m_impl->m_length;
 }
 
 
 SStack::operator char*() const {
-    int maxlen = 1;
+    size_t maxlen = 1;
 
-    for(int i = 0; i < m_impl->m_index; ++i) {
+    for(size_t i = 0; i < m_impl->m_index; ++i) {
         maxlen += strlen(this->m_impl->m_storage[i]) + 1;
     }
     maxlen++;
@@ -175,9 +175,9 @@ SStack::operator char*() const {
     char *res = new char[maxlen];
     char *tmp = res;
 
-    for(int i = 0; i < m_impl->m_index; ++i) {
+    for(size_t i = 0; i < m_impl->m_index; ++i) {
         const char *s = this->m_impl->m_storage[i];
-        const int len = strlen(s);
+        const size_t len = strlen(s);
         std::copy(s, s+len, tmp);
         tmp = tmp + len;
         tmp[0] = '\n';
@@ -220,7 +220,7 @@ bool isEqual(const char *s1, const char *s2, bool ignoreSpace) {
 }
 
 bool SStack::contains(const char *s, bool ignoreSpaces) {
-    for(int i = 0; i < m_impl->m_index; ++i) {
+    for(size_t i = 0; i < m_impl->m_index; ++i) {
         if(isEqual(m_impl->m_storage[i], s, ignoreSpaces)) {
             return true;
         }
