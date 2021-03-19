@@ -5,3 +5,4 @@ project_17_2019/bubnov_17
 *.out
 obj
 valgrind-out.txt
+mylang/mylang
