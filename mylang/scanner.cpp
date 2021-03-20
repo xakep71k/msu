@@ -65,6 +65,7 @@ Lex Scanner::get_lex()
         case H:
             if (isspace(c))
             {
+                continue;
             }
             else if (isalpha(c))
             {
