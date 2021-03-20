@@ -37,7 +37,7 @@ class Scanner
     }
 
 public:
-    static char **TW, **TD;
+    static const char * TW[], *TD[];
     Scanner(const std::string &program)
     {
         fp = fopen(program.c_str(), "r");
