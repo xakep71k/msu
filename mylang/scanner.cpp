@@ -101,70 +101,72 @@ Lex Scanner::get_lex()
                     return Lex((type_of_lex)(j + (int)LEX_FIN), j);
                 else
                     throw c;
-                break;
-            case IDENT:
-                if (isalpha(c) || isdigit(c))
-                {
-                    buf.push_back(c);
-                }
+            }
+            break;
+        case IDENT:
+            if (isalpha(c) || isdigit(c))
+            {
+                buf.push_back(c);
+            }
+            else
+            {
+                ungc(c);
+                if (j = look(buf, TW))
+                    return Lex((type_of_lex)j, j);
                 else
                 {
-                    ungc(c);
-                    if (j = look(buf, TW))
-                        return Lex((type_of_lex)j, j);
-                    else
-                    {
-                        j = put(buf);
-                        return Lex(LEX_ID, j);
-                    }
-                    break;
-                case NUMB:
-                    if (isdigit(c))
-                    {
-                        d = d * 10 + (c - '0');
-                    }
-                    else
-                    {
-                        ungc(c);
-                        return Lex(LEX_NUM, d);
-                    }
-                    break;
-                case COM:
-                    if (c == '}')
-                    {
-                        CS = H;
-                    }
-                    else if (c == '@' || c == '{')
-                        throw c;
-                    break;
-                case ALE:
-                    if (c == '=')
-                    {
-                        buf.push_back(c);
-                        j = look(buf, TD);
-                        return Lex((type_of_lex)(j + (int)LEX_FIN), j);
-                    }
-                    else
-                    {
-                        ungc(c);
-                        j = look(buf, TD);
-                        return Lex((type_of_lex)(j + (int)LEX_FIN), j);
-                    }
-                    break;
-                case NEQ:
-                    if (c == '=')
-                    {
-                        buf.push_back(c);
-                        j = look(buf, TD);
-                        return Lex(LEX_NEQ, j);
-                    }
-                    else
-                    {
-                        throw '!';
-                    }
-                    break;
+                    j = put(buf);
+                    return Lex(LEX_ID, j);
                 }
             }
+            break;
+        case NUMB:
+            if (isdigit(c))
+            {
+                d = d * 10 + (c - '0');
+            }
+            else
+            {
+                ungc(c);
+                return Lex(LEX_NUM, d);
+            }
+            break;
+        case COM:
+            if (c == '}')
+            {
+                CS = H;
+            }
+            else if (c == '@' || c == '{')
+            {
+                throw c;
+            }
+            break;
+        case ALE:
+            if (c == '=')
+            {
+                buf.push_back(c);
+                j = look(buf, TD);
+                return Lex((type_of_lex)(j + (int)LEX_FIN), j);
+            }
+            else
+            {
+                ungc(c);
+                j = look(buf, TD);
+                return Lex((type_of_lex)(j + (int)LEX_FIN), j);
+            }
+            break;
+        case NEQ:
+            if (c == '=')
+            {
+                buf.push_back(c);
+                j = look(buf, TD);
+                return Lex(LEX_NEQ, j);
+            }
+            else
+            {
+                throw '!';
+            }
+            break;
         }
     }
     throw std::runtime_error("unexcepted EOF");
