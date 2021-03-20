@@ -38,5 +38,4 @@ const char *Scanner::TD[] = {
     "/",
     "<=",
     ">=",
-    NULL
-};
+    NULL};
