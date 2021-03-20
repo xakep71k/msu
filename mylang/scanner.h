@@ -31,6 +31,14 @@ class Scanner
             throw std::runtime_error(strerror(errno));
         }
     }
+    void ungc(char c)
+    {
+        ungetc(c, fp);
+        if (ferror(fp))
+        {
+            throw std::runtime_error(strerror(errno));
+        }
+    }
     bool eof()
     {
         return std::feof(fp);

@@ -87,7 +87,9 @@ Lex Scanner::get_lex()
                 CS = ALE;
             }
             else if (c == '@')
+            {
                 return Lex(LEX_FIN);
+            }
             else if (c == '!')
             {
                 buf.push_back(c);
@@ -108,7 +110,7 @@ Lex Scanner::get_lex()
                 }
                 else
                 {
-                    ungetc(c, fp);
+                    ungc(c);
                     if (j = look(buf, TW))
                         return Lex((type_of_lex)j, j);
                     else
@@ -124,7 +126,7 @@ Lex Scanner::get_lex()
                     }
                     else
                     {
-                        ungetc(c, fp);
+                        ungc(c);
                         return Lex(LEX_NUM, d);
                     }
                     break;
@@ -145,7 +147,7 @@ Lex Scanner::get_lex()
                     }
                     else
                     {
-                        ungetc(c, fp);
+                        ungc(c);
                         j = look(buf, TD);
                         return Lex((type_of_lex)(j + (int)LEX_FIN), j);
                     }
