@@ -57,10 +57,8 @@ Lex Scanner::get_lex()
     state CS = H;
     std::string buf;
     int d, j;
-    for (;;)
+    for (char c = gc(); c != EOF ; c = gc())
     {
-        const char c = gc();
-        // обработать EOF
         switch (CS)
         {
         case H:
@@ -167,4 +165,5 @@ Lex Scanner::get_lex()
             }
         }
     }
+    throw std::runtime_error("unexcepted EOF");
 }
