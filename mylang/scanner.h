@@ -12,7 +12,7 @@ class Scanner
 {
     FILE *fp;
     char c;
-    int look(const std::string &buf, char **list)
+    int look(const std::string &buf, const char **list)
     {
         int i = 0;
         while (list[i])
@@ -37,7 +37,7 @@ class Scanner
     }
 
 public:
-    static const char * TW[], *TD[];
+    static const char *TW[], *TD[];
     Scanner(const std::string &program)
     {
         fp = fopen(program.c_str(), "r");

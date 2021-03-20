@@ -11,20 +11,19 @@ class Ident
     type_of_lex type;
     bool assign;
     int value;
+
 public:
-    Ident():
-        declare(false),
-        assign(false)
+    Ident() : declare(false),
+              assign(false)
     {
     }
-    Ident(const char *n):
-        name(n),
-        declare(false),
-        assign(false)
+    Ident(const std::string &n) : name(n),
+                                  declare(false),
+                                  assign(false)
     {
     }
 
-    bool operator== (const std::string &s) const { return name == s; }
+    bool operator==(const std::string &s) const { return name == s; }
     const char *get_name() { return name.c_str(); }
     bool get_declare() { return declare; }
     void put_declare() { declare = true; }
@@ -36,6 +35,6 @@ public:
     void put_value(int v) { value = v; }
 };
 
-int put(const std::string & buf);
+int put(const std::string &buf);
 
 #endif

@@ -14,6 +14,7 @@ enum type_of_lex
     LEX_COMMA,
     LEX_GEQ,
     LEX_NUM,
+    LEX_NEQ,
     LEX_ID,
     POLIZ_LABEL,
     POLIZ_ADDRESS,
