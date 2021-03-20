@@ -8,7 +8,7 @@ int main()
 {
     try
     {
-        Scanner scanner("adasfd");
+        Scanner scanner("myprogram.txt");
     }
     catch(char c) 
     {
