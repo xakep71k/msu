@@ -10,6 +10,10 @@ int main()
     {
         Scanner scanner("adasfd");
     }
+    catch(char c) 
+    {
+        std::cerr << "unexcepted character " << c << std::endl;
+    }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
