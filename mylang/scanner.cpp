@@ -59,7 +59,8 @@ Lex Scanner::get_lex()
     int d, j;
     for (;;)
     {
-        gc();
+        const char c = gc();
+        // обработать EOF
         switch (CS)
         {
         case H:

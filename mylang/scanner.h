@@ -11,7 +11,6 @@
 class Scanner
 {
     FILE *fp;
-    char c;
     int look(const std::string &buf, const char **list)
     {
         int i = 0;
@@ -23,13 +22,14 @@ class Scanner
         }
         return 0;
     }
-    void gc()
+    char gc()
     {
-        c = fgetc(fp);
+        const char c = fgetc(fp);
         if (ferror(fp))
         {
             throw std::runtime_error(strerror(errno));
         }
+        return c;
     }
     void ungc(char c)
     {
