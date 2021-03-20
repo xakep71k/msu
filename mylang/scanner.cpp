@@ -57,7 +57,7 @@ Lex Scanner::get_lex()
     state CS = H;
     std::string buf;
     int d, j;
-    for (char c = gc(); c != EOF ; c = gc())
+    for (char c = gc(); c != EOF; c = gc())
     {
         switch (CS)
         {
@@ -159,7 +159,9 @@ Lex Scanner::get_lex()
                         return Lex(LEX_NEQ, j);
                     }
                     else
+                    {
                         throw '!';
+                    }
                     break;
                 }
             }
