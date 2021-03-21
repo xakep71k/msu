@@ -25,8 +25,8 @@ const char *Scanner::TW[] = {
     NULL};
 
 const char *Scanner::TD[] = {
-    ";",
     "@",
+    ";",
     ",",
     ":",
     ":=",
@@ -98,7 +98,7 @@ Lex Scanner::get_lex()
             {
                 buf.push_back(c);
                 if ((j = look(buf, TD)))
-                    return Lex((type_of_lex)(j + (int)LEX_FIN), j);
+                    return Lex((type_of_lex)(j + (int)LEX_FIN), j, buf);
                 else
                     throw c;
             }
@@ -112,11 +112,11 @@ Lex Scanner::get_lex()
             {
                 ungc(c);
                 if ((j = look(buf, TW)))
-                    return Lex((type_of_lex)j, j);
+                    return Lex((type_of_lex)j, j, buf);
                 else
                 {
                     j = put(buf);
-                    return Lex(LEX_ID, j);
+                    return Lex(LEX_ID, j, buf);
                 }
             }
             break;
@@ -128,7 +128,9 @@ Lex Scanner::get_lex()
             else
             {
                 ungc(c);
-                return Lex(LEX_NUM, d);
+                std::ostringstream os;
+                os << d;
+                return Lex(LEX_NUM, d, os.str());
             }
             break;
         case COM:
@@ -146,13 +148,13 @@ Lex Scanner::get_lex()
             {
                 buf.push_back(c);
                 j = look(buf, TD);
-                return Lex((type_of_lex)(j + (int)LEX_FIN), j);
+                return Lex((type_of_lex)(j + (int)LEX_FIN), j, buf);
             }
             else
             {
                 ungc(c);
                 j = look(buf, TD);
-                return Lex((type_of_lex)(j + (int)LEX_FIN), j);
+                return Lex((type_of_lex)(j + (int)LEX_FIN), j, buf);
             }
             break;
         case NEQ:
@@ -160,7 +162,7 @@ Lex Scanner::get_lex()
             {
                 buf.push_back(c);
                 j = look(buf, TD);
-                return Lex(LEX_NEQ, j);
+                return Lex(LEX_NEQ, j, buf);
             }
             else
             {

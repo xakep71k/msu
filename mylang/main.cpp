@@ -9,9 +9,13 @@ int main()
 {
     try
     {
-        Scanner scanner("myprogram.txt");
+        Scanner scanner("example_program.txt");
+        for (Lex lex = scanner.get_lex(); lex.get_type() != LEX_FIN; lex = scanner.get_lex())
+        {
+            std::cout << lex << std::endl;
+        }
     }
-    catch(char c) 
+    catch (char c)
     {
         std::cerr << "unexcepted character " << c << std::endl;
     }

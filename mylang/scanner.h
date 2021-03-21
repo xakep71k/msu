@@ -11,7 +11,7 @@
 class Scanner
 {
     FILE *fp;
-    int look(const std::string &buf, const char **list)
+    static int look(const std::string &buf, const char **list)
     {
         int i = 0;
         while (list[i])
