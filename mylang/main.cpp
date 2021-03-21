@@ -3,6 +3,7 @@
 #include "scanner.h"
 #include <stdexcept>
 #include <iostream>
+#include "parser.h"
 
 int main()
 {

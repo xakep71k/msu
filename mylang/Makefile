@@ -1,9 +1,9 @@
 CPPFLAGS := -g -O0 -Wall
 TARGET := mylang
-SRC := main.cpp scanner.cpp ident.cpp
+SRC := main.cpp scanner.cpp ident.cpp parser.cpp
 OBJ_DIR := obj
 OBJECTS := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
-HEADERS := ident.h lex.h scanner.h
+HEADERS := ident.h lex.h scanner.h parser.h
 
 all: $(TARGET)
 
