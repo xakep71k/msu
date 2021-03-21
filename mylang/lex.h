@@ -19,6 +19,7 @@ enum type_of_lex
     POLIZ_ADDRESS,
     POLIZ_GO,
     POLIZ_FGO,
+    /* order from LEX_FIN to the end make sense, see Scanner:get_lex() H-state */
     LEX_FIN,
     LEX_SEMICOLON,
     LEX_COMMA,
