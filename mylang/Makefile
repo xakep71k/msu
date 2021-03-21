@@ -1,18 +1,19 @@
-CPPFLAGS := -g -O0 -Wall
+CXXFLAGS := -g -O0 -Wall -MD
 TARGET := mylang
-SRC := main.cpp scanner.cpp ident.cpp parser.cpp
+SRCS := main.cpp scanner.cpp ident.cpp parser.cpp
 OBJ_DIR := obj
-OBJECTS := $(SRC:%.cpp=$(OBJ_DIR)/%.o)
-HEADERS := ident.h lex.h scanner.h parser.h
+OBJECTS := $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 
 all: $(TARGET)
 
 clean:
 	rm -rf $(OBJ_DIR) $(TARGET)
 
-$(OBJ_DIR)/%.o: %.cpp $(HEADERS)
+$(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(TARGET): $(OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $^
+
+-include $(OBJECTS:.o=.d)

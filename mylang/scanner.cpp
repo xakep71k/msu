@@ -111,7 +111,7 @@ Lex Scanner::get_lex()
             else
             {
                 ungc(c);
-                if (j = look(buf, TW))
+                if ((j = look(buf, TW)))
                     return Lex((type_of_lex)j, j);
                 else
                 {
