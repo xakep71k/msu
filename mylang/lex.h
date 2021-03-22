@@ -19,7 +19,7 @@ enum type_of_lex
     POLIZ_ADDRESS,
     POLIZ_GO,
     POLIZ_FGO,
-    /* order from LEX_FIN to the end make sense, see Scanner:get_lex() H-state */
+    /* order from LEX_FIN to the latest enum item make sense, see Scanner::get_lex() H-state */
     LEX_FIN,
     LEX_SEMICOLON,
     LEX_COMMA,
@@ -36,7 +36,6 @@ enum type_of_lex
     LEX_SLASH,
     LEX_LEQ,
     LEX_GEQ,
-    LEX_LIMIT,
 };
 
 class Lex
