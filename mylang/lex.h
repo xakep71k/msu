@@ -10,32 +10,45 @@ enum type_of_lex
     LEX_NULL,
     LEX_AND,
     LEX_BEGIN,
-    LEX_WRITE,
-    LEX_NUM,
-    LEX_NEQ,
-    LEX_ID,
+    LEX_BOOL,
+    LEX_DO,
+    LEX_ELSE,
+    LEX_END,
+    LEX_IF,
+    LEX_FALSE,
+    LEX_INT,
+    LEX_NOT,
+    LEX_OR,
     LEX_PROGRAM,
-    POLIZ_LABEL,
-    POLIZ_ADDRESS,
-    POLIZ_GO,
-    POLIZ_FGO,
-    /* order from LEX_FIN to the latest enum item make sense, see Scanner::get_lex() H-state */
+    LEX_READ,
+    LEX_THEN,
+    LEX_TRUE,
+    LEX_VAR,
+    LEX_WHILE,
+    LEX_WRITE,
     LEX_FIN,
     LEX_SEMICOLON,
     LEX_COMMA,
     LEX_COLON,
     LEX_ASSIGN,
-    LEX_LEFT_BRACKET,
-    LEX_RIGH_BRACKET,
+    LEX_LPAREN,
+    LEX_RPAREN,
     LEX_EQ,
-    LEX_LE,
-    LEX_GE,
+    LEX_LSS,
+    LEX_GTR,
     LEX_PLUS,
     LEX_MINUS,
-    LEX_ASTERISK,
+    LEX_TIMES,
     LEX_SLASH,
     LEX_LEQ,
+    LEX_NEQ,
     LEX_GEQ,
+    LEX_NUM,
+    LEX_ID,
+    POLIZ_LABEL,
+    POLIZ_ADDRESS,
+    POLIZ_GO,
+    POLIZ_FGO
 };
 
 class Lex
@@ -45,19 +58,14 @@ class Lex
     std::string s_lex;
 
 public:
-    Lex(type_of_lex t = LEX_NULL, int v = 0, const std::string &s = ""):
-        t_lex(t),
-        v_lex(v),
-        s_lex(s)
+    Lex(type_of_lex t = LEX_NULL, int v = 0, const std::string &s = "") : t_lex(t),
+                                                                          v_lex(v),
+                                                                          s_lex(s)
     {
     }
     type_of_lex get_type() const { return t_lex; }
     int get_value() const { return v_lex; }
-    friend std::ostream &operator<<(std::ostream &s, Lex l)
-    {
-        s << '(' << l.t_lex << ',' << l.v_lex << ", \"" << l.get_str_value() << "\"" <<  ");";
-        return s;
-    }
+    friend std::ostream & operator<< ( std::ostream &s, Lex l );
 
     const std::string &get_str_value() const
     {

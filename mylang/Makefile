@@ -1,6 +1,6 @@
 CXXFLAGS := -g -O0 -Wall -MD
 TARGET := mylang
-SRCS := main.cpp scanner.cpp ident.cpp parser.cpp
+SRCS := main.cpp scanner.cpp parser.cpp executer.cpp ident.cpp
 OBJ_DIR := obj
 OBJECTS := $(SRCS:%.cpp=$(OBJ_DIR)/%.o)
 

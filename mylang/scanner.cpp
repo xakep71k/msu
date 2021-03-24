@@ -4,6 +4,7 @@
 #include "lex.h"
 
 const char *Scanner::TW[] = {
+    "",
     "and",
     "begin",
     "bool",
@@ -111,8 +112,9 @@ Lex Scanner::get_lex()
             else
             {
                 ungc(c);
-                if ((j = look(buf, TW)))
+                if ((j = look(buf, TW))) {
                     return Lex((type_of_lex)j, j, buf);
+                }
                 else
                 {
                     j = put(buf);
@@ -173,3 +175,4 @@ Lex Scanner::get_lex()
     }
     throw std::runtime_error("unexcepted EOF");
 }
+

@@ -4,24 +4,33 @@
 #include <stdexcept>
 #include <iostream>
 #include "parser.h"
+#include "interpretator.h"
 
 int main()
 {
     try
     {
-        Scanner scanner("example_program.txt");
-        for (Lex lex = scanner.get_lex(); lex.get_type() != LEX_FIN; lex = scanner.get_lex())
-        {
-            std::cout << lex << std::endl;
-        }
+        Interpretator I("prog.txt");
+        I.interpretation();
     }
     catch (char c)
     {
-        std::cerr << "unexcepted character " << c << std::endl;
+        std::cout << "unexpected symbol " << c << std::endl;
+        return 1;
+    }
+    catch (Lex l)
+    {
+        std::cout << "unexpected lexeme" << l << std::endl;
+        return 1;
     }
     catch (const std::exception &e)
     {
         std::cerr << e.what() << std::endl;
+    }
+    catch (const char *source)
+    {
+        std::cout << source << std::endl;
+        return 1;
     }
     return 0;
 }

@@ -1,0 +1,6 @@
+program
+var myvar: int;
+begin
+write(myvar);
+end
+@

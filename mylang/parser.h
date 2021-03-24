@@ -6,6 +6,12 @@
 #include "lex.h"
 #include <vector>
 
+
+template <class T, class T_EL>
+void from_st ( T & st, T_EL & i ) {
+    i = st.top(); st.pop();
+}
+
 class Parser
 {
     Lex curr_lex;
