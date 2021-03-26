@@ -40,10 +40,6 @@ void Parser::analyze()
     {
         throw curr_lex;
     }
-    //for_each( poliz.begin(), poliz.end(), [](Lex l){ cout << l; });
-    /*for (Lex l : poliz)
-        std::cout << l;
-    std::cout << std::endl << "Yes!!!" << std::endl;*/
 }
 
 void Parser::P()
@@ -168,6 +164,7 @@ void Parser::B()
     }
 }
 
+// логические конструкции
 void Parser::S()
 {
     int pl0, pl1, pl2, pl3;
@@ -179,26 +176,23 @@ void Parser::S()
         eq_bool();
         pl2 = poliz.size();
         poliz.push_back(Lex());
-        poliz.push_back(Lex(POLIZ_FGO));
+        poliz.push_back(Lex(POLIZ_FGO, 0, "POLIZ_FGO"));
         if (c_type == LEX_THEN)
         {
             gl();
             S();
-            pl3 = poliz.size();
-            poliz.push_back(Lex());
 
-            poliz.push_back(Lex(POLIZ_GO));
-            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size());
             if (c_type == LEX_ELSE)
             {
+                pl3 = poliz.size();
+                poliz.push_back(Lex());
+                poliz.push_back(Lex(POLIZ_GO, 0, "POLIZ_GO"));
+
                 gl();
                 S();
-                poliz[pl3] = Lex(POLIZ_LABEL, poliz.size());
+                poliz[pl3] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
             }
-            else
-            {
-                throw curr_lex;
-            }
+            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
         }
         else
         {
@@ -271,14 +265,14 @@ void Parser::S()
     else if (c_type == LEX_ID)
     {
         check_id();
-        poliz.push_back(Lex(POLIZ_ADDRESS, c_val));
+        poliz.push_back(Lex(POLIZ_ADDRESS, c_val, "POLIZ_ADDRESS"));
         gl();
         if (c_type == LEX_ASSIGN)
         {
             gl();
             E();
             eq_type();
-            poliz.push_back(Lex(LEX_ASSIGN));
+            poliz.push_back(Lex(LEX_ASSIGN, 0, "LEX_ASSIGN"));
         }
         else
         {
@@ -333,7 +327,7 @@ void Parser::F()
     if (c_type == LEX_ID)
     {
         check_id();
-        poliz.push_back(Lex(LEX_ID, c_val));
+        poliz.push_back(Lex(LEX_ID, c_val, "LEX_ID"));
         gl();
     }
     else if (c_type == LEX_NUM)
@@ -345,13 +339,13 @@ void Parser::F()
     else if (c_type == LEX_TRUE)
     {
         st_lex.push(LEX_BOOL);
-        poliz.push_back(Lex(LEX_TRUE, 1));
+        poliz.push_back(Lex(LEX_TRUE, 1, "true"));
         gl();
     }
     else if (c_type == LEX_FALSE)
     {
         st_lex.push(LEX_BOOL);
-        poliz.push_back(Lex(LEX_FALSE, 0));
+        poliz.push_back(Lex(LEX_FALSE, 0, "false"));
         gl();
     }
     else if (c_type == LEX_NOT)
@@ -415,7 +409,7 @@ void Parser::check_op()
         st_lex.push(r);
     else
         throw "wrong types are in operation";
-    poliz.push_back(Lex(op));
+    poliz.push_back(Lex(op, 0, "op"));
 }
 
 void Parser::check_not()
@@ -423,7 +417,7 @@ void Parser::check_not()
     if (st_lex.top() != LEX_BOOL)
         throw "wrong type is in not";
     else
-        poliz.push_back(Lex(LEX_NOT));
+        poliz.push_back(Lex(LEX_NOT, 0, "LEX_NOT"));
 }
 
 void Parser::eq_type()

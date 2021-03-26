@@ -64,6 +64,7 @@ public:
     {
     }
     type_of_lex get_type() const { return t_lex; }
+    // value - для переменной это index в std::vector<Ident> TID;
     int get_value() const { return v_lex; }
     friend std::ostream & operator<< ( std::ostream &s, Lex l );
 

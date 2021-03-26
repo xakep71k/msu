@@ -6,6 +6,7 @@ f0 := 0;
 f1 := 1;
 k := 2;
 read(i);
+fi := i;
 
 if(i > 1) then begin
     while(k <= i) do begin
@@ -14,8 +15,6 @@ if(i > 1) then begin
         f1 := fi;
         k := k + 1
     end
-end else begin
-    fi := i
 end;
 
 write(fi)
