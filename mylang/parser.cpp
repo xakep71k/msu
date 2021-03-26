@@ -41,10 +41,9 @@ void Parser::analyze()
         throw curr_lex;
     }
     //for_each( poliz.begin(), poliz.end(), [](Lex l){ cout << l; });
-    for (Lex l : poliz)
+    /*for (Lex l : poliz)
         std::cout << l;
-    std::cout << std::endl
-              << "Yes!!!" << std::endl;
+    std::cout << std::endl << "Yes!!!" << std::endl;*/
 }
 
 void Parser::P()
@@ -190,7 +189,6 @@ void Parser::S()
 
             poliz.push_back(Lex(POLIZ_GO));
             poliz[pl2] = Lex(POLIZ_LABEL, poliz.size());
-
             if (c_type == LEX_ELSE)
             {
                 gl();

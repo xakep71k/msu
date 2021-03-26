@@ -1,6 +1,23 @@
 program
-var myvar1: int;
+var f0, f1, fi, k, i: int;
 begin
-read(myvar1);
-write(myvar1)
+
+f0 := 0;
+f1 := 1;
+k := 2;
+read(i);
+
+if(i > 1) then begin
+    while(k <= i) do begin
+        fi := f0 + f1;
+        f0 := f1;
+        f1 := fi;
+        k := k + 1
+    end
+end else begin
+    fi := i
+end;
+
+write(fi)
+
 end@
