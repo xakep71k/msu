@@ -67,6 +67,11 @@ void Executer::execute(std::vector<Lex> &poliz)
 
         case LEX_WRITE:
             from_st(args, j);
+            std::cout << j;
+            break;
+
+        case LEX_WRITELN:
+            from_st(args, j);
             std::cout << j << std::endl;
             break;
 

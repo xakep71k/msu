@@ -26,6 +26,7 @@ enum type_of_lex
     LEX_VAR,
     LEX_WHILE,
     LEX_WRITE,
+    LEX_WRITELN,
     LEX_FIN,
     LEX_SEMICOLON,
     LEX_COMMA,

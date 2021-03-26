@@ -10,7 +10,7 @@ extern std::vector<Ident> TID;
 std::ostream &operator<<(std::ostream &s, Lex l)
 {
     std::string t;
-    if (l.t_lex <= LEX_WRITE)
+    if (l.t_lex <= LEX_WRITELN)
         t = Scanner::TW[l.t_lex];
     else if (l.t_lex >= LEX_FIN && l.t_lex <= LEX_GEQ)
         t = Scanner::TD[l.t_lex - LEX_FIN];
@@ -244,8 +244,9 @@ void Parser::S()
         else
             throw curr_lex;
     } //end read
-    else if (c_type == LEX_WRITE)
+    else if (c_type == LEX_WRITE || c_type == LEX_WRITELN)
     {
+        const type_of_lex lex_write = c_type; 
         gl();
         if (c_type == LEX_LPAREN)
         {
@@ -254,7 +255,7 @@ void Parser::S()
             if (c_type == LEX_RPAREN)
             {
                 gl();
-                poliz.push_back(Lex(LEX_WRITE));
+                poliz.push_back(Lex(lex_write));
             }
             else
                 throw curr_lex;

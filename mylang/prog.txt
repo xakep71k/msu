@@ -17,6 +17,6 @@ if(i > 1) then begin
     end
 end;
 
-write(fi)
+writeln(fi)
 
 end@
