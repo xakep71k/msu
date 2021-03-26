@@ -24,6 +24,7 @@ const char *Scanner::TW[] = {
     "while",
     "write",
     "writeln",
+    "case",
     NULL};
 
 const char *Scanner::TD[] = {
