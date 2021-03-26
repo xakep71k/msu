@@ -34,7 +34,6 @@ std::ostream &operator<<(std::ostream &s, Lex l)
 
 void Parser::analyze()
 {
-    puts("=========analyze");
     gl();
     P();
     if (c_type != LEX_FIN)
@@ -50,7 +49,6 @@ void Parser::analyze()
 
 void Parser::P()
 {
-    puts("=========P");
     if (c_type == LEX_PROGRAM)
     {
         gl();
@@ -59,6 +57,12 @@ void Parser::P()
     {
         throw curr_lex;
     }
+
+    // тут объявления переменных
+    /*
+    program
+    var <имя>: int|bool[, <имя>: int|bool];
+    */
     D1();
     if (c_type == LEX_SEMICOLON)
     {
@@ -68,12 +72,13 @@ void Parser::P()
     {
         throw curr_lex;
     }
+
+    // логика программы
     B();
 }
 
 void Parser::D1()
 {
-    puts("=========D1");
     if (c_type == LEX_VAR)
     {
         gl();
@@ -92,7 +97,6 @@ void Parser::D1()
 
 void Parser::D()
 {
-    puts("=========D");
     if (c_type != LEX_ID)
     {
         throw curr_lex;
@@ -141,7 +145,6 @@ void Parser::D()
 
 void Parser::B()
 {
-    puts("=========B");
     if (c_type == LEX_BEGIN)
     {
         gl();
@@ -168,7 +171,6 @@ void Parser::B()
 
 void Parser::S()
 {
-    puts("=========S");
     int pl0, pl1, pl2, pl3;
 
     if (c_type == LEX_IF)

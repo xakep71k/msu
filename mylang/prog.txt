@@ -1,6 +1,6 @@
 program
-var myvar: int;
+var myvar1: int;
 begin
-write(myvar);
-end
-@
+read(myvar1);
+write(myvar1)
+end@

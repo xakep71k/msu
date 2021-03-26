@@ -64,13 +64,13 @@ void Executer::execute ( std::vector<Lex> & poliz ) {
                 int k;
                 from_st ( args, i );
                 if ( TID[i].get_type () == LEX_INT ) {
-                    std::cout << "Input int value for" << TID[i].get_name () << std::endl;
+                    std::cout << "Input int value for " << TID[i].get_name () << std::endl;
                     std::cin >> k;
                 }
                 else {
                     std::string j;
                     while (1) {
-                        std::cout << "Input boolean value (true or false) for" << TID[i].get_name() << std::endl;
+                        std::cout << "Input boolean value (true or false) for " << TID[i].get_name() << std::endl;
                         std::cin >> j;
                         if ( j != "true" && j != "false" ) {
                             std::cout << "Error in input:true/false" << std::endl;
