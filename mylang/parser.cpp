@@ -426,22 +426,32 @@ void Parser::check_const_case_type(type_of_lex case_type)
 
 int Parser::get_case_val()
 {
-    switch(c_type) {
-        case LEX_TRUE:
+    switch (c_type)
+    {
+    case LEX_TRUE:
         return 1;
-        case LEX_FALSE:
+    case LEX_FALSE:
         return 0;
-        default:
+    default:
         return c_val;
     }
 }
 
+void Parser::repeat_case(int pl0, int pl1)
+{
+    // повторяем выражение из case(<выражение>)
+    std::vector<Lex> tmp;
+    tmp.assign(poliz.begin() + pl0, poliz.begin() + pl1);
+    poliz.insert(poliz.end(), tmp.begin(), tmp.end());
+}
+
 void Parser::case_of()
 {
-    int pl0, pl1, pl2;
+    int pl2;
     std::stack<int> labels;
-    
-    pl0 = poliz.size();
+    std::set<int> consts;
+
+    const int pl0 = poliz.size();
     // забираем выражение внутри скобок case(<выражение>)
     gl();
     E();
@@ -450,25 +460,46 @@ void Parser::case_of()
     {
         // все константы дожны быть одного типа с выражением case(<выражение>)
         const type_of_lex case_type = st_lex.top();
-        std::set<int> consts;
 
-        pl1 = poliz.size();
+        const int pl1 = poliz.size();
         gl();
-        for(;;)
+        for (;;)
         {
-            // берём константу <константа>:
-            check_const_case_type(case_type);
-
-            // проверяем была ли она уже добавлена
-            auto result = consts.insert(c_val);
-            if (!result.second)
+            std::vector<Lex> const_lexes;
+            for (;;)
             {
-                throw "case/of has duplicate branch";
+                // берём константу <константа>:
+                check_const_case_type(case_type);
+
+                // проверяем была ли она уже добавлена
+                auto result = consts.insert(c_val);
+                if (!result.second)
+                {
+                    throw "case/of has duplicate branch";
+                }
+                const_lexes.push_back(Lex(c_type, get_case_val(), c_str_val));
+
+                gl();
+                if (c_type != LEX_COMMA)
+                {
+                    break;
+                }
+
+                // забираем следующую константу
+                gl();
             }
 
-            // добавляем сравнение с константой
-            poliz.push_back(Lex(c_type, get_case_val(), c_str_val));
-            poliz.push_back(Lex(LEX_EQ, 0, "case EQ"));
+            for (auto it = const_lexes.begin(); it != const_lexes.end(); it++)
+            {
+                // добавляем сравнение с константой
+                poliz.push_back(*it);
+                poliz.push_back(Lex(LEX_EQ, 0, "case EQ"));
+                if (it != const_lexes.begin())
+                {
+                    repeat_case(pl0, pl1);
+                    poliz.push_back(Lex(LEX_OR, 0, "LEX_OR"));
+                }
+            }
 
             // аналогично LEX_IF, если условие в case не совпадает
             // с константой, то идём дальше
@@ -477,7 +508,6 @@ void Parser::case_of()
             poliz.push_back(Lex(POLIZ_FGO, 0, "FGO"));
 
             // пропускаем символ :
-            gl();
             if (c_type != LEX_COLON)
             {
                 throw curr_lex;
@@ -486,24 +516,21 @@ void Parser::case_of()
             // тело ветки case/of
             gl();
             S();
-            
+
             // сюда запишется адрес выхода из ветки
-            poliz.push_back(Lex(POLIZ_LABEL, -1, "BREAK CASE"));
             labels.push(poliz.size());
+            poliz.push_back(Lex(POLIZ_LABEL, -1, "BREAK CASE"));
             poliz.push_back(Lex(POLIZ_GO, 0, "GO"));
 
             // если ветка не подходит, то идём к следующей
             poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
-            
-            if(c_type == LEX_END)
+
+            if (c_type == LEX_END)
             {
                 break;
             }
 
-            // повторяем выражение из case(<выражение>)
-            std::vector<Lex> tmp;
-            tmp.assign(poliz.begin()+pl0, poliz.begin()+pl1);
-            poliz.insert(poliz.end(), tmp.begin(), tmp.end());
+            repeat_case(pl0, pl1);
         }
 
         if (consts.size() == 0)
@@ -512,7 +539,8 @@ void Parser::case_of()
         }
 
         // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
-        while(!labels.empty()) {
+        while (!labels.empty())
+        {
             poliz[labels.top()] = Lex(POLIZ_LABEL, poliz.size(), "BREAK CASE");
             labels.pop();
         }

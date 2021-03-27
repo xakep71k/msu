@@ -35,6 +35,7 @@ class Parser
     void check_id();
     void check_op();
     void case_of();
+    void repeat_case(int pl0, int pl1);
     int get_case_val();
     void check_const_case_type(type_of_lex case_type);
     void check_not();

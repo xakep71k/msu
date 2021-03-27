@@ -10,7 +10,7 @@ int main()
 {
     try
     {
-        Interpretator I("prog.txt");
+        Interpretator I("prog.pas");
         I.interpretation();
     }
     catch (char c)

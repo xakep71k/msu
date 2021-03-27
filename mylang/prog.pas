@@ -2,17 +2,17 @@ program
 var f0, f1, fi, k, i: int, b: bool;
 begin
 
-i := 2;
+i := 1;
 case(i) of
-    1: begin
+    2,1,3: begin
         writeln(22)
     end
-    2: begin
+    4: begin
         writeln(33)
     end
 end;
 
-b := true;
+b := false;
 case(b) of
     true: begin
         writeln(44)
