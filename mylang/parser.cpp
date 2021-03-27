@@ -10,7 +10,7 @@ extern std::vector<Ident> TID;
 std::ostream &operator<<(std::ostream &s, Lex l)
 {
     std::string t;
-    if (l.t_lex <= LEX_WRITELN)
+    if (l.t_lex <= LEX_OF)
         t = Scanner::TW[l.t_lex];
     else if (l.t_lex >= LEX_FIN && l.t_lex <= LEX_GEQ)
         t = Scanner::TD[l.t_lex - LEX_FIN];
@@ -199,6 +199,10 @@ void Parser::S()
             throw curr_lex;
         }
     } //end if
+    else if (c_type == LEX_CASE)
+    {
+        case_of();
+    }
     else if (c_type == LEX_WHILE)
     {
         pl0 = poliz.size();
@@ -246,7 +250,7 @@ void Parser::S()
     } //end read
     else if (c_type == LEX_WRITE || c_type == LEX_WRITELN)
     {
-        const type_of_lex lex_write = c_type; 
+        const type_of_lex lex_write = c_type;
         gl();
         if (c_type == LEX_LPAREN)
         {
@@ -383,6 +387,141 @@ void Parser::dec(type_of_lex type)
             TID[i].put_declare();
             TID[i].put_type(type);
         }
+    }
+}
+
+void Parser::check_const_case_type(type_of_lex case_type)
+{
+    if (case_type == LEX_BOOL)
+    {
+        switch (c_type)
+        {
+        case LEX_FALSE:
+            break;
+        case LEX_TRUE:
+            break;
+        default:
+            std::ostringstream os;
+            os << "wrong const type of case: must be true/false: " << c_type;
+            throw std::runtime_error(os.str());
+        }
+    }
+    else if (case_type == LEX_INT)
+    {
+        switch (c_type)
+        {
+        case LEX_NUM:
+            break;
+        default:
+            std::ostringstream os;
+            os << "wrong const type of case: must be num: " << c_type;
+            throw std::runtime_error(os.str());
+        }
+    }
+    else
+    {
+        throw "wrong case type";
+    }
+}
+
+int Parser::get_case_val()
+{
+    switch(c_type) {
+        case LEX_TRUE:
+        return 1;
+        case LEX_FALSE:
+        return 0;
+        default:
+        return c_val;
+    }
+}
+
+void Parser::case_of()
+{
+    int pl0, pl1, pl2;
+    std::stack<int> labels;
+    
+    pl0 = poliz.size();
+    // забираем выражение внутри скобок case(<выражение>)
+    gl();
+    E();
+
+    if (c_type == LEX_OF)
+    {
+        // все константы дожны быть одного типа с выражением case(<выражение>)
+        const type_of_lex case_type = st_lex.top();
+        std::set<int> consts;
+
+        pl1 = poliz.size();
+        gl();
+        for(;;)
+        {
+            // берём константу <константа>:
+            check_const_case_type(case_type);
+
+            // проверяем была ли она уже добавлена
+            auto result = consts.insert(c_val);
+            if (!result.second)
+            {
+                throw "case/of has duplicate branch";
+            }
+
+            // добавляем сравнение с константой
+            poliz.push_back(Lex(c_type, get_case_val(), c_str_val));
+            poliz.push_back(Lex(LEX_EQ, 0, "case EQ"));
+
+            // аналогично LEX_IF, если условие в case не совпадает
+            // с константой, то идём дальше
+            pl2 = poliz.size();
+            poliz.push_back(Lex());
+            poliz.push_back(Lex(POLIZ_FGO, 0, "FGO"));
+
+            // пропускаем символ :
+            gl();
+            if (c_type != LEX_COLON)
+            {
+                throw curr_lex;
+            }
+
+            // тело ветки case/of
+            gl();
+            S();
+            
+            // сюда запишется адрес выхода из ветки
+            poliz.push_back(Lex(POLIZ_LABEL, -1, "BREAK CASE"));
+            labels.push(poliz.size());
+            poliz.push_back(Lex(POLIZ_GO, 0, "GO"));
+
+            // если ветка не подходит, то идём к следующей
+            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
+            
+            if(c_type == LEX_END)
+            {
+                break;
+            }
+
+            // повторяем выражение из case(<выражение>)
+            std::vector<Lex> tmp;
+            tmp.assign(poliz.begin()+pl0, poliz.begin()+pl1);
+            poliz.insert(poliz.end(), tmp.begin(), tmp.end());
+        }
+
+        if (consts.size() == 0)
+        {
+            throw "case/of must have at least one const";
+        }
+
+        // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
+        while(!labels.empty()) {
+            poliz[labels.top()] = Lex(POLIZ_LABEL, poliz.size(), "BREAK CASE");
+            labels.pop();
+        }
+
+        gl();
+    }
+    else
+    {
+        throw curr_lex;
     }
 }
 

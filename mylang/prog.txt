@@ -1,6 +1,26 @@
 program
-var f0, f1, fi, k, i: int;
+var f0, f1, fi, k, i: int, b: bool;
 begin
+
+i := 2;
+case(i) of
+    1: begin
+        writeln(22)
+    end
+    2: begin
+        writeln(33)
+    end
+end;
+
+b := true;
+case(b) of
+    true: begin
+        writeln(44)
+    end
+    false: begin
+        writeln(55)
+    end
+end;
 
 f0 := 0;
 f1 := 1;

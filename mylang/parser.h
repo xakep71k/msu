@@ -5,6 +5,7 @@
 #include "scanner.h"
 #include "lex.h"
 #include <vector>
+#include <set>
 
 
 template <class T, class T_EL>
@@ -17,6 +18,7 @@ class Parser
     Lex curr_lex;
     type_of_lex c_type;
     int c_val;
+    std::string c_str_val;
     Scanner scan;
     std::stack<int> st_int;
     std::stack<type_of_lex> st_lex;
@@ -32,6 +34,9 @@ class Parser
     void dec(type_of_lex type);
     void check_id();
     void check_op();
+    void case_of();
+    int get_case_val();
+    void check_const_case_type(type_of_lex case_type);
     void check_not();
     void eq_type();
     void eq_bool();
@@ -41,6 +46,7 @@ class Parser
         curr_lex = scan.get_lex();
         c_type = curr_lex.get_type();
         c_val = curr_lex.get_value();
+        c_str_val = curr_lex.get_str_value();
     }
 
 public:

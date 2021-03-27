@@ -28,6 +28,7 @@ enum type_of_lex
     LEX_WRITE,
     LEX_WRITELN,
     LEX_CASE,
+    LEX_OF,
     LEX_FIN,
     LEX_SEMICOLON,
     LEX_COMMA,
