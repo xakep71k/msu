@@ -20,8 +20,10 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = TID[l.v_lex].get_name();
     else if (l.t_lex == POLIZ_LABEL)
         t = "Label";
-    else if (l.t_lex == POLIZ_LABEL)
+    else if (l.t_lex == POLIZ_CASE_EQ)
         t = "case EQ";
+    else if (l.t_lex == POLIZ_CASE_SAVE)
+        t = "case save";
     else if (l.t_lex == POLIZ_CASE_NOTFOUND)
         t = "Label";
     else if (l.t_lex == POLIZ_ADDRESS)
@@ -30,6 +32,8 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = "!";
     else if (l.t_lex == POLIZ_FGO)
         t = "!F";
+    else if (l.t_lex == POLIZ_CASE_FGO)
+        t = "case !F";
     else
         throw l;
     s << '(' << t << ',' << l.v_lex << ");" << std::endl;
@@ -453,6 +457,7 @@ void Parser::case_of()
 
     if (c_type == LEX_OF)
     {
+        poliz.push_back(Lex(POLIZ_CASE_SAVE, 0, "case save"));
         // все константы дожны быть одного типа с выражением case(<выражение>)
         const type_of_lex case_type = st_lex.top();
         gl();
@@ -498,7 +503,7 @@ void Parser::case_of()
             // с константой, то идём дальше
             pl2 = poliz.size();
             poliz.push_back(Lex());
-            poliz.push_back(Lex(POLIZ_FGO, 0, "FGO"));
+            poliz.push_back(Lex(POLIZ_CASE_FGO, 0, "FGO"));
 
             // пропускаем символ :
             if (c_type != LEX_COLON)

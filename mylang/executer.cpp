@@ -12,12 +12,13 @@ void Executer::execute(std::vector<Lex> &poliz)
 {
     Lex pc_el;
     std::stack<int> args;
-    bool need_clear_stack = false;
+    std::stack<int> cases;
     int i, j, index = 0, size = poliz.size();
     while (index < size)
     {
         pc_el = poliz[index];
-        switch (pc_el.get_type())
+        const type_of_lex type = pc_el.get_type();
+        switch (type)
         {
         case LEX_TRUE:
         case LEX_FALSE:
@@ -60,16 +61,16 @@ void Executer::execute(std::vector<Lex> &poliz)
             break;
 
         case POLIZ_FGO:
+        case POLIZ_CASE_FGO:
             from_st(args, i);
             from_st(args, j);
             if (!j)
             {
                 index = i - 1;
             }
-            else if (need_clear_stack)
+            else if(type == POLIZ_CASE_FGO)
             {
-                need_clear_stack = false;
-                from_st(args, j);
+                cases.pop();
             }
             break;
 
@@ -141,24 +142,17 @@ void Executer::execute(std::vector<Lex> &poliz)
                 throw "POLIZ:divide by zero";
 
         case LEX_EQ:
-            from_st(args, i);
-            from_st(args, j);
-            args.push(i == j);
-            break;
-
         case POLIZ_CASE_EQ:
-            from_st(args, i);
-            from_st(args, j);
-            if (need_clear_stack)
+            if (type == POLIZ_CASE_EQ)
             {
-                args.push(i);
+                i = cases.top();
             }
             else
             {
-                args.push(j);
+                from_st(args, i);
             }
+            from_st(args, j);
             args.push(i == j);
-            need_clear_stack = true;
             break;
 
         case LEX_LSS:
@@ -198,8 +192,14 @@ void Executer::execute(std::vector<Lex> &poliz)
             TID[j].put_assign();
             break;
 
+        case POLIZ_CASE_SAVE:
+            from_st(args, i);
+            cases.push(i);
+            break;
+
         case POLIZ_CASE_NOTFOUND:
             throw "case/of not matched";
+
         default:
             std::ostringstream os;
             os << "POLIZ: unexpected elem: " << pc_el.get_type();

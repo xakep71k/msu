@@ -53,6 +53,8 @@ enum type_of_lex
     POLIZ_ADDRESS,
     POLIZ_GO,
     POLIZ_CASE_EQ,
+    POLIZ_CASE_SAVE,
+    POLIZ_CASE_FGO,
     POLIZ_FGO
 };
 
