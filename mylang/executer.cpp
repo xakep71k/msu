@@ -12,6 +12,7 @@ void Executer::execute(std::vector<Lex> &poliz)
 {
     Lex pc_el;
     std::stack<int> args;
+    bool need_clear_stack = false;
     int i, j, index = 0, size = poliz.size();
     while (index < size)
     {
@@ -62,7 +63,14 @@ void Executer::execute(std::vector<Lex> &poliz)
             from_st(args, i);
             from_st(args, j);
             if (!j)
+            {
                 index = i - 1;
+            }
+            else if (need_clear_stack)
+            {
+                need_clear_stack = false;
+                from_st(args, j);
+            }
             break;
 
         case LEX_WRITE:
@@ -138,6 +146,21 @@ void Executer::execute(std::vector<Lex> &poliz)
             args.push(i == j);
             break;
 
+        case POLIZ_CASE_EQ:
+            from_st(args, i);
+            from_st(args, j);
+            if (need_clear_stack)
+            {
+                args.push(i);
+            }
+            else
+            {
+                args.push(j);
+            }
+            args.push(i == j);
+            need_clear_stack = true;
+            break;
+
         case LEX_LSS:
             from_st(args, i);
             from_st(args, j);
@@ -175,7 +198,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             TID[j].put_assign();
             break;
 
-        case POLIZ_LATEST_CASE_LABEL:
+        case POLIZ_CASE_NOTFOUND:
             throw "case/of not matched";
         default:
             std::ostringstream os;

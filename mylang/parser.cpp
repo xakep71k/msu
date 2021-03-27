@@ -20,7 +20,9 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = TID[l.v_lex].get_name();
     else if (l.t_lex == POLIZ_LABEL)
         t = "Label";
-    else if (l.t_lex == POLIZ_LATEST_CASE_LABEL)
+    else if (l.t_lex == POLIZ_LABEL)
+        t = "case EQ";
+    else if (l.t_lex == POLIZ_CASE_NOTFOUND)
         t = "Label";
     else if (l.t_lex == POLIZ_ADDRESS)
         t = "Addr";
@@ -439,25 +441,15 @@ int Parser::get_case_val()
     }
 }
 
-void Parser::repeat_case(int pl0, int pl1)
-{
-    // повторяем выражение из case(<выражение>)
-    std::vector<Lex> tmp;
-    tmp.assign(poliz.begin() + pl0, poliz.begin() + pl1);
-    poliz.insert(poliz.end(), tmp.begin(), tmp.end());
-}
-
 void Parser::case_of()
 {
     int pl2;
     std::stack<int> labels;
     std::set<int> consts;
 
-    const int pl0 = poliz.size();
     // забираем выражение внутри скобок case(<выражение>)
     gl();
     E();
-    const int pl1 = poliz.size();
 
     if (c_type == LEX_OF)
     {
@@ -469,11 +461,10 @@ void Parser::case_of()
             std::vector<Lex> const_lexes;
             for (;;)
             {
-                // берём константу <константа>:
                 check_const_case_type(case_type);
 
-                // проверяем была ли она уже добавлена
-                auto result = consts.insert(c_val);
+                // проверяем была ли константа уже упомянута
+                const auto result = consts.insert(c_val);
                 if (!result.second)
                 {
                     throw "case/of has duplicate branch";
@@ -493,13 +484,9 @@ void Parser::case_of()
             for (auto it = const_lexes.begin(); it != const_lexes.end(); it++)
             {
                 const bool first = it == const_lexes.begin();
-                if (!first)
-                {
-                    repeat_case(pl0, pl1);
-                }
                 // добавляем сравнение с константой
                 poliz.push_back(*it);
-                poliz.push_back(Lex(LEX_EQ, 0, "case EQ"));
+                poliz.push_back(Lex(POLIZ_CASE_EQ, 0, "case EQ"));
 
                 if (!first)
                 {
@@ -535,8 +522,6 @@ void Parser::case_of()
             {
                 break;
             }
-
-            repeat_case(pl0, pl1);
         }
 
         if (consts.size() == 0)
@@ -545,7 +530,7 @@ void Parser::case_of()
         }
 
         // помечаем последнюю метку, если мы на неё попали, значит ни одна ветка не сработала
-        poliz.push_back(Lex(POLIZ_LATEST_CASE_LABEL, 0, "POLIZ_LATEST_CASE_LABEL"));
+        poliz.push_back(Lex(POLIZ_CASE_NOTFOUND, 0, "POLIZ_CASE_NOTFOUND"));
 
         // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
         while (!labels.empty())
