@@ -175,6 +175,8 @@ void Executer::execute(std::vector<Lex> &poliz)
             TID[j].put_assign();
             break;
 
+        case POLIZ_LATEST_CASE_LABEL:
+            throw "case/of not matched";
         default:
             std::ostringstream os;
             os << "POLIZ: unexpected elem: " << pc_el.get_type();

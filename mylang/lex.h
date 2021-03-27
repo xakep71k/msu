@@ -49,6 +49,7 @@ enum type_of_lex
     LEX_NUM,
     LEX_ID,
     POLIZ_LABEL,
+    POLIZ_LATEST_CASE_LABEL,
     POLIZ_ADDRESS,
     POLIZ_GO,
     POLIZ_FGO

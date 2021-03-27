@@ -20,6 +20,8 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = TID[l.v_lex].get_name();
     else if (l.t_lex == POLIZ_LABEL)
         t = "Label";
+    else if (l.t_lex == POLIZ_LATEST_CASE_LABEL)
+        t = "Label";
     else if (l.t_lex == POLIZ_ADDRESS)
         t = "Addr";
     else if (l.t_lex == POLIZ_GO)
@@ -455,13 +457,12 @@ void Parser::case_of()
     // забираем выражение внутри скобок case(<выражение>)
     gl();
     E();
+    const int pl1 = poliz.size();
 
     if (c_type == LEX_OF)
     {
         // все константы дожны быть одного типа с выражением case(<выражение>)
         const type_of_lex case_type = st_lex.top();
-
-        const int pl1 = poliz.size();
         gl();
         for (;;)
         {
@@ -491,12 +492,17 @@ void Parser::case_of()
 
             for (auto it = const_lexes.begin(); it != const_lexes.end(); it++)
             {
+                const bool first = it == const_lexes.begin();
+                if (!first)
+                {
+                    repeat_case(pl0, pl1);
+                }
                 // добавляем сравнение с константой
                 poliz.push_back(*it);
                 poliz.push_back(Lex(LEX_EQ, 0, "case EQ"));
-                if (it != const_lexes.begin())
+
+                if (!first)
                 {
-                    repeat_case(pl0, pl1);
                     poliz.push_back(Lex(LEX_OR, 0, "LEX_OR"));
                 }
             }
@@ -537,6 +543,9 @@ void Parser::case_of()
         {
             throw "case/of must have at least one const";
         }
+
+        // помечаем последнюю метку, если мы на неё попали, значит ни одна ветка не сработала
+        poliz.push_back(Lex(POLIZ_LATEST_CASE_LABEL, 0, "POLIZ_LATEST_CASE_LABEL"));
 
         // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
         while (!labels.empty())
