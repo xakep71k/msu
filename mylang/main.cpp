@@ -6,11 +6,16 @@
 #include "parser.h"
 #include "interpretator.h"
 
-int main()
+int main(int argc, char**argv)
 {
+    if(argc != 2)
+    {
+        std::cerr << "Usage: " << argv[0] << " <pascal source code>\n";
+        return 1;
+    }
     try
     {
-        Interpretator I("prog.pas");
+        Interpretator I(argv[1]);
         I.interpretation();
     }
     catch (char c)
