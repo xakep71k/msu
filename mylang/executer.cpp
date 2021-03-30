@@ -12,7 +12,7 @@ void Executer::execute(std::vector<Lex> &poliz)
 {
     Lex pc_el;
     std::stack<int> args;
-    std::stack<int> cases;
+    std::stack<int> case_of;
     int i, j, index = 0, size = poliz.size();
     while (index < size)
     {
@@ -70,7 +70,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             }
             else if(type == POLIZ_CASE_FGO)
             {
-                cases.pop();
+                case_of.pop();
             }
             break;
 
@@ -145,7 +145,7 @@ void Executer::execute(std::vector<Lex> &poliz)
         case POLIZ_CASE_EQ:
             if (type == POLIZ_CASE_EQ)
             {
-                i = cases.top();
+                i = case_of.top();
             }
             else
             {
@@ -194,7 +194,7 @@ void Executer::execute(std::vector<Lex> &poliz)
 
         case POLIZ_CASE_SAVE:
             from_st(args, i);
-            cases.push(i);
+            case_of.push(i);
             break;
 
         case POLIZ_CASE_NOTFOUND:
