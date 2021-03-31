@@ -49,13 +49,12 @@ enum type_of_lex
     LEX_NUM,
     LEX_ID,
     POLIZ_LABEL,
-    POLIZ_CASE_NOTFOUND,
+    POLIZ_FAIL,
     POLIZ_ADDRESS,
     POLIZ_GO,
-    POLIZ_CASE_EQ,
-    POLIZ_CASE_SAVE,
-    POLIZ_CASE_FGO,
-    POLIZ_FGO
+    POLIZ_FGO,
+    POLIZ_DUP,
+    POLIZ_DEL_ARG
 };
 
 class Lex

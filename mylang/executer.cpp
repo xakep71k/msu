@@ -12,7 +12,6 @@ void Executer::execute(std::vector<Lex> &poliz)
 {
     Lex pc_el;
     std::stack<int> args;
-    std::stack<int> case_of;
     int i, j, index = 0, size = poliz.size();
     while (index < size)
     {
@@ -60,17 +59,16 @@ void Executer::execute(std::vector<Lex> &poliz)
             index = i - 1;
             break;
 
+        case POLIZ_DUP:
+            args.push(args.top());
+            break;
+
         case POLIZ_FGO:
-        case POLIZ_CASE_FGO:
             from_st(args, i);
             from_st(args, j);
             if (!j)
             {
                 index = i - 1;
-            }
-            else if(type == POLIZ_CASE_FGO)
-            {
-                case_of.pop();
             }
             break;
 
@@ -142,15 +140,7 @@ void Executer::execute(std::vector<Lex> &poliz)
                 throw "POLIZ:divide by zero";
 
         case LEX_EQ:
-        case POLIZ_CASE_EQ:
-            if (type == POLIZ_CASE_EQ)
-            {
-                i = case_of.top();
-            }
-            else
-            {
-                from_st(args, i);
-            }
+            from_st(args, i);
             from_st(args, j);
             args.push(i == j);
             break;
@@ -192,13 +182,12 @@ void Executer::execute(std::vector<Lex> &poliz)
             TID[j].put_assign();
             break;
 
-        case POLIZ_CASE_SAVE:
-            from_st(args, i);
-            case_of.push(i);
-            break;
+        case POLIZ_FAIL:
+            throw std::runtime_error(pc_el.get_str_value());
 
-        case POLIZ_CASE_NOTFOUND:
-            throw "case/of not matched";
+        case POLIZ_DEL_ARG:
+            args.pop();
+            break;
 
         default:
             std::ostringstream os;
@@ -207,5 +196,10 @@ void Executer::execute(std::vector<Lex> &poliz)
         } //end of switch
         ++index;
     }; //end of while
+
+    if (args.size() != 0)
+    {
+        throw std::logic_error("executer: args stack not empty");
+    }
     //std::cout << "Finish of executing!!!" << std::endl;
 }

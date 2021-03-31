@@ -20,20 +20,18 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = TID[l.v_lex].get_name();
     else if (l.t_lex == POLIZ_LABEL)
         t = "Label";
-    else if (l.t_lex == POLIZ_CASE_EQ)
-        t = "case EQ";
-    else if (l.t_lex == POLIZ_CASE_SAVE)
-        t = "case save";
-    else if (l.t_lex == POLIZ_CASE_NOTFOUND)
-        t = "Label";
+    else if (l.t_lex == POLIZ_FAIL)
+        t = "Fail";
     else if (l.t_lex == POLIZ_ADDRESS)
         t = "Addr";
     else if (l.t_lex == POLIZ_GO)
         t = "!";
     else if (l.t_lex == POLIZ_FGO)
         t = "!F";
-    else if (l.t_lex == POLIZ_CASE_FGO)
-        t = "case !F";
+    else if (l.t_lex == POLIZ_DEL_ARG)
+        t = "DEL";
+    else if (l.t_lex == POLIZ_DUP)
+        t = "DUP";
     else
         throw l;
     s << '(' << t << ',' << l.v_lex << ");" << std::endl;
@@ -447,7 +445,7 @@ int Parser::get_case_val()
 
 void Parser::case_of()
 {
-    int pl2;
+    int pl1;
     std::stack<int> labels;
     std::set<int> consts;
 
@@ -457,13 +455,13 @@ void Parser::case_of()
 
     if (c_type == LEX_OF)
     {
-        poliz.push_back(Lex(POLIZ_CASE_SAVE, 0, "case save"));
         // все константы дожны быть одного типа с выражением case(<выражение>)
         const type_of_lex case_type = st_lex.top();
         gl();
         for (;;)
         {
             std::vector<Lex> const_lexes;
+            // забираем все константы, разделённые запятой, одной ветки до знака :
             for (;;)
             {
                 check_const_case_type(case_type);
@@ -486,24 +484,33 @@ void Parser::case_of()
                 gl();
             }
 
+            // формируем условия для выполенния ветки: добавляем сравнение с каждой константой
             for (auto it = const_lexes.begin(); it != const_lexes.end(); it++)
             {
-                const bool first = it == const_lexes.begin();
-                // добавляем сравнение с константой
+                poliz.push_back(Lex(POLIZ_DUP, 0, "dup"));
                 poliz.push_back(*it);
-                poliz.push_back(Lex(POLIZ_CASE_EQ, 0, "case EQ"));
-
-                if (!first)
-                {
-                    poliz.push_back(Lex(LEX_OR, 0, "LEX_OR"));
-                }
+                poliz.push_back(Lex(LEX_NEQ, 0, "case NEQ"));
+                labels.push(poliz.size());
+                poliz.push_back(Lex()); // адрес тела ветки
+                poliz.push_back(Lex(POLIZ_FGO, 0, "FGO"));
             }
 
-            // аналогично LEX_IF, если условие в case не совпадает
-            // с константой, то идём дальше
-            pl2 = poliz.size();
+            if(const_lexes.size() == 0 )
+            {
+                throw std::runtime_error("not constants specified");
+            }
+
+            // ни одно из условий не выполнено, идём к следующей ветки
+            pl1 = poliz.size();
             poliz.push_back(Lex());
-            poliz.push_back(Lex(POLIZ_CASE_FGO, 0, "FGO"));
+            poliz.push_back(Lex(POLIZ_GO, 0, "GO"));
+
+            // заполняем пропущенные адреса на тело ветки case of
+            for(size_t i = 0; i < const_lexes.size(); i++)
+            {
+                poliz[labels.top()] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL to case branch");
+                labels.pop();
+            }
 
             // пропускаем символ :
             if (c_type != LEX_COLON)
@@ -512,17 +519,16 @@ void Parser::case_of()
             }
 
             // тело ветки case/of
+            poliz.push_back(Lex(POLIZ_DEL_ARG, 0, "pop value of dup"));
             gl();
             S();
-
+            
             // сюда запишется адрес выхода из ветки
             labels.push(poliz.size());
-            poliz.push_back(Lex(POLIZ_LABEL, -1, "BREAK CASE"));
+            poliz.push_back(Lex(POLIZ_LABEL, 0, "BREAK CASE"));
             poliz.push_back(Lex(POLIZ_GO, 0, "GO"));
 
-            // если ветка не подходит, то идём к следующей
-            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
-
+            poliz[pl1] = Lex(POLIZ_LABEL, poliz.size(), "NEXT BRANCH");
             if (c_type == LEX_END)
             {
                 break;
@@ -535,7 +541,7 @@ void Parser::case_of()
         }
 
         // помечаем последнюю метку, если мы на неё попали, значит ни одна ветка не сработала
-        poliz.push_back(Lex(POLIZ_CASE_NOTFOUND, 0, "POLIZ_CASE_NOTFOUND"));
+        poliz.push_back(Lex(POLIZ_FAIL, 0, "branch of case not found"));
 
         // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
         while (!labels.empty())
