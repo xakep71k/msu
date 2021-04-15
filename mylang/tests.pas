@@ -1,4 +1,10 @@
 program
+
+function less(var x,y :int):boolean;
+begin
+	less := x < y;
+end;
+
 var i: int;
 begin
 

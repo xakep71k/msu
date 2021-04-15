@@ -5,8 +5,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
-extern std::vector<Ident> TID;
+#include "tid.h"
 
 void Executer::execute(std::vector<Lex> &poliz)
 {
@@ -95,7 +94,7 @@ void Executer::execute(std::vector<Lex> &poliz)
                 std::string j;
                 while (1)
                 {
-                    std::cout << "Input boolean value (true or false) for " << TID[i].get_name() << std::endl;
+                    std::cout << "Input boolean value (true or false) for '" << TID[i].get_type() << "'" << std::endl;
                     std::cin >> j;
                     if (j != "true" && j != "false")
                     {

@@ -2,6 +2,8 @@
 #define __IDENT_H__
 
 #include <string>
+#include <vector>
+#include <map>
 #include "lex.h"
 
 class Ident {

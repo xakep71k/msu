@@ -26,6 +26,7 @@ const char *Scanner::TW[] = {
     "writeln",
     "case",
     "of",
+    "function",
     NULL};
 
 const char *Scanner::TD[] = {

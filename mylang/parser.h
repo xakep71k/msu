@@ -22,9 +22,11 @@ class Parser
     Scanner scan;
     std::stack<int> st_int;
     std::stack<type_of_lex> st_lex;
-    void P();
-    void D1();
-    void D();
+    void Program();
+    void VarDeclaration();
+    void VarExtract();
+    void Func();
+    void FuncVarArgs();
     void B();
     void S();
     void E();
@@ -42,7 +44,7 @@ class Parser
     void eq_type();
     void eq_bool();
     void check_id_in_read();
-    void gl()
+    void get_next_lex()
     {
         curr_lex = scan.get_lex();
         c_type = curr_lex.get_type();

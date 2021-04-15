@@ -4,13 +4,13 @@
 #include "ident.h"
 #include <string>
 #include <algorithm>
-
-extern std::vector<Ident> TID;
+#include <stack>
+#include "tid.h"
 
 std::ostream &operator<<(std::ostream &s, Lex l)
 {
     std::string t;
-    if (l.t_lex <= LEX_OF)
+    if (l.t_lex <= LEX_FUNCTION)
         t = Scanner::TW[l.t_lex];
     else if (l.t_lex >= LEX_FIN && l.t_lex <= LEX_GEQ)
         t = Scanner::TD[l.t_lex - LEX_FIN];
@@ -40,23 +40,28 @@ std::ostream &operator<<(std::ostream &s, Lex l)
 
 void Parser::analyze()
 {
-    gl();
-    P();
+    get_next_lex();
+    Program();
     if (c_type != LEX_FIN)
     {
         throw curr_lex;
     }
 }
 
-void Parser::P()
+void Parser::Program()
 {
-    if (c_type == LEX_PROGRAM)
-    {
-        gl();
-    }
-    else
+    //TID.push(std::vector<Ident>());
+
+    if (c_type != LEX_PROGRAM)
     {
         throw curr_lex;
+    }
+
+    get_next_lex();
+    while (c_type == LEX_FUNCTION)
+    {
+        Func();
+        get_next_lex();
     }
 
     // тут объявления переменных
@@ -64,100 +69,118 @@ void Parser::P()
     program
     var <имя>: int|bool[, <имя>: int|bool];
     */
-    D1();
-    if (c_type == LEX_SEMICOLON)
-    {
-        gl();
-    }
-    else
+    VarDeclaration();
+    if (c_type != LEX_SEMICOLON)
     {
         throw curr_lex;
     }
-
     // логика программы
+    get_next_lex();
     B();
 }
 
-void Parser::D1()
+void Parser::VarDeclaration()
 {
-    if (c_type == LEX_VAR)
-    {
-        gl();
-        D();
-        while (c_type == LEX_COMMA)
-        {
-            gl();
-            D();
-        }
-    }
-    else
+    if (c_type != LEX_VAR)
     {
         throw curr_lex;
     }
+
+    get_next_lex();
+    VarExtract();
+    while (c_type == LEX_COMMA)
+    {
+        get_next_lex();
+        VarExtract();
+    }
 }
 
-void Parser::D()
+void Parser::VarExtract()
 {
     if (c_type != LEX_ID)
     {
         throw curr_lex;
     }
-    else
+
+    st_int.push(c_val);
+    get_next_lex();
+    while (c_type == LEX_COMMA)
     {
-        st_int.push(c_val);
-        gl();
-        while (c_type == LEX_COMMA)
-        {
-            gl();
-            if (c_type != LEX_ID)
-            {
-                throw curr_lex;
-            }
-            else
-            {
-                st_int.push(c_val);
-                gl();
-            }
-        }
-        if (c_type != LEX_COLON)
+        get_next_lex();
+        if (c_type != LEX_ID)
         {
             throw curr_lex;
         }
-        else
-        {
-            gl();
-            if (c_type == LEX_INT)
-            {
-                dec(LEX_INT);
-                gl();
-            }
-            else if (c_type == LEX_BOOL)
-            {
-                dec(LEX_BOOL);
-                gl();
-            }
-            else
-            {
-                throw curr_lex;
-            }
-        }
+        st_int.push(c_val);
+        get_next_lex();
     }
+    if (c_type != LEX_COLON)
+    {
+        throw curr_lex;
+    }
+
+    get_next_lex();
+    if (c_type == LEX_INT)
+    {
+        dec(LEX_INT);
+        get_next_lex();
+    }
+    else if (c_type == LEX_BOOL)
+    {
+        dec(LEX_BOOL);
+        get_next_lex();
+    }
+    else
+    {
+        throw curr_lex;
+    }
+}
+
+void Parser::Func()
+{
+    /*
+    TID.push(std::vector<Ident>());
+
+    get_next_lex();
+    if (c_type != LEX_LPAREN)
+    {
+        throw curr_lex;
+    }
+
+    get_next_lex();
+    if (c_type != LEX_RPAREN)
+    {
+        FuncVarArgs();
+    }
+
+    if (c_type != LEX_RPAREN)
+    {
+        throw curr_lex;
+    }
+
+    TID.pop();
+    */
+}
+
+void Parser::FuncVarArgs()
+{
+    VarDeclaration();
 }
 
 void Parser::B()
 {
     if (c_type == LEX_BEGIN)
     {
-        gl();
+        get_next_lex();
         S();
         while (c_type == LEX_SEMICOLON)
         {
-            gl();
+            get_next_lex();
             S();
         }
         if (c_type == LEX_END)
         {
-            gl();
+            get_next_lex();
         }
         else
         {
@@ -177,7 +200,7 @@ void Parser::S()
 
     if (c_type == LEX_IF)
     {
-        gl();
+        get_next_lex();
         E();
         eq_bool();
         pl2 = poliz.size();
@@ -185,7 +208,7 @@ void Parser::S()
         poliz.push_back(Lex(POLIZ_FGO, 0, "POLIZ_FGO"));
         if (c_type == LEX_THEN)
         {
-            gl();
+            get_next_lex();
             S();
 
             if (c_type == LEX_ELSE)
@@ -194,7 +217,7 @@ void Parser::S()
                 poliz.push_back(Lex());
                 poliz.push_back(Lex(POLIZ_GO, 0, "POLIZ_GO"));
 
-                gl();
+                get_next_lex();
                 S();
                 poliz[pl3] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
             }
@@ -212,7 +235,7 @@ void Parser::S()
     else if (c_type == LEX_WHILE)
     {
         pl0 = poliz.size();
-        gl();
+        get_next_lex();
         E();
         eq_bool();
         pl1 = poliz.size();
@@ -220,7 +243,7 @@ void Parser::S()
         poliz.push_back(Lex(POLIZ_FGO));
         if (c_type == LEX_DO)
         {
-            gl();
+            get_next_lex();
             S();
             poliz.push_back(Lex(POLIZ_LABEL, pl0));
             poliz.push_back(Lex(POLIZ_GO));
@@ -231,21 +254,21 @@ void Parser::S()
     } //end while
     else if (c_type == LEX_READ)
     {
-        gl();
+        get_next_lex();
         if (c_type == LEX_LPAREN)
         {
-            gl();
+            get_next_lex();
             if (c_type == LEX_ID)
             {
                 check_id_in_read();
                 poliz.push_back(Lex(POLIZ_ADDRESS, c_val));
-                gl();
+                get_next_lex();
             }
             else
                 throw curr_lex;
             if (c_type == LEX_RPAREN)
             {
-                gl();
+                get_next_lex();
                 poliz.push_back(Lex(LEX_READ));
             }
             else
@@ -257,14 +280,14 @@ void Parser::S()
     else if (c_type == LEX_WRITE || c_type == LEX_WRITELN)
     {
         const type_of_lex lex_write = c_type;
-        gl();
+        get_next_lex();
         if (c_type == LEX_LPAREN)
         {
-            gl();
+            get_next_lex();
             E();
             if (c_type == LEX_RPAREN)
             {
-                gl();
+                get_next_lex();
                 poliz.push_back(Lex(lex_write));
             }
             else
@@ -277,10 +300,10 @@ void Parser::S()
     {
         check_id();
         poliz.push_back(Lex(POLIZ_ADDRESS, c_val, "POLIZ_ADDRESS"));
-        gl();
+        get_next_lex();
         if (c_type == LEX_ASSIGN)
         {
-            gl();
+            get_next_lex();
             E();
             eq_type();
             poliz.push_back(Lex(LEX_ASSIGN, 0, "LEX_ASSIGN"));
@@ -303,7 +326,7 @@ void Parser::E()
         c_type == LEX_LEQ || c_type == LEX_GEQ || c_type == LEX_NEQ)
     {
         st_lex.push(c_type);
-        gl();
+        get_next_lex();
         E1();
         check_op();
     }
@@ -315,7 +338,7 @@ void Parser::E1()
     while (c_type == LEX_PLUS || c_type == LEX_MINUS || c_type == LEX_OR)
     {
         st_lex.push(c_type);
-        gl();
+        get_next_lex();
         T();
         check_op();
     }
@@ -327,7 +350,7 @@ void Parser::T()
     while (c_type == LEX_TIMES || c_type == LEX_SLASH || c_type == LEX_AND)
     {
         st_lex.push(c_type);
-        gl();
+        get_next_lex();
         F();
         check_op();
     }
@@ -339,38 +362,38 @@ void Parser::F()
     {
         check_id();
         poliz.push_back(Lex(LEX_ID, c_val, "LEX_ID"));
-        gl();
+        get_next_lex();
     }
     else if (c_type == LEX_NUM)
     {
         st_lex.push(LEX_INT);
         poliz.push_back(curr_lex);
-        gl();
+        get_next_lex();
     }
     else if (c_type == LEX_TRUE)
     {
         st_lex.push(LEX_BOOL);
         poliz.push_back(Lex(LEX_TRUE, 1, "true"));
-        gl();
+        get_next_lex();
     }
     else if (c_type == LEX_FALSE)
     {
         st_lex.push(LEX_BOOL);
         poliz.push_back(Lex(LEX_FALSE, 0, "false"));
-        gl();
+        get_next_lex();
     }
     else if (c_type == LEX_NOT)
     {
-        gl();
+        get_next_lex();
         F();
         check_not();
     }
     else if (c_type == LEX_LPAREN)
     {
-        gl();
+        get_next_lex();
         E();
         if (c_type == LEX_RPAREN)
-            gl();
+            get_next_lex();
         else
             throw curr_lex;
     }
@@ -450,14 +473,14 @@ void Parser::case_of()
     std::set<int> consts;
 
     // забираем выражение внутри скобок case(<выражение>)
-    gl();
+    get_next_lex();
     E();
 
     if (c_type == LEX_OF)
     {
         // все константы дожны быть одного типа с выражением case(<выражение>)
         const type_of_lex case_type = st_lex.top();
-        gl();
+        get_next_lex();
         for (;;)
         {
             std::vector<Lex> const_lexes;
@@ -474,14 +497,14 @@ void Parser::case_of()
                 }
                 const_lexes.push_back(Lex(c_type, get_case_val(), c_str_val));
 
-                gl();
+                get_next_lex();
                 if (c_type != LEX_COMMA)
                 {
                     break;
                 }
 
                 // забираем следующую константу
-                gl();
+                get_next_lex();
             }
 
             // формируем условия для выполенния ветки: добавляем сравнение с каждой константой
@@ -495,7 +518,7 @@ void Parser::case_of()
                 poliz.push_back(Lex(POLIZ_FGO, 0, "FGO"));
             }
 
-            if(const_lexes.size() == 0 )
+            if (const_lexes.size() == 0)
             {
                 throw std::runtime_error("not constants specified");
             }
@@ -506,7 +529,7 @@ void Parser::case_of()
             poliz.push_back(Lex(POLIZ_GO, 0, "GO"));
 
             // заполняем пропущенные адреса на тело ветки case of
-            for(size_t i = 0; i < const_lexes.size(); i++)
+            for (size_t i = 0; i < const_lexes.size(); i++)
             {
                 poliz[labels.top()] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL to case branch");
                 labels.pop();
@@ -520,9 +543,9 @@ void Parser::case_of()
 
             // тело ветки case/of
             poliz.push_back(Lex(POLIZ_DEL_ARG, 0, "pop value of dup"));
-            gl();
+            get_next_lex();
             S();
-            
+
             // сюда запишется адрес выхода из ветки
             labels.push(poliz.size());
             poliz.push_back(Lex(POLIZ_LABEL, 0, "BREAK CASE"));
@@ -550,7 +573,7 @@ void Parser::case_of()
             labels.pop();
         }
 
-        gl();
+        get_next_lex();
     }
     else
     {
