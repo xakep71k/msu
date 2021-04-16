@@ -11,6 +11,10 @@ void Executer::execute(std::vector<Lex> &poliz)
 {
     Lex pc_el;
     std::stack<int> args;
+    std::stack<std::map<int, Ident>> identsStack;
+    identsStack.push(std::map<int, Ident>());
+    std::map<int, Ident> &idents = identsStack.top();
+
     int i, j, index = 0, size = poliz.size();
     while (index < size)
     {
@@ -18,6 +22,17 @@ void Executer::execute(std::vector<Lex> &poliz)
         const type_of_lex type = pc_el.get_type();
         switch (type)
         {
+        case POLIZ_DECLARE_VAR:
+        {
+            i = pc_el.get_value();
+            const Ident &ident = idents[i];
+            if (ident.get_declare())
+            {
+                throw "POLIZ: variable already declared";
+            }
+            idents[i] = TID[i];
+        }
+        break;
         case LEX_TRUE:
         case LEX_FALSE:
         case LEX_NUM:
@@ -25,16 +40,19 @@ void Executer::execute(std::vector<Lex> &poliz)
         case POLIZ_LABEL:
             args.push(pc_el.get_value());
             break;
-
         case LEX_ID:
             i = pc_el.get_value();
-            if (TID[i].get_assign())
+            if (!idents[i].get_declare())
             {
-                args.push(TID[i].get_value());
-                break;
+                throw "POLIZ: not declared";
             }
-            else
-                throw "POLIZ: indefinite identifier";
+            if (!idents[i].get_assign())
+            {
+                throw "POLIZ: not initialized";
+            }
+
+            args.push(idents[i].get_value());
+            break;
 
         case LEX_NOT:
             from_st(args, i);
@@ -105,8 +123,7 @@ void Executer::execute(std::vector<Lex> &poliz)
                     break;
                 }
             }
-            TID[i].put_value(k);
-            TID[i].put_assign();
+            idents[i].put_value(k);
             break;
 
         case LEX_PLUS:
@@ -177,8 +194,7 @@ void Executer::execute(std::vector<Lex> &poliz)
         case LEX_ASSIGN:
             from_st(args, i);
             from_st(args, j);
-            TID[j].put_value(i);
-            TID[j].put_assign();
+            idents[j].put_value(i);
             break;
 
         case POLIZ_FAIL:
@@ -200,5 +216,4 @@ void Executer::execute(std::vector<Lex> &poliz)
     {
         throw std::logic_error("executer: args stack not empty");
     }
-    //std::cout << "Finish of executing!!!" << std::endl;
 }

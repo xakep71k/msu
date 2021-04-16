@@ -32,6 +32,8 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = "DEL";
     else if (l.t_lex == POLIZ_DUP)
         t = "DUP";
+    else if (l.t_lex == POLIZ_DECLARE_VAR)
+        t = "DUP";
     else
         throw l;
     s << '(' << t << ',' << l.v_lex << ");" << std::endl;
@@ -60,7 +62,7 @@ void Parser::Program()
     get_next_lex();
     while (c_type == LEX_FUNCTION)
     {
-        Func();
+        FuncExtract();
         get_next_lex();
     }
 
@@ -136,35 +138,40 @@ void Parser::VarExtract()
     }
 }
 
-void Parser::Func()
+void Parser::FuncExtract()
 {
-    /*
-    TID.push(std::vector<Ident>());
+    // получаем имя функции
+    get_next_lex();
+    if (c_type != LEX_ID)
+    {
+        throw curr_lex;
+    }
 
+    if (TID.declare_func(TID.pop_back(), poliz.size()))
+    {
+        throw std::runtime_error("function already exists");
+    }
+
+    // открывающаяся скобка (
     get_next_lex();
     if (c_type != LEX_LPAREN)
     {
         throw curr_lex;
     }
 
+    // параметры функции
     get_next_lex();
-    if (c_type != LEX_RPAREN)
-    {
-        FuncVarArgs();
-    }
+    VarDeclaration();
 
+    // закрывающаяся скоба )
+    get_next_lex();
     if (c_type != LEX_RPAREN)
     {
         throw curr_lex;
     }
 
-    TID.pop();
-    */
-}
-
-void Parser::FuncVarArgs()
-{
-    VarDeclaration();
+    std::cout << "=== END " << c_type << "\n";
+    exit(1);
 }
 
 void Parser::B()
@@ -409,13 +416,9 @@ void Parser::dec(type_of_lex type)
     while (!st_int.empty())
     {
         from_st(st_int, i);
-        if (TID[i].get_declare())
-            throw "twice";
-        else
-        {
-            TID[i].put_declare();
-            TID[i].put_type(type);
-        }
+        poliz.push_back(Lex(POLIZ_DECLARE_VAR, i, "declare variable"));
+        TID[i].put_declare();
+        TID[i].put_type(type);
     }
 }
 

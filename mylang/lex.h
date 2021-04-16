@@ -55,7 +55,8 @@ enum type_of_lex
     POLIZ_GO,
     POLIZ_FGO,
     POLIZ_DUP,
-    POLIZ_DEL_ARG
+    POLIZ_DEL_ARG,
+    POLIZ_DECLARE_VAR,
 };
 
 class Lex
