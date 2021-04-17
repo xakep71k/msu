@@ -23,8 +23,8 @@ class Parser
     std::stack<int> st_int;
     std::stack<type_of_lex> st_lex;
     void Program();
-    void VarDeclaration();
-    void VarExtract();
+    int VarDeclaration();
+    int VarExtract();
     void FuncExtract();
     void B();
     void S();

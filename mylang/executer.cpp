@@ -48,7 +48,9 @@ void Executer::execute(std::vector<Lex> &poliz)
             }
             if (!idents[i].get_assign())
             {
-                throw "POLIZ: not initialized";
+                std::ostringstream os;
+                os << "POLIZ: not initialized: " << idents[i].get_name() << " " << idents[i].get_id();
+                throw std::runtime_error(os.str());
             }
 
             args.push(idents[i].get_value());

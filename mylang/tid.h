@@ -6,15 +6,18 @@
 #include <vector>
 #include <stack>
 #include "ident.h"
+#include "ident_func.h"
 
 class TIDType
 {
     std::vector<Ident> cur_tid_;
-    std::map<std::string, Ident> func_table_;
+    std::map<std::string, IdentFunc> func_table_;
+    std::stack<std::string> func_stack_;
 
 public:
     TIDType()
     {
+        func_stack_.push("global");
     }
 
     Ident &operator[](int i)
@@ -39,7 +42,17 @@ public:
         return cur_tid();
     }
 
+    size_t size() const
+    {
+        return cur_tid().size();
+    }
+
     std::vector<Ident> &cur_tid()
+    {
+        return cur_tid_;
+    }
+
+    const std::vector<Ident> &cur_tid() const
     {
         return cur_tid_;
     }
@@ -47,7 +60,7 @@ public:
     bool declare_func(const Ident &ident, int address)
     {
         const std::string &name = ident.get_name();
-        if (func_table_.find(name) == func_table_.end())
+        if (func_table_.find(name) != func_table_.end())
         {
             return true;
         }
@@ -56,9 +69,29 @@ public:
         return false;
     }
 
+    IdentFunc &top_func()
+    {
+        return func_table_[func_stack_.top()];
+    }
+
     const Ident &find_func(const std::string &name)
     {
         return func_table_[name];
+    }
+
+    void push_func(const std::string &name)
+    {
+        func_stack_.push(name);
+    }
+
+    void pop_func()
+    {
+        func_stack_.pop();
+    }
+
+    const std::string &top_func_name() const
+    {
+        return func_stack_.top();
     }
 };
 

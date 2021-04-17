@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include "ident.h"
+#include "ident_func.h"
 #include <string>
 #include <algorithm>
 #include <stack>
@@ -52,12 +53,14 @@ void Parser::analyze()
 
 void Parser::Program()
 {
-    //TID.push(std::vector<Ident>());
-
     if (c_type != LEX_PROGRAM)
     {
         throw curr_lex;
     }
+
+    int indexMainLabel = poliz.size();
+    poliz.push_back(Lex());
+    poliz.push_back(Lex(POLIZ_GO, 0, "go to main"));
 
     get_next_lex();
     while (c_type == LEX_FUNCTION)
@@ -71,34 +74,41 @@ void Parser::Program()
     program
     var <имя>: int|bool[, <имя>: int|bool];
     */
+    poliz[indexMainLabel] = Lex(POLIZ_LABEL, poliz.size(), "main label");
+
     VarDeclaration();
     if (c_type != LEX_SEMICOLON)
     {
         throw curr_lex;
     }
+
     // логика программы
     get_next_lex();
     B();
 }
 
-void Parser::VarDeclaration()
+int Parser::VarDeclaration()
 {
+    int countVars = 0;
     if (c_type != LEX_VAR)
     {
         throw curr_lex;
     }
 
     get_next_lex();
-    VarExtract();
+    countVars += VarExtract();
     while (c_type == LEX_COMMA)
     {
         get_next_lex();
-        VarExtract();
+        countVars += VarExtract();
     }
+
+    return countVars;
 }
 
-void Parser::VarExtract()
+int Parser::VarExtract()
 {
+    int countVars = 1;
     if (c_type != LEX_ID)
     {
         throw curr_lex;
@@ -108,6 +118,7 @@ void Parser::VarExtract()
     get_next_lex();
     while (c_type == LEX_COMMA)
     {
+        countVars++;
         get_next_lex();
         if (c_type != LEX_ID)
         {
@@ -136,6 +147,8 @@ void Parser::VarExtract()
     {
         throw curr_lex;
     }
+
+    return countVars;
 }
 
 void Parser::FuncExtract()
@@ -147,12 +160,15 @@ void Parser::FuncExtract()
         throw curr_lex;
     }
 
-    if (TID.declare_func(TID.pop_back(), poliz.size()))
+    Ident identFunc = TID.pop_back();
+    if (TID.declare_func(identFunc, poliz.size()))
     {
         throw std::runtime_error("function already exists");
     }
 
-    // открывающаяся скобка (
+    TID.push_func(identFunc.get_name());
+    IdentFunc &func = TID.top_func();
+
     get_next_lex();
     if (c_type != LEX_LPAREN)
     {
@@ -161,17 +177,46 @@ void Parser::FuncExtract()
 
     // параметры функции
     get_next_lex();
-    VarDeclaration();
+    int varsCount = VarDeclaration();
 
-    // закрывающаяся скоба )
-    get_next_lex();
     if (c_type != LEX_RPAREN)
     {
         throw curr_lex;
     }
 
-    std::cout << "=== END " << c_type << "\n";
-    exit(1);
+    for (size_t i = TID.size() - varsCount; i < TID.size(); i++)
+    {
+        func.push_arg(TID[i]);
+    }
+
+    get_next_lex();
+    if (c_type != LEX_COLON)
+    {
+        throw curr_lex;
+    }
+
+    get_next_lex();
+    if (c_type != LEX_BOOL && c_type != LEX_INT)
+    {
+        throw curr_lex;
+    }
+
+    func.set_return_lex(curr_lex);
+
+    get_next_lex();
+    if (c_type == LEX_VAR)
+    {
+        VarDeclaration();
+        if (c_type != LEX_SEMICOLON)
+        {
+            throw curr_lex;
+        }
+        get_next_lex();
+    }
+
+    B();
+    poliz.push_back(Lex(POLIZ_GO, 0, "return from function"));
+    TID.pop_func();
 }
 
 void Parser::B()
@@ -416,6 +461,10 @@ void Parser::dec(type_of_lex type)
     while (!st_int.empty())
     {
         from_st(st_int, i);
+        if (TID[i].get_declare())
+        {
+            throw "twice";
+        }
         poliz.push_back(Lex(POLIZ_DECLARE_VAR, i, "declare variable"));
         TID[i].put_declare();
         TID[i].put_type(type);
@@ -587,9 +636,13 @@ void Parser::case_of()
 void Parser::check_id()
 {
     if (TID[c_val].get_declare())
+    {
         st_lex.push(TID[c_val].get_type());
+    }
     else
+    {
         throw "not declared";
+    }
 }
 
 void Parser::check_op()

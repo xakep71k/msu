@@ -6,9 +6,16 @@
 
 int put(const std::string &buf)
 {
-    std::vector<Ident>& idents = TID;
-    std::vector<Ident>::iterator k;
-    if ((k = std::find(idents.begin(), idents.end(), buf)) != idents.end()) return k - idents.begin();
-    idents.push_back(Ident(buf));
+    const std::string &prefix = TID.top_func_name();
+    std::vector<Ident> &idents = TID;
+    const std::string id = prefix + buf;
+    std::vector<Ident>::iterator k = std::find(idents.begin(), idents.end(), id);
+    if (k != idents.end())
+    {
+        return k - idents.begin();
+    }
+    Ident ident(buf);
+    ident.set_id(id);
+    idents.push_back(ident);
     return idents.size() - 1;
 }
