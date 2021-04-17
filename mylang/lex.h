@@ -57,6 +57,9 @@ enum type_of_lex
     POLIZ_DUP,
     POLIZ_DEL_ARG,
     POLIZ_DECLARE_VAR,
+    POLIZ_CALL_FUNC,
+    POLIZ_RETURN_FUNC,
+    POLIZ_INIT_FUNC_ARG
 };
 
 class Lex

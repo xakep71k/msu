@@ -25,6 +25,7 @@ class Parser
     void Program();
     int VarDeclaration();
     int VarExtract();
+    void callFunc();
     void FuncExtract();
     void B();
     void S();

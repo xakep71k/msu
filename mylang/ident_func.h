@@ -38,7 +38,7 @@ public:
         return return_lex_;
     }
 
-    const Ident &operator[](int i)
+    const Ident &operator[](int i) const
     {
         return args_[i];
     }

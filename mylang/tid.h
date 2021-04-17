@@ -66,6 +66,7 @@ public:
         }
         func_table_[name] = ident;
         func_table_[name].put_value(address);
+        func_table_[name].put_type(LEX_FUNCTION);
         return false;
     }
 
@@ -74,7 +75,7 @@ public:
         return func_table_[func_stack_.top()];
     }
 
-    const Ident &find_func(const std::string &name)
+    const IdentFunc &find_func(const std::string &name)
     {
         return func_table_[name];
     }

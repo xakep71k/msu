@@ -13,7 +13,6 @@ void Executer::execute(std::vector<Lex> &poliz)
     std::stack<int> args;
     std::stack<std::map<int, Ident>> identsStack;
     identsStack.push(std::map<int, Ident>());
-    std::map<int, Ident> &idents = identsStack.top();
 
     int i, j, index = 0, size = poliz.size();
     while (index < size)
@@ -25,12 +24,12 @@ void Executer::execute(std::vector<Lex> &poliz)
         case POLIZ_DECLARE_VAR:
         {
             i = pc_el.get_value();
-            const Ident &ident = idents[i];
+            const Ident &ident = identsStack.top()[i];
             if (ident.get_declare())
             {
                 throw "POLIZ: variable already declared";
             }
-            idents[i] = TID[i];
+            identsStack.top()[i] = TID[i];
         }
         break;
         case LEX_TRUE:
@@ -42,18 +41,24 @@ void Executer::execute(std::vector<Lex> &poliz)
             break;
         case LEX_ID:
             i = pc_el.get_value();
-            if (!idents[i].get_declare())
+
+            if (!identsStack.top()[i].get_declare())
             {
-                throw "POLIZ: not declared";
-            }
-            if (!idents[i].get_assign())
-            {
+                const std::string id = identsStack.top()[i].get_id();
                 std::ostringstream os;
-                os << "POLIZ: not initialized: " << idents[i].get_name() << " " << idents[i].get_id();
+                os << "POLIZ: not declared: name '" << identsStack.top()[i].get_name() << "' id = '" << id << "'"
+                   << " " << pc_el.get_str_value();
+                throw std::runtime_error(os.str());
+            }
+            if (!identsStack.top()[i].get_assign())
+            {
+                const std::string id = identsStack.top()[i].get_id();
+                std::ostringstream os;
+                os << "POLIZ: not assigned: name '" << identsStack.top()[i].get_name() << "' id = '" << id << "'";
                 throw std::runtime_error(os.str());
             }
 
-            args.push(idents[i].get_value());
+            args.push(identsStack.top()[i].get_value());
             break;
 
         case LEX_NOT:
@@ -73,9 +78,20 @@ void Executer::execute(std::vector<Lex> &poliz)
             args.push(j && i);
             break;
 
+        case POLIZ_CALL_FUNC:
+            index = pc_el.get_value() - 1;
+            identsStack.push(std::map<int, Ident>());
+            break;
+
         case POLIZ_GO:
             from_st(args, i);
             index = i - 1;
+            break;
+
+        case POLIZ_RETURN_FUNC:
+            from_st(args, i);
+            index = i - 1;
+            identsStack.pop();
             break;
 
         case POLIZ_DUP:
@@ -125,7 +141,7 @@ void Executer::execute(std::vector<Lex> &poliz)
                     break;
                 }
             }
-            idents[i].put_value(k);
+            identsStack.top()[i].put_value(k);
             break;
 
         case LEX_PLUS:
@@ -196,7 +212,13 @@ void Executer::execute(std::vector<Lex> &poliz)
         case LEX_ASSIGN:
             from_st(args, i);
             from_st(args, j);
-            idents[j].put_value(i);
+            identsStack.top()[j].put_value(i);
+            break;
+
+        case POLIZ_INIT_FUNC_ARG:
+            from_st(args, j);
+            from_st(args, i);
+            identsStack.top()[j].put_value(i);
             break;
 
         case POLIZ_FAIL:
