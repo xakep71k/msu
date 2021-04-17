@@ -8,6 +8,7 @@ class IdentFunc : public Ident
 {
     std::vector<Ident> args_;
     Lex return_lex_;
+    int return_var_;
 
 public:
     IdentFunc()
@@ -33,7 +34,7 @@ public:
         return_lex_ = lex;
     }
 
-    const Lex &get_return_lex()
+    const Lex &get_return_lex() const
     {
         return return_lex_;
     }
@@ -41,6 +42,16 @@ public:
     const Ident &operator[](int i) const
     {
         return args_[i];
+    }
+
+    void set_return_var(int i)
+    {
+        return_var_ = i;
+    }
+
+    int get_return_var() const
+    {
+        return return_var_;
     }
 };
 

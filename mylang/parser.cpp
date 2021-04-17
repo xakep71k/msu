@@ -190,11 +190,15 @@ void Parser::FuncExtract()
 
     // параметры функции
     get_next_lex();
-    int varsCount = VarDeclaration();
-
+    int varsCount = 0;
     if (c_type != LEX_RPAREN)
     {
-        throw curr_lex;
+        varsCount = VarDeclaration();
+
+        if (c_type != LEX_RPAREN)
+        {
+            throw curr_lex;
+        }
     }
 
     for (int i = (int)TID.size() - 1; i >= (int)TID.size() - varsCount; i--)
@@ -217,6 +221,7 @@ void Parser::FuncExtract()
     }
 
     func.set_return_lex(curr_lex);
+    FuncDeclareRetVar(func);
 
     get_next_lex();
     if (c_type == LEX_VAR)
@@ -234,11 +239,21 @@ void Parser::FuncExtract()
     TID.pop_func();
 }
 
+void Parser::FuncDeclareRetVar(IdentFunc &func)
+{
+    const int index = put(func.get_name());
+    TID[index].set_ret();
+    st_int.push(index);
+    dec(func.get_return_lex().get_type());
+    func.set_return_var(index);
+}
+
 void Parser::B()
 {
     if (c_type == LEX_BEGIN)
     {
         get_next_lex();
+
         S();
         while (c_type == LEX_SEMICOLON)
         {
@@ -273,27 +288,28 @@ void Parser::S()
         pl2 = poliz.size();
         poliz.push_back(Lex());
         poliz.push_back(Lex(POLIZ_FGO, 0, "POLIZ_FGO"));
-        if (c_type == LEX_THEN)
-        {
-            get_next_lex();
-            S();
-
-            if (c_type == LEX_ELSE)
-            {
-                pl3 = poliz.size();
-                poliz.push_back(Lex());
-                poliz.push_back(Lex(POLIZ_GO, 0, "POLIZ_GO"));
-
-                get_next_lex();
-                S();
-                poliz[pl3] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
-            }
-            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
-        }
-        else
+        if (c_type != LEX_THEN)
         {
             throw curr_lex;
         }
+        get_next_lex();
+        S();
+
+        pl3 = poliz.size();
+        poliz.push_back(Lex());
+        poliz.push_back(Lex(POLIZ_GO, 0, "POLIZ_GO"));
+
+        if (c_type == LEX_ELSE)
+        {
+            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
+            get_next_lex();
+            S();
+        }
+        else
+        {
+            poliz[pl2] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
+        }
+        poliz[pl3] = Lex(POLIZ_LABEL, poliz.size(), "POLIZ_LABEL");
     } //end if
     else if (c_type == LEX_CASE)
     {
@@ -363,15 +379,18 @@ void Parser::S()
     } //end write
     else if (c_type == LEX_ID)
     {
-        if (TID.find_func(c_str_val).get_type() == LEX_FUNCTION)
+        const int old_c_val = c_val;
+        const std::string old_c_str_val = c_str_val;
+        get_next_lex();
+        if (TID.find_func(old_c_str_val).get_type() == LEX_FUNCTION && c_type == LEX_LPAREN)
         {
-            callFunc();
+            callFunc(old_c_str_val);
         }
         else
         {
-            check_id();
-            poliz.push_back(Lex(POLIZ_ADDRESS, c_val, "POLIZ_ADDRESS"));
-            get_next_lex();
+            check_id(old_c_val);
+            poliz.push_back(Lex(POLIZ_ADDRESS, old_c_val, "POLIZ_ADDRESS"));
+            //get_next_lex();
             if (c_type != LEX_ASSIGN)
             {
                 throw curr_lex;
@@ -388,36 +407,47 @@ void Parser::S()
     }
 }
 
-void Parser::callFunc()
+void Parser::callFunc(const std::string &func_name)
 {
-    const IdentFunc &func = TID.find_func(c_str_val);
-    get_next_lex();
-    if (c_type != LEX_LPAREN)
+    const IdentFunc &func = TID.find_func(func_name);
+    if (func.get_type() != LEX_FUNCTION)
     {
-        throw curr_lex;
+        std::ostringstream os;
+        os << "function not declared: '" << func_name << "'";
+        throw std::runtime_error(os.str());
     }
-
     get_next_lex();
     bool leave = false;
     size_t countArgs = 0;
     const int returnIndexLabel = poliz.size();
     poliz.push_back(Lex());
-    for (; !leave; ++countArgs)
+    if (func.size_args() != 0)
     {
-        type_of_lex t;
-        if (countArgs >= func.size_args())
+        for (; !leave; ++countArgs)
         {
-            std::ostringstream os;
-            os << "wrong number of args in function: " << func.get_name();
-            throw std::runtime_error(os.str());
+            type_of_lex t;
+            if (countArgs >= func.size_args())
+            {
+                std::ostringstream os;
+                os << "wrong number of args in function: " << func.get_name();
+                throw std::runtime_error(os.str());
+            }
+            E();
+            from_st(st_lex, t);
+            if (func[countArgs].get_type() != t)
+            {
+                throw std::runtime_error("wrong type of arg");
+            }
+            leave = c_type == LEX_RPAREN;
+            get_next_lex();
         }
-        E();
-        from_st(st_lex, t);
-        if (func[countArgs].get_type() != t)
+    }
+    else
+    {
+        if (c_type != LEX_RPAREN)
         {
-            throw std::runtime_error("wrong type of arg");
+            throw curr_lex;
         }
-        leave = c_type == LEX_RPAREN;
         get_next_lex();
     }
 
@@ -473,9 +503,23 @@ void Parser::F()
 {
     if (c_type == LEX_ID)
     {
-        check_id();
-        poliz.push_back(Lex(LEX_ID, c_val, "LEX_ID F()"));
-        get_next_lex();
+        if (TID.find_func(c_str_val).get_type() == LEX_FUNCTION)
+        {
+            const std::string func_name = c_str_val;
+            get_next_lex();
+            if (c_type != LEX_LPAREN)
+            {
+                throw curr_lex;
+            }
+            callFunc(func_name);
+            st_lex.push(TID.find_func(func_name).get_return_lex().get_type());
+        }
+        else
+        {
+            check_id(c_val);
+            poliz.push_back(Lex(LEX_ID, c_val, "LEX_ID F()"));
+            get_next_lex();
+        }
     }
     else if (c_type == LEX_NUM)
     {
@@ -694,16 +738,17 @@ void Parser::case_of()
     }
 }
 
-void Parser::check_id()
+void Parser::check_id(int addr)
 {
-    if (TID[c_val].get_declare())
+    if (TID[addr].get_declare())
     {
-        st_lex.push(TID[c_val].get_type());
+        st_lex.push(TID[addr].get_type());
     }
     else
     {
         std::ostringstream os;
-        os << "check_id: not declared " << TID[c_val].get_name() << " " << TID[c_val].get_id();
+        TID[addr].get_name();
+        os << "check_id: not declared " << TID[addr].get_name() << " " << TID[addr].get_id();
         throw std::runtime_error(os.str());
     }
 }
@@ -717,13 +762,21 @@ void Parser::check_op()
     from_st(st_lex, t1);
 
     if (op == LEX_PLUS || op == LEX_MINUS || op == LEX_TIMES || op == LEX_SLASH)
+    {
         r = LEX_INT;
+    }
     if (op == LEX_OR || op == LEX_AND)
+    {
         t = LEX_BOOL;
+    }
     if (t1 == t2 && t1 == t)
+    {
         st_lex.push(r);
+    }
     else
+    {
         throw "wrong types are in operation";
+    }
     poliz.push_back(Lex(op, 0, "op"));
 }
 

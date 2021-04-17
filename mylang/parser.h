@@ -4,6 +4,7 @@
 #include <stack>
 #include "scanner.h"
 #include "lex.h"
+#include "ident_func.h"
 #include <vector>
 #include <set>
 
@@ -25,8 +26,9 @@ class Parser
     void Program();
     int VarDeclaration();
     int VarExtract();
-    void callFunc();
+    void callFunc(const std::string &func_name);
     void FuncExtract();
+    void FuncDeclareRetVar(IdentFunc &func);
     void B();
     void S();
     void E();
@@ -34,7 +36,7 @@ class Parser
     void T();
     void F();
     void dec(type_of_lex type);
-    void check_id();
+    void check_id(int);
     void check_op();
     void case_of();
     void repeat_case(int pl0, int pl1);

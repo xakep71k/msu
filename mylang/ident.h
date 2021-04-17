@@ -14,10 +14,12 @@ class Ident
     bool assign;
     int value;
     std::string id_;
+    bool ret;
 
 public:
     Ident() : declare(false),
-              assign(false)
+              assign(false),
+              ret(false)
     {
     }
     
@@ -28,7 +30,8 @@ public:
 
     Ident(const std::string &n) : name(n),
                                   declare(false),
-                                  assign(false)
+                                  assign(false),
+                                  ret(false)
     {
     }
 
@@ -42,7 +45,7 @@ public:
         return id_;
     }
 
-    std::string get_name() const
+    const std::string &get_name() const
     {
         return name;
     }
@@ -74,6 +77,16 @@ public:
     {
         value = v;
         assign = true;
+    }
+
+    bool get_ret() const
+    {
+        return ret;
+    }
+
+    void set_ret()
+    {
+        ret = true;
     }
 };
 
