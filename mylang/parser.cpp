@@ -423,7 +423,7 @@ void Parser::callFunc(const std::string &func_name)
     poliz.push_back(Lex());
     if (func.size_args() != 0)
     {
-        for (; !leave; ++countArgs)
+        for (int i = func.size_args() - 1; !leave; ++countArgs, i--)
         {
             type_of_lex t;
             if (countArgs >= func.size_args())
@@ -434,7 +434,7 @@ void Parser::callFunc(const std::string &func_name)
             }
             E();
             from_st(st_lex, t);
-            if (func[countArgs].get_type() != t)
+            if (func[i].get_type() != t)
             {
                 throw std::runtime_error("wrong type of arg");
             }
