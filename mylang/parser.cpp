@@ -417,13 +417,13 @@ void Parser::callFunc(const std::string &func_name)
         throw std::runtime_error(os.str());
     }
     get_next_lex();
-    bool rparent = false;
+    bool rparent_found = false;
     const int returnIndexLabel = poliz.size();
     poliz.push_back(Lex());
     if (func.size_args() != 0)
     {
         int i = func.size_args() - 1;
-        for (; !rparent && i >= 0; i--)
+        for (; !rparent_found && i >= 0; i--)
         {
             type_of_lex t;
             E();
@@ -432,10 +432,10 @@ void Parser::callFunc(const std::string &func_name)
             {
                 throw std::runtime_error("wrong type of arg");
             }
-            rparent = c_type == LEX_RPAREN;
+            rparent_found = c_type == LEX_RPAREN;
             get_next_lex();
         }
-        if (i >= 0 || !rparent)
+        if (i >= 0 || !rparent_found)
         {
             std::ostringstream os;
             os << "wrong number of args in function: " << func.get_name();
