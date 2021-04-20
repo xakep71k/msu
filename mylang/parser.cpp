@@ -420,9 +420,7 @@ void Parser::callFunc(const std::string &func_name)
     const IdentFunc &func = TID.find_func(func_name);
     if (func.get_type() != LEX_FUNCTION)
     {
-        std::ostringstream os;
-        os << "function not declared: '" << func_name << "'";
-        throw std::runtime_error(os.str());
+        throw Error() << "function not declared: '" << func_name << "'";
     }
     get_next_lex();
     bool rparent_found = false;
@@ -445,9 +443,7 @@ void Parser::callFunc(const std::string &func_name)
         }
         if (i >= 0 || !rparent_found)
         {
-            std::ostringstream os;
-            os << "wrong number of args in function: " << func.get_name();
-            throw std::runtime_error(os.str());
+            throw Error() << "wrong number of args in function: " << func.get_name();
         }
     }
     else
@@ -589,9 +585,7 @@ void Parser::check_const_case_type(type_of_lex case_type)
         case LEX_TRUE:
             break;
         default:
-            std::ostringstream os;
-            os << "wrong const type of case: must be true/false: " << c_type;
-            throw std::runtime_error(os.str());
+            throw Error() << "wrong const type of case: must be true/false: " << c_type;
         }
     }
     else if (case_type == LEX_INT)
@@ -601,9 +595,7 @@ void Parser::check_const_case_type(type_of_lex case_type)
         case LEX_NUM:
             break;
         default:
-            std::ostringstream os;
-            os << "wrong const type of case: must be num: " << c_type;
-            throw std::runtime_error(os.str());
+            throw Error() << "wrong const type of case: must be num: " << c_type;
         }
     }
     else
@@ -748,10 +740,7 @@ void Parser::check_id(int addr)
     }
     else
     {
-        std::ostringstream os;
-        TID[addr].get_name();
-        os << "check_id: not declared " << TID[addr].get_name() << " " << TID[addr].get_id();
-        throw std::runtime_error(os.str());
+        throw Error() << "check_id: not declared " << TID[addr].get_name() << " " << TID[addr].get_id();
     }
 }
 
@@ -810,8 +799,6 @@ void Parser::check_id_in_read()
 {
     if (!TID[c_val].get_declare())
     {
-        std::ostringstream os;
-        os << "check_id_in_read: not declared " << TID[c_val].get_name() << " " << TID[c_val].get_id();
-        throw std::runtime_error(os.str());
+        throw Error() << "check_id_in_read: not declared " << TID[c_val].get_name() << " " << TID[c_val].get_id();
     }
 }

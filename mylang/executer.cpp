@@ -3,9 +3,9 @@
 #include "parser.h"
 #include <stack>
 #include <iostream>
-#include <sstream>
 #include <vector>
 #include "tid.h"
+#include "error.h"
 
 void Executer::execute(std::vector<Lex> &poliz)
 {
@@ -49,17 +49,11 @@ void Executer::execute(std::vector<Lex> &poliz)
 
             if (!idents[i].get_declare())
             {
-                const std::string id = idents[i].get_id();
-                std::ostringstream os;
-                os << "POLIZ: not declared: name '" << idents[i].get_id();
-                throw std::runtime_error(os.str());
+                throw Error() << "POLIZ: not declared: name '" << idents[i].get_id();
             }
             if (!idents[i].get_assign())
             {
-                const std::string id = idents[i].get_id();
-                std::ostringstream os;
-                os << "POLIZ: not assigned: name '" << idents[i].get_id();
-                throw std::runtime_error(os.str());
+                throw Error() << "POLIZ: not assigned: name '" << idents[i].get_id();
             }
 
             args.push(idents[i].get_value());
@@ -239,9 +233,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             break;
 
         default:
-            std::ostringstream os;
-            os << "POLIZ: unexpected elem: " << pc_el.get_type();
-            throw std::runtime_error(os.str());
+            throw Error() << "POLIZ: unexpected elem: " << pc_el.get_type();
         } //end of switch
         ++index;
     }; //end of while

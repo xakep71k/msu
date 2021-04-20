@@ -2,6 +2,7 @@
 #include <cctype>
 #include "ident.h"
 #include "lex.h"
+#include <sstream>
 
 const char *Scanner::TW[] = {
     "",
