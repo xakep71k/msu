@@ -22,21 +22,6 @@ void Executer::execute(std::vector<Lex> &poliz)
         const type_of_lex type = pc_el.get_type();
         switch (type)
         {
-        case POLIZ_DECLARE_VAR:
-        {
-            i = pc_el.get_value();
-            const Ident &ident = idents[i];
-            if (ident.get_declare())
-            {
-                THROW_ERROR << "POLIZ: variable already declared";
-            }
-            idents[i] = TID[i];
-            if (idents[i].get_ret())
-            {
-                args.push(i);
-            }
-        }
-        break;
         case LEX_TRUE:
         case LEX_FALSE:
         case LEX_NUM:
@@ -46,11 +31,6 @@ void Executer::execute(std::vector<Lex> &poliz)
             break;
         case LEX_ID:
             i = pc_el.get_value();
-
-            if (!idents[i].get_declare())
-            {
-                THROW_ERROR << "POLIZ: not declared: name '" << idents[i].get_id();
-            }
             if (!idents[i].get_assign())
             {
                 THROW_ERROR << "POLIZ: not assigned: name '" << idents[i].get_id();
@@ -88,12 +68,12 @@ void Executer::execute(std::vector<Lex> &poliz)
 
         case POLIZ_RETURN_FUNC:
             from_st(args, j);
-            from_st(args, i);
-            index = i - 1;
             if (!idents[j].get_assign())
             {
-                THROW_ERROR << "return value not assigned";
+                THROW_ERROR << "return value not assigned: " << TID[j].get_name() ;
             }
+            from_st(args, i);
+            index = i - 1;
             args.push(idents[j].get_value());
             identsStack.pop();
             break;
@@ -144,6 +124,11 @@ void Executer::execute(std::vector<Lex> &poliz)
                     k = (j == "true") ? 1 : 0;
                     break;
                 }
+            }
+
+            if (!idents[i].get_assign())
+            {
+                idents[i] = TID[i];
             }
             idents[i].put_value(k);
             break;

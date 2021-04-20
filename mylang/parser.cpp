@@ -34,8 +34,6 @@ std::ostream &operator<<(std::ostream &s, Lex l)
         t = "DEL";
     else if (l.t_lex == POLIZ_DUP)
         t = "DUP";
-    else if (l.t_lex == POLIZ_DECLARE_VAR)
-        t = "VAR";
     else if (l.t_lex == POLIZ_CALL_FUNC)
         t = "CALL";
     else if (l.t_lex == POLIZ_RETURN_FUNC)
@@ -249,6 +247,7 @@ void Parser::FuncDeclareRetVar(IdentFunc &func)
     st_int.push(index);
     dec(func.get_return_lex().get_type());
     func.set_return_var(index);
+    poliz.push_back(Lex(POLIZ_ADDRESS, index));
 }
 
 void Parser::B()
@@ -438,14 +437,14 @@ void Parser::callFunc(const std::string &func_name)
             from_st(st_lex, t);
             if (func[i].get_type() != t)
             {
-                throw std::runtime_error("wrong type of arg");
+                THROW_ERROR << "wrong type of arg";
             }
             rparent_found = c_type == LEX_RPAREN;
             get_next_lex();
         }
         if (i >= 0 || !rparent_found)
         {
-            THROW_ERROR << "wrong number of args in function: " << func.get_name();
+            THROW_ERROR << "wrong number of args in function '" << func.get_name() << "'";
         }
     }
     else
@@ -570,7 +569,6 @@ void Parser::dec(type_of_lex type)
         {
             throw "twice";
         }
-        poliz.push_back(Lex(POLIZ_DECLARE_VAR, i, "declare variable"));
         TID[i].put_declare();
         TID[i].put_type(type);
     }

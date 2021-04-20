@@ -1,13 +1,13 @@
 program
 
-function num1(): int
+function num1(var i: int): int
 begin
-    num1 := 5
+    num1 := i
 end;
 
-function num2(): int
+function num2(var i: int): int
 begin
-    num2 := 10
+    num2 := i
 end;
 
 function plus(var i1, i2: int): int
@@ -34,15 +34,15 @@ end;
 begin
     writeln(
         plus(
-            num1(),
-            num2()
+            num1(5),
+            num2(10)
         )
     );
     writeln(
         andop(
             less(
-                num1(),
-                num2()
+                num1(5),
+                num2(10)
             ),
             more(4, 3)
         )
@@ -50,8 +50,8 @@ begin
     writeln(
         andop(
             less(
-                num1(),
-                num2()
+                num1(5),
+                num2(10)
             ),
             more(1, 2)
         )

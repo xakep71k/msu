@@ -6,5 +6,6 @@ begin
 end;
 
 begin
-    writeln(less(1, 2))
+    writeln(less(1, 2));
+    writeln(less(2, 1))
 end@
