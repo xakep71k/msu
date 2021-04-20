@@ -49,11 +49,11 @@ void Executer::execute(std::vector<Lex> &poliz)
 
             if (!idents[i].get_declare())
             {
-                throw Error() << "POLIZ: not declared: name '" << idents[i].get_id();
+                THROW_ERROR() << "POLIZ: not declared: name '" << idents[i].get_id();
             }
             if (!idents[i].get_assign())
             {
-                throw Error() << "POLIZ: not assigned: name '" << idents[i].get_id();
+                THROW_ERROR() << "POLIZ: not assigned: name '" << idents[i].get_id();
             }
 
             args.push(idents[i].get_value());
@@ -233,7 +233,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             break;
 
         default:
-            throw Error() << "POLIZ: unexpected elem: " << pc_el.get_type();
+            THROW_ERROR() << "POLIZ: unexpected elem: " << pc_el.get_type();
         } //end of switch
         ++index;
     }; //end of while
