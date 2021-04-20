@@ -16,6 +16,7 @@ void from_st ( T & st, T_EL & i ) {
 
 class Parser
 {
+    int deep_S;
     Lex curr_lex;
     type_of_lex c_type;
     int c_val;

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <stack>
 #include "tid.h"
+#include "error.h"
 
 std::ostream &operator<<(std::ostream &s, Lex l)
 {
@@ -254,9 +255,11 @@ void Parser::B()
     {
         get_next_lex();
 
+        deep_S = 0;
         S();
         while (c_type == LEX_SEMICOLON)
         {
+            deep_S = 0;
             get_next_lex();
             S();
         }
@@ -279,6 +282,7 @@ void Parser::B()
 void Parser::S()
 {
     int pl0, pl1, pl2, pl3;
+    deep_S++;
 
     if (c_type == LEX_IF)
     {
@@ -409,6 +413,10 @@ void Parser::S()
 
 void Parser::callFunc(const std::string &func_name)
 {
+    if (deep_S == 1)
+    {
+        throw Error() << "return value of function '" << func_name << "()' not used"; 
+    }
     const IdentFunc &func = TID.find_func(func_name);
     if (func.get_type() != LEX_FUNCTION)
     {
@@ -457,6 +465,7 @@ void Parser::callFunc(const std::string &func_name)
 
 void Parser::E()
 {
+    deep_S++;
     E1();
     if (c_type == LEX_EQ || c_type == LEX_LSS || c_type == LEX_GTR ||
         c_type == LEX_LEQ || c_type == LEX_GEQ || c_type == LEX_NEQ)

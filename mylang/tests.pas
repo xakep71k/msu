@@ -12,6 +12,7 @@ end;
 var i: int;
 begin
     read(i);
+    recursion(i);
     writeln(recursion(i))
 end@
 
