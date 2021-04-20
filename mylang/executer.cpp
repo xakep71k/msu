@@ -28,7 +28,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             const Ident &ident = idents[i];
             if (ident.get_declare())
             {
-                throw "POLIZ: variable already declared";
+                THROW_ERROR << "POLIZ: variable already declared";
             }
             idents[i] = TID[i];
             if (idents[i].get_ret())
@@ -92,7 +92,7 @@ void Executer::execute(std::vector<Lex> &poliz)
             index = i - 1;
             if (!idents[j].get_assign())
             {
-                throw std::runtime_error("return value not assigned");
+                THROW_ERROR << "return value not assigned";
             }
             args.push(idents[j].get_value());
             identsStack.pop();
@@ -175,7 +175,9 @@ void Executer::execute(std::vector<Lex> &poliz)
                 break;
             }
             else
-                throw "POLIZ:divide by zero";
+            {
+                THROW_ERROR << "POLIZ:divide by zero";
+            }
 
         case LEX_EQ:
             from_st(args, i);
