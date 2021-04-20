@@ -31,5 +31,5 @@ public:
     }
 };
 
-#define THROW_ERROR() throw Error() << __FILE__ << ":" << __LINE__ << " "
+#define THROW_ERROR throw Error() << __FILE__ << ":" << __LINE__ << " "
 #endif

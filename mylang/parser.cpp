@@ -415,12 +415,12 @@ void Parser::callFunc(const std::string &func_name)
 {
     if (deep_S == 1)
     {
-        THROW_ERROR() << "return value of function '" << func_name << "()' not used"; 
+        THROW_ERROR << "return value of function '" << func_name << "()' not used"; 
     }
     const IdentFunc &func = TID.find_func(func_name);
     if (func.get_type() != LEX_FUNCTION)
     {
-        THROW_ERROR() << "function not declared: '" << func_name << "'";
+        THROW_ERROR << "function not declared: '" << func_name << "'";
     }
     get_next_lex();
     bool rparent_found = false;
@@ -443,7 +443,7 @@ void Parser::callFunc(const std::string &func_name)
         }
         if (i >= 0 || !rparent_found)
         {
-            THROW_ERROR() << "wrong number of args in function: " << func.get_name();
+            THROW_ERROR << "wrong number of args in function: " << func.get_name();
         }
     }
     else
@@ -585,7 +585,7 @@ void Parser::check_const_case_type(type_of_lex case_type)
         case LEX_TRUE:
             break;
         default:
-            THROW_ERROR() << "wrong const type of case: must be true/false: " << c_type;
+            THROW_ERROR << "wrong const type of case: must be true/false: " << c_type;
         }
     }
     else if (case_type == LEX_INT)
@@ -595,7 +595,7 @@ void Parser::check_const_case_type(type_of_lex case_type)
         case LEX_NUM:
             break;
         default:
-            THROW_ERROR() << "wrong const type of case: must be num: " << c_type;
+            THROW_ERROR << "wrong const type of case: must be num: " << c_type;
         }
     }
     else
@@ -740,7 +740,7 @@ void Parser::check_id(int addr)
     }
     else
     {
-        THROW_ERROR() << "check_id: not declared " << TID[addr].get_name() << " " << TID[addr].get_id();
+        THROW_ERROR << "check_id: not declared " << TID[addr].get_name() << " " << TID[addr].get_id();
     }
 }
 
@@ -799,6 +799,6 @@ void Parser::check_id_in_read()
 {
     if (!TID[c_val].get_declare())
     {
-        THROW_ERROR() << "check_id_in_read: not declared " << TID[c_val].get_name() << " " << TID[c_val].get_id();
+        THROW_ERROR << "check_id_in_read: not declared " << TID[c_val].get_name() << " " << TID[c_val].get_id();
     }
 }
