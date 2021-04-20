@@ -167,8 +167,6 @@ int Parser::VarExtract()
 
 // FuncExtract = W
 // W -> function (var D, {D}): [int | bool] B
-// вызов
-// 
 void Parser::FuncExtract()
 {
     // получаем имя функции
