@@ -43,3 +43,22 @@
 
 (print (LastAtom '(((A)) (B))))
 (print (LastAtom '(((5) A))))
+
+; Определить функцию (Depth L), вычисляющую глубину списка L,
+; т.е. максимальное количество уровней в нём. Например:
+; (Depth '(((A (5) 8) B (K))(G (C)))) => 4
+(defun Depth (L)
+    (cond
+        ((atom L) 0)
+        (T (let ((x (+ 1 (Depth (car L)))) (y (Depth (cdr L))))
+               (cond 
+                   ((< x y) y)
+                   (T x)
+               )
+           )
+        )
+    )
+)
+
+(print (Depth '(C (B) ((A))) ))
+(print (Depth '(((A (5) 8) B (K))(G (C)))))
