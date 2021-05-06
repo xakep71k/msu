@@ -62,3 +62,19 @@
 
 (print (Depth '(C (B) ((A))) ))
 (print (Depth '(((A (5) 8) B (K))(G (C)))))
+
+; Составить функцию (MySubst A L E), заменяющуюв произвольном списочном выражении L на всех его уровнях все вхождения атома А на выражение Е.
+; Например: (MySubst 'Q '(Q (B (Q)) C ((Q) 8))) '(A Z)) => ((A Z) (B ((A Z))) C (((A Z)) 8)
+(defun MySubst (A L E)
+    (cond 
+        ((equal A L) E)
+        ((atom L) L)
+        (T (let ((x (MySubst A (car L) E)) (y (MySubst A (cdr L) E)))
+               (append (list x) y)
+           )
+        )
+    )
+)
+
+(print (MySubst '(NIL) '((NIL) D) 'C))
+(print (MySubst 'Q '(Q (B (Q)) C ((Q) 8)) '(A Z)))
