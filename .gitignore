@@ -3,6 +3,8 @@
 all_sorts_17_2
 project_17_2019/bubnov_17
 *.out
+*.hi
 obj
 valgrind-out.txt
 mylang/mylang
+haskell
