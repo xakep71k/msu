@@ -93,15 +93,24 @@
 ; на всех его уровнях встречается только атом Z, иначе вырабатывает NIL.
 ; Например: (OnlyZ '((Z (Z ()) Z) () Z) )=> T, (OnlyZ '((Z (Z ()) 8) () Z))=> NIL.
 (defun OnlyZ (L)
+     (let ((x (OnlyZ_ L)))
+         (cond
+             ((equal x '(NIL)) NIL)
+             (T x)
+         )
+     )
+)
+
+(defun OnlyZ_ (L)
     (cond
         ((equal 'Z L) T)
         ((atom L) NIL)
         (T (let ((x (car L)) (y (cdr L)))
                    (cond
                        ((and (null x) (null y)) '(NIL))
-                       ((null x) (OnlyZ y))
-                       ((null y) (OnlyZ x))
-                       (T (let ((a (OnlyZ x)) (b (OnlyZ y)))
+                       ((null x) (OnlyZ_ y))
+                       ((null y) (OnlyZ_ x))
+                       (T (let ((a (OnlyZ_ x)) (b (OnlyZ_ y)))
                                (cond
                                    ((and (equal T a) (equal '(NIL) b)) T)
                                    ((and (equal '(NIL) a) (equal T b)) T)
@@ -116,6 +125,7 @@
     )
 )
 
+(print (OnlyZ '(() () (())) ))
 (print (OnlyZ '(Z (())) ))
 (print (OnlyZ '(Z 9)))
 (print (OnlyZ '((Z ((())) Z) () Z)))
