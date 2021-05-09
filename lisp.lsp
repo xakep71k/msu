@@ -131,3 +131,43 @@
 (print (OnlyZ '((Z ((())) Z) () Z)))
 (print (OnlyZ '((Z (Z ()) Z) () Z)))
 (print (OnlyZ '((Z (Z ()) 8) () Z)))
+
+; упрощение выражений (c операциями +,-,/,*). 
+; Выражение a+b+b*(c+0)*b+(b+f)*0
+; можно представить лисповским списком:
+; (+ a b (* b (+ c 0) b) (*(+ b f ) 0) )
+; Нужно написать функцию (возможно с вспомогательными функциями) simplify,  которая упрощает выражение. Например, исходному выражению будет эквивалентно
+; a+b+b*c*b , что на Лиспе выглядит как
+; (+ a b (* b  c  b) )
+(defun skipZero (L1 L2)
+    (cond
+        ((null L2) L1)
+        (T (let ((item (car L2)) (tail (cdr L2)))
+             (cond
+                 ((equal item '0) (skipZero L1 tail))
+                 ((not (atom item)) (let ((expr (CalcExpr item)))
+                     (cond
+                         ((null expr) L1)
+                         (T (append L1 (list expr)))
+                     )
+                 ))
+                 (T (skipZero (append L1 (list item)) tail))
+             )
+        ))
+    )
+)
+
+(defun CalcExpr (L)
+    (let ((sign (car L)) (expr (cdr L)))
+         (cond
+             ((or (equal sign '+) (equal sign '-))
+                 (let ((result (skipZero () expr)))
+                      (cond
+                          ((atom result) result)
+                          (T (append (list sign) result))
+                      )
+                 )
+             )
+         )
+    )
+)
