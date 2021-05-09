@@ -1,5 +1,5 @@
-; http://recyclebin.ru/BMK/LISP/PosobieLisp.pdf
-; https://rextester.com/l/common_lisp_online_compiler
+; пособие http://recyclebin.ru/BMK/LISP/PosobieLisp.pdf
+; онлайн компилятор https://rextester.com/l/common_lisp_online_compiler
 
 ; стр 59 (1)
 ; Составить функцию (RemoveLast L), удаляющую из списка последний элемент.
@@ -139,29 +139,57 @@
 ; Нужно написать функцию (возможно с вспомогательными функциями) simplify,  которая упрощает выражение. Например, исходному выражению будет эквивалентно
 ; a+b+b*c*b , что на Лиспе выглядит как
 ; (+ a b (* b  c  b) )
-(defun skipZero (L1 L2)
+(defun skipSumSubZero (L1 L2)
     (cond
         ((null L2) L1)
         (T (let ((item (car L2)) (tail (cdr L2)))
              (cond
-                 ((equal item '0) (skipZero L1 tail))
-                 ((not (atom item)) (let ((expr (CalcExpr item)))
+                 ((equal item '0) (skipSumSubZero L1 tail))
+                 ((atom item) (skipSumSubZero (append L1 (list item)) tail))
+                 (T (let ((expr (CalcExpr item)))
                      (cond
                          ((null expr) L1)
-                         (T (append L1 (list expr)))
+                         ((equal expr 0) (skipSumSubZero L1 tail))
+                         (T (skipSumSubZero (append L1 (list expr)) tail))
                      )
                  ))
-                 (T (skipZero (append L1 (list item)) tail))
              )
         ))
     )
 )
 
-(defun CalcExpr (L)
+(defun skipMulZero (L1 L2)
+    (cond
+        ((null L2) L1)
+        (T (let ((item (car L2)) (tail (cdr L2)))
+             (cond
+                 ((equal item '0) NIL)
+                 ((atom item) (skipMulZero (append L1 (list item)) tail))
+                 (T (let ((expr (CalcExpr item)))
+                     (cond
+                         ((null expr) L1)
+                         ((equal expr 0) NIL)
+                         (T (skipMulZero (append L1 (list expr)) tail))
+                     )
+                 ))
+             )
+        ))
+    )
+)
+
+(defun SimplifyExpr (L)
     (let ((sign (car L)) (expr (cdr L)))
          (cond
              ((or (equal sign '+) (equal sign '-))
-                 (let ((result (skipZero () expr)))
+                 (let ((result (skipSumSubZero () expr)))
+                      (cond
+                          ((atom result) result)
+                          (T (append (list sign) result))
+                      )
+                 )
+             )
+             ((equal sign '*)
+                 (let ((result (skipMulZero () expr)))
                       (cond
                           ((atom result) result)
                           (T (append (list sign) result))
@@ -171,3 +199,47 @@
          )
     )
 )
+
+(defun RedundantBrackets (L1 L2)
+    (cond
+        ((null L2) L1)
+        (T (let ((item (car L2)) (tail (cdr L2)))
+                (cond
+                    ((and (null L1) (equal (length tail) 1))
+                        (cond
+                            ((equal item '-)
+                                (cond
+                                    ((atom (car tail)) L2)
+                                    (T (append L1 (append (list item) (RedundantBrackets () (car tail)))))
+                                )
+                            )
+                            (T
+                                (cond
+                                    ((atom (car tail)) (car tail))
+                                    (T (RedundantBrackets () (car tail)))
+                                )
+                            )
+                        )
+                    )
+                    ((atom item) (RedundantBrackets (append L1 (list item)) tail))
+                    (T (RedundantBrackets (append L1 (list (RedundantBrackets () item))) tail))
+                )
+            )
+        )
+    )
+)
+
+(defun CalcExpr (L)
+    (let ((expr (RedundantBrackets () (SimplifyExpr L))))
+        (cond
+            ((null expr) 0)
+            (T expr)
+        )
+    )
+)
+
+(print (CalcExpr '(+ 0 0)))
+(print (CalcExpr '(+ 0 (- 0 a))))
+(print (calcExpr '(+ a b (* b (+ c 0) b) (*(+ b f ) 0) )))
+(print (CalcExpr '(* a (+ 0 (* 0 b) c))))
+(print (CalcExpr '(* (+ c 0) b) ))
