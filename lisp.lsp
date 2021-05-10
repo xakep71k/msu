@@ -183,6 +183,7 @@
              ((or (equal sign '+) (equal sign '-))
                  (let ((result (skipSumSubZero () expr)))
                       (cond
+                          ((<= (length L) 1) (error "Выражение должно сождерать более одного символа"))
                           ((atom result) result)
                           (T (append (list sign) result))
                       )
@@ -191,6 +192,7 @@
              ((equal sign '*)
                  (let ((result (skipMulZero () expr)))
                       (cond
+                          ((<= (length L) 2) (error "Выражение должно сождерать более двух символов"))
                           ((atom result) result)
                           (T (append (list sign) result))
                       )
@@ -243,3 +245,5 @@
 (print (calcExpr '(+ a b (* b (+ c 0) b) (*(+ b f ) 0) )))
 (print (CalcExpr '(* a (+ 0 (* 0 b) c))))
 (print (CalcExpr '(* (+ c 0) b) ))
+;(print (CalcExpr '(* a)))
+
