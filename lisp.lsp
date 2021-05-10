@@ -142,17 +142,10 @@
 (defun skipSumSubZero (L1 L2)
     (cond
         ((null L2) L1)
-        (T (let ((item (car L2)) (tail (cdr L2)))
+        (T (let ((item (CalcExpr (car L2))) (tail (cdr L2)))
              (cond
                  ((equal item '0) (skipSumSubZero L1 tail))
-                 ((atom item) (skipSumSubZero (append L1 (list item)) tail))
-                 (T (let ((expr (CalcExpr item)))
-                     (cond
-                         ((null expr) L1)
-                         ((equal expr 0) (skipSumSubZero L1 tail))
-                         (T (skipSumSubZero (append L1 (list expr)) tail))
-                     )
-                 ))
+                 (T (skipSumSubZero (append L1 (list item)) tail))
              )
         ))
     )
@@ -161,19 +154,26 @@
 (defun skipMulZero (L1 L2)
     (cond
         ((null L2) L1)
-        (T (let ((item (car L2)) (tail (cdr L2)))
-             (cond
-                 ((equal item '0) NIL)
-                 ((atom item) (skipMulZero (append L1 (list item)) tail))
-                 (T (let ((expr (CalcExpr item)))
-                     (cond
-                         ((null expr) L1)
-                         ((equal expr 0) NIL)
-                         (T (skipMulZero (append L1 (list expr)) tail))
-                     )
-                 ))
-             )
-        ))
+        (T (let ((item (CalcExpr (car L2))) (tail (cdr L2)))
+               (cond
+                   ((equal item '0) NIL)
+                   (T (skipMulZero (append L1 (list item)) tail))
+               )
+            )
+        )
+    )
+)
+
+(defun skipDivZero (L1 L2)
+    (cond
+        ((null L2) L1)
+        (T (let ((item (CalcExpr (car L2))) (tail (cdr L2)))
+               (cond
+                   ((and (not (null L1)) (equal item '0)) (error "На ноль делить нельзя!"))
+                   (T (skipDivZero (append L1 (list item)) tail))
+               )
+           )
+        )
     )
 )
 
@@ -181,23 +181,40 @@
     (let ((sign (car L)) (expr (cdr L)))
          (cond
              ((or (equal sign '+) (equal sign '-))
+                 (cond
+                     ((<= (length L) 1) (error "Выражение должно содержать одно или более элементов"))
+                 )
                  (let ((result (skipSumSubZero () expr)))
                       (cond
-                          ((<= (length L) 1) (error "Выражение должно сождерать более одного символа"))
                           ((atom result) result)
                           (T (append (list sign) result))
                       )
                  )
              )
              ((equal sign '*)
+                 (cond
+                     ((<= (length L) 2) (error "Выражение должно содержать два или более элементов"))
+                 )
                  (let ((result (skipMulZero () expr)))
                       (cond
-                          ((<= (length L) 2) (error "Выражение должно сождерать более двух символов"))
                           ((atom result) result)
                           (T (append (list sign) result))
                       )
                  )
              )
+             ((equal sign '/)
+                 (cond
+                     ((<= (length L) 2) (error "Выражение должно содержать два или более элементов"))
+                 )
+                 (let ((result (skipDivZero () expr)))
+                      (cond
+                          ((atom result) result)
+                          ((equal (car result) '0) NIL)
+                          (T (append (list sign) result))
+                      )
+                 )
+             )
+             (T (error "выражение без оператора"))
          )
     )
 )
@@ -232,11 +249,14 @@
 )
 
 (defun CalcExpr (L)
-    (let ((expr (RedundantBrackets () (SimplifyExpr L))))
-        (cond
-            ((null expr) 0)
-            (T expr)
-        )
+    (cond
+        ((atom L) L)
+        (T (let ((expr (RedundantBrackets () (SimplifyExpr L))))
+            (cond
+                ((null expr) 0)
+                (T expr)
+            )
+        ))
     )
 )
 
@@ -245,5 +265,15 @@
 (print (calcExpr '(+ a b (* b (+ c 0) b) (*(+ b f ) 0) )))
 (print (CalcExpr '(* a (+ 0 (* 0 b) c))))
 (print (CalcExpr '(* (+ c 0) b) ))
-;(print (CalcExpr '(* a)))
+(print (CalcExpr 'a))
+(print (CalcExpr '(* (+ a b) (+ a (* c 0)))))
+(print (CalcExpr '(* (* a 0) b)))
+(print (CalcExpr '(* a b c d 0)))
+(print (CalcExpr '(/ a b)))
+(print (CalcExpr '(/ 0 b)))
+;(print (CalcExpr '(/ 0 0)))
+(print (CalcExpr '(/ (* a b) (* a c))))
+(print (CalcExpr '(/ (* a c 0) (* a c))))
+(print (CalcExpr '(/ (+ a 0 b) (* a c))))
+(print (CalcExpr '(/ a b c d)))
 
