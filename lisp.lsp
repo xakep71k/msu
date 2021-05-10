@@ -276,4 +276,5 @@
 (print (CalcExpr '(/ (* a c 0) (* a c))))
 (print (CalcExpr '(/ (+ a 0 b) (* a c))))
 (print (CalcExpr '(/ a b c d)))
-
+(print (CalcExpr '(+ a)))
+(print (CalcExpr '(- a)))
