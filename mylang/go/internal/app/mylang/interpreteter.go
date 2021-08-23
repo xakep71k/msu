@@ -1,6 +1,6 @@
 package mylang
 
 func RunInterprepeter(sourceFile string) {
-	poliz := parser{}.analyze()
+	poliz := MakeParser().analyze()
 	executePolize(poliz)
 }

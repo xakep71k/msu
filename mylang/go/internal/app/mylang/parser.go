@@ -1,8 +1,12 @@
 package mylang
 
-type parser struct {
+type _Parser struct {
 }
 
-func (p parser) analyze() []_Lex {
+func MakeParser() _Parser {
+	return _Parser{}
+}
+
+func (p _Parser) analyze() []_Lex {
 	return nil
 }

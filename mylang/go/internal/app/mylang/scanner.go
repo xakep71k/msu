@@ -14,12 +14,13 @@ type _Scanner struct {
 	close func()
 }
 
-func MakeScanner(filename string) _Scanner {
+func MakeScanner(filename string) <-chan _Lex {
 	file, err := os.Open(filename)
 	if err != nil {
 		fatalError("%s: %v", filename, err)
 	}
 
+	result := make(chan _Lex)
 	char := make(chan rune)
 	go func() {
 		reader := bufio.NewReader(file)
@@ -33,10 +34,18 @@ func MakeScanner(filename string) _Scanner {
 		}
 		char <- r
 	}()
-	return _Scanner{
+	scanner := _Scanner{
 		char:  char,
 		close: func() { _ = file.Close() },
 	}
+
+	go func() {
+		l := scanner.ScanLex()
+		if l.Type() == lex.FIN {
+			close(result)
+		}
+	}()
+	return result
 }
 
 var TW = []string{
