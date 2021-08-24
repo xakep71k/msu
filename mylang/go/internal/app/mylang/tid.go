@@ -5,28 +5,28 @@ import "mylang/internal/app/mylang/lex"
 var TID = _MakeTID()
 
 type _TIDType struct {
-	cur       []_Ident
-	funcTable map[string]_IdentFunc
+	cur       []*_Ident
+	funcTable map[string]*_IdentFunc
 	funcStack []string
 }
 
 func _MakeTID() _TIDType {
 	return _TIDType{
 		funcStack: []string{"global"},
-		cur:       make([]_Ident, 0),
+		cur:       make([]*_Ident, 0),
 	}
 }
 
-func (t *_TIDType) ICurTID(i int) _Ident {
+func (t *_TIDType) ICurTID(i int) *_Ident {
 	return t.CurTID()[i]
 }
 
-func (t *_TIDType) CurTID() []_Ident {
+func (t *_TIDType) CurTID() []*_Ident {
 	return t.cur
 }
 
 func (t *_TIDType) Push(ident _Ident) {
-	t.cur = append(t.cur, ident)
+	t.cur = append(t.cur, &ident)
 }
 
 func (t *_TIDType) Size() int {
@@ -42,15 +42,15 @@ func (t *_TIDType) DeclareFunc(ident _Ident, address int) bool {
 	newIdent := _IdentFunc{}
 	newIdent.putValue(address)
 	newIdent.putType(lex.FUNCTION)
-	t.funcTable[name] = newIdent
+	t.funcTable[name] = &newIdent
 	return false
 }
 
-func (t *_TIDType) TopFunc() _IdentFunc {
+func (t *_TIDType) TopFunc() *_IdentFunc {
 	return t.funcTable[t.funcStack[len(t.funcStack)-1]]
 }
 
-func (t *_TIDType) FindFunc(name string) _IdentFunc {
+func (t *_TIDType) FindFunc(name string) *_IdentFunc {
 	return t.funcTable[name]
 }
 
@@ -64,6 +64,12 @@ func (t *_TIDType) PopFunc() {
 
 func (t *_TIDType) TopFuncName() string {
 	return t.funcStack[len(t.funcStack)-1]
+}
+
+func (t *_TIDType) PopBack() *_Ident {
+	ident := t.cur[len(t.cur)-1]
+	t.cur = t.cur[:len(t.cur)-1]
+	return ident
 }
 
 func putIdent(buf string) int {

@@ -106,7 +106,7 @@ func executePolize(poliz []_Lex) {
 
 			newIdent := idents[i]
 			if !idents[i].Assign() {
-				newIdent = TID.ICurTID(i)
+				newIdent = *TID.ICurTID(i)
 			}
 			newIdent.putValue(k)
 			idents[i] = newIdent

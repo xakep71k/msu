@@ -46,6 +46,10 @@ func (ident _Ident) Value() int {
 	return ident._Value
 }
 
+func (ident _Ident) Type() lex.Type {
+	return ident._Type
+}
+
 func (ident *_Ident) putValue(v int) {
 	ident._Assign = true
 	ident._Value = v
