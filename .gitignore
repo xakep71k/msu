@@ -8,3 +8,4 @@ obj
 valgrind-out.txt
 mylang/mylang
 haskell
+.vscode

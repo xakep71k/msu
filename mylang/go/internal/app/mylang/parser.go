@@ -16,8 +16,12 @@ type _Parser struct {
 	stLex   TypeLexStack
 }
 
-func MakeParser() _Parser {
-	return _Parser{}
+func MakeParser(filename string) _Parser {
+	return _Parser{
+		scanner: MakeScanner(filename),
+		stInt:   make(IntStack, 0),
+		stLex:   make(TypeLexStack, 0),
+	}
 }
 
 func (p *_Parser) analyze() []_Lex {

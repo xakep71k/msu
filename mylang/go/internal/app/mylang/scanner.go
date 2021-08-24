@@ -10,39 +10,45 @@ import (
 )
 
 type _Scanner struct {
-	char  chan rune
-	close func()
+	char chan rune
 }
 
 func MakeScanner(filename string) <-chan _Lex {
 	file, err := os.Open(filename)
 	if err != nil {
-		fatalError("%s: %v", filename, err)
+		fatalError("%v", err)
 	}
 
 	result := make(chan _Lex)
 	char := make(chan rune)
 	go func() {
 		reader := bufio.NewReader(file)
-		r, _, err := reader.ReadRune()
-		if err != nil {
-			if err == io.EOF {
-				close(char)
-			} else {
-				fatalError("reading failed: %v", err)
+		for {
+			r, _, err := reader.ReadRune()
+			if err != nil {
+				if err == io.EOF {
+					close(char)
+				} else {
+					fatalError("reading failed: %v", err)
+				}
 			}
+			char <- r
 		}
-		char <- r
 	}()
 	scanner := _Scanner{
-		char:  char,
-		close: func() { _ = file.Close() },
+		char: char,
 	}
 
 	go func() {
-		l := scanner.ScanLex()
-		if l.Type() == lex.FIN {
-			close(result)
+		for {
+			l := scanner.ScanLex()
+			if l.Type() == lex.FIN {
+				close(result)
+				_ = file.Close()
+				return
+			}
+
+			result <- l
 		}
 	}()
 	return result
