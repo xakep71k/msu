@@ -27,9 +27,8 @@ func MakeParser(filename string) _Parser {
 func (p *_Parser) analyze() []_Lex {
 	p.nextLex()
 	p.Program()
-	_, eof := <-p.scanner
-	if !eof {
-		fatalError("rest of data cannot be analyzed")
+	if p.cType != lex.FIN {
+		fatalError("FIN expected but found %v %v", p.cType, p.cStrVal)
 	}
 	return p.poliz
 }
@@ -47,7 +46,7 @@ func (p *_Parser) nextLex() {
 
 func (p *_Parser) Program() {
 	if p.cType != lex.PROGRAM {
-		fatalError("not program lex: %v", p.cType)
+		fatalError("not program lex: %v %v", p.cType, p.cStrVal)
 	}
 
 	indexMainLabel := len(p.poliz)
@@ -112,18 +111,18 @@ func (p *_Parser) VarExtract() int {
 	}
 
 	if p.cType != lex.COLON {
-		fatalError("not COLON lex: %v", p.cType)
+		fatalError("not COLON1 lex: %v %v", p.cType, p.cStrVal)
 	}
 	p.nextLex()
 
-	if p.cType != lex.INT {
+	if p.cType == lex.INT {
 		p.dec(lex.INT)
 		p.nextLex()
 	} else if p.cType == lex.BOOL {
 		p.dec(lex.BOOL)
 		p.nextLex()
 	} else {
-		fatalError("unknown type lex: %v", p.cType)
+		fatalError("unknown type lex1: %v", p.cType, p.cStrVal)
 	}
 
 	return countVars
@@ -168,7 +167,7 @@ func (p *_Parser) FuncExtract() {
 	p.nextLex()
 
 	if p.cType != lex.COLON {
-		fatalError("not COLON: %v", p.cType)
+		fatalError("not COLON2 lex: %v %v", p.cType, p.cStrVal)
 	}
 
 	p.nextLex()
@@ -205,7 +204,6 @@ func (p *_Parser) FuncDeclareRetVar(ifunc *_IdentFunc) {
 func (p *_Parser) B() {
 	if p.cType == lex.BEGIN {
 		p.nextLex()
-
 		p.deepS = 0
 		p.S()
 		for p.cType == lex.SEMICOLON {
@@ -218,9 +216,11 @@ func (p *_Parser) B() {
 		} else {
 			fatalError("not END: %v", p.cType)
 		}
+
 		return
 	}
-	fatalError("not BEGIN: %v", p.cType)
+
+	fatalError("not BEGIN: %v %v", p.cType, p.cStrVal)
 }
 
 // логические конструкции
@@ -270,7 +270,7 @@ func (p *_Parser) S() {
 			p.poliz = append(p.poliz, _MakeLex(lex.POLIZ_GO, 0, ""))
 			p.poliz[pl1] = _MakeLex(lex.POLIZ_LABEL, len(p.poliz), "")
 		} else {
-			fatalError("unknown type lex: %v", p.cType)
+			fatalError("unknown type lex2: %v", p.cType, p.cStrVal)
 		}
 	} else if p.cType == lex.READ {
 		p.nextLex()
@@ -310,7 +310,8 @@ func (p *_Parser) S() {
 		oldCVal := p.cVal
 		oldCStrVal := p.cStrVal
 		p.nextLex()
-		if TID.FindFunc(oldCStrVal).Type() == lex.FUNCTION && p.cType == lex.LPAREN {
+		funcIdent := TID.FindFunc(oldCStrVal)
+		if funcIdent != nil && funcIdent.Type() == lex.FUNCTION && p.cType == lex.LPAREN {
 			p.callFunc(oldCStrVal)
 		} else {
 			p.check_id(oldCVal)
@@ -334,7 +335,7 @@ func (p *_Parser) callFunc(funcName string) {
 	}
 
 	ifunc := TID.FindFunc(funcName)
-	if ifunc.Type() != lex.FUNCTION {
+	if ifunc == nil || ifunc.Type() != lex.FUNCTION {
 		fatalError("function not declared: %s", funcName)
 	}
 
@@ -400,7 +401,8 @@ func (p *_Parser) T() {
 
 func (p *_Parser) F() {
 	if p.cType == lex.ID {
-		if TID.FindFunc(p.cStrVal).Type() == lex.FUNCTION {
+		identFunc := TID.FindFunc(p.cStrVal)
+		if identFunc != nil && identFunc.Type() == lex.FUNCTION {
 			funcName := p.cStrVal
 			p.nextLex()
 			if p.cType != lex.LPAREN {
@@ -409,7 +411,7 @@ func (p *_Parser) F() {
 			p.callFunc(funcName)
 			p.stLex.Push(TID.FindFunc(funcName).ReturnLex().Type())
 		} else {
-			p.check_id(int(p.cType))
+			p.check_id(p.cVal)
 			p.poliz = append(p.poliz, _MakeLex(lex.ID, p.cVal, "LEX_ID F()"))
 			p.nextLex()
 		}
@@ -438,7 +440,7 @@ func (p *_Parser) F() {
 			fatalError("not RPARENT: %v\n", p.cType)
 		}
 	} else {
-		fatalError("unknown type lex: %v\n", p.cType)
+		fatalError("unknown type lex3: %v", p.cType, p.cStrVal)
 	}
 }
 
@@ -543,7 +545,7 @@ func (p *_Parser) case_of() {
 
 			// пропускаем символ :
 			if p.cType != lex.COLON {
-				fatalError("not COLON: %v", p.cType)
+				fatalError("not COLON3 lex: %v %v", p.cType, p.cStrVal)
 			}
 
 			// тело ветки case/of

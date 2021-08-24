@@ -3,6 +3,7 @@ package mylang
 import "mylang/internal/app/mylang/lex"
 
 type IntStack []int
+type RuneStack []rune
 type MapIntIdentStack []map[int]_Ident
 type LexStack []_Lex
 type TypeLexStack []lex.Type
@@ -85,4 +86,23 @@ func (sp *TypeLexStack) Push(v lex.Type) {
 
 func (s TypeLexStack) Top() lex.Type {
 	return s[len(s)-1]
+}
+
+func (sp *RuneStack) Pop() rune {
+	s := *sp
+	v := s[len(s)-1]
+	*sp = s[:len(s)-1]
+	return v
+}
+
+func (sp *RuneStack) Push(v rune) {
+	*sp = append(*sp, v)
+}
+
+func (s RuneStack) Top() rune {
+	return s[len(s)-1]
+}
+
+func (s RuneStack) Size() int {
+	return len(s)
 }

@@ -81,10 +81,10 @@ func executePolize(poliz []_Lex) {
 		case lex.READ:
 			var k int
 			i = args.Pop()
-			if TID.ICurTID(i).Value() == int(lex.INT) {
+			if TID.ICurTID(i).Type() == lex.INT {
 				fmt.Printf("Input int value for %s\n", TID.ICurTID(i).Name())
 				fmt.Scanf("%d", &k)
-			} else if TID.ICurTID(i).Value() == int(lex.BOOL) {
+			} else if TID.ICurTID(i).Type() == lex.BOOL {
 				var str string
 				for {
 					fmt.Printf("Input boolean value (true or false) for '%s'\n", TID.ICurTID(i).Name())
@@ -101,7 +101,7 @@ func executePolize(poliz []_Lex) {
 					break
 				}
 			} else {
-				panic(fmt.Sprintf("unknown type %d", TID.ICurTID(i).Value()))
+				panic(fmt.Sprintf("unknown type %d %v", TID.ICurTID(i).Value(), TID.ICurTID(i).Type()))
 			}
 
 			newIdent := idents[i]

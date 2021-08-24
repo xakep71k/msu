@@ -1,6 +1,8 @@
 package mylang
 
-import "mylang/internal/app/mylang/lex"
+import (
+	"mylang/internal/app/mylang/lex"
+)
 
 var TID = _MakeTID()
 
@@ -85,5 +87,5 @@ func putIdent(buf string) int {
 	newIdent := MakeIdent(buf)
 	newIdent.setID(id)
 	TID.Push(newIdent)
-	return TID.Size()
+	return TID.Size() - 1
 }

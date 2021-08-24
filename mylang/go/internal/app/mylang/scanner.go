@@ -3,6 +3,7 @@ package mylang
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"io"
 	"mylang/internal/app/mylang/lex"
 	"os"
@@ -10,7 +11,8 @@ import (
 )
 
 type _Scanner struct {
-	char chan rune
+	char  chan rune
+	unget RuneStack
 }
 
 func MakeScanner(filename string) <-chan _Lex {
@@ -21,34 +23,41 @@ func MakeScanner(filename string) <-chan _Lex {
 
 	result := make(chan _Lex)
 	char := make(chan rune)
+	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		reader := bufio.NewReader(file)
+		defer close(char)
 		for {
 			r, _, err := reader.ReadRune()
 			if err != nil {
 				if err == io.EOF {
-					close(char)
+					return
 				} else {
 					fatalError("reading failed: %v", err)
 				}
 			}
-			char <- r
+			select {
+			case char <- r:
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 	scanner := _Scanner{
-		char: char,
+		char:  char,
+		unget: make(RuneStack, 0),
 	}
 
 	go func() {
 		for {
 			l := scanner.ScanLex()
+			result <- l
 			if l.Type() == lex.FIN {
 				close(result)
+				cancel()
 				_ = file.Close()
 				return
 			}
-
-			result <- l
 		}
 	}()
 	return result
@@ -81,7 +90,7 @@ var TW = []string{
 }
 
 var TD = []string{
-	"",
+	"@",
 	";",
 	",",
 	":",
@@ -109,7 +118,7 @@ func look(str string, list []string) int {
 	return 0
 }
 
-func (s _Scanner) ScanLex() _Lex {
+func (s *_Scanner) ScanLex() _Lex {
 	const (
 		H = iota
 		IDENT
@@ -126,10 +135,10 @@ func (s _Scanner) ScanLex() _Lex {
 	var c rune
 
 	for {
-		var ok bool
-		c, ok = <-s.char
-		if !ok {
-			return _MakeLex(lex.FIN, 0, "")
+		if s.unget.Size() == 0 {
+			c = <-s.char
+		} else {
+			c = s.unget.Pop()
 		}
 
 		switch CS {
@@ -147,6 +156,8 @@ func (s _Scanner) ScanLex() _Lex {
 			} else if c == ':' || c == '<' || c == '>' {
 				buf.WriteRune(c)
 				CS = ALE
+			} else if c == '@' {
+				return _MakeLex(lex.FIN, 0, "FIN")
 			} else if c == '!' {
 				buf.WriteRune(c)
 				CS = NEQ
@@ -164,11 +175,13 @@ func (s _Scanner) ScanLex() _Lex {
 			if unicode.IsLetter(c) || unicode.IsDigit(c) {
 				buf.WriteRune(c)
 			} else {
+				s.unget.Push(c)
 				str := buf.String()
-				j = look(str, TD)
+				j = look(str, TW)
 				if j != 0 {
 					return _MakeLex(lex.Type(j), j, str)
 				}
+				j = putIdent(str)
 				return _MakeLex(lex.ID, j, str)
 			}
 
@@ -176,13 +189,14 @@ func (s _Scanner) ScanLex() _Lex {
 			if unicode.IsDigit(c) {
 				d = d*10 + (c - '0')
 			} else {
+				s.unget.Push(c)
 				return _MakeLex(lex.NUM, int(d), string(c))
 			}
 
 		case COM:
 			if c == '}' {
 				CS = H
-			} else if c == '{' {
+			} else if c == '@' || c == '{' {
 				fatalError("unexepected {")
 			}
 
@@ -191,6 +205,8 @@ func (s _Scanner) ScanLex() _Lex {
 			j = look(str, TD)
 			if c == '=' {
 				buf.WriteRune(c)
+			} else {
+				s.unget.Push(c)
 			}
 			return _MakeLex(lex.Type(j+int(lex.FIN)), j, str)
 
