@@ -146,7 +146,7 @@ func executePolize(poliz []_Lex) {
 		case lex.LSS:
 			i = args.Pop()
 			j = args.Pop()
-			if i < j {
+			if j < i {
 				args.Push(1)
 			} else {
 				args.Push(0)
@@ -155,7 +155,7 @@ func executePolize(poliz []_Lex) {
 		case lex.GTR:
 			i = args.Pop()
 			j = args.Pop()
-			if i > j {
+			if j > i {
 				args.Push(1)
 			} else {
 				args.Push(0)
@@ -173,7 +173,7 @@ func executePolize(poliz []_Lex) {
 		case lex.GEQ:
 			i = args.Pop()
 			j = args.Pop()
-			if i >= j {
+			if j >= i {
 				args.Push(1)
 			} else {
 				args.Push(0)

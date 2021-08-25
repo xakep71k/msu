@@ -464,7 +464,7 @@ func (p *_Parser) check_const_case_type(caseType lex.Type) {
 			fatalError("wrong const type of case: must be true/false: %v", p.cType)
 		}
 	} else if caseType == lex.INT {
-		switch caseType {
+		switch p.cType {
 		case lex.NUM:
 		default:
 			fatalError("wrong const type of case: must be num: %v", p.cType)
@@ -512,7 +512,7 @@ func (p *_Parser) case_of() {
 				constLexes = append(constLexes, _MakeLex(p.cType, p.get_case_val(), p.cStrVal))
 
 				p.nextLex()
-				if p.cType == lex.COMMA {
+				if p.cType != lex.COMMA {
 					break
 				}
 				// забираем следующую константу
