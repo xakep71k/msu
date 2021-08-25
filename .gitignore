@@ -6,6 +6,6 @@ project_17_2019/bubnov_17
 *.hi
 obj
 valgrind-out.txt
-mylang/mylang
+mylang/c++/mylang
 haskell
 .vscode

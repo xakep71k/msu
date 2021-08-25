@@ -309,8 +309,8 @@ func (p *_Parser) S() {
 	} else if p.cType == lex.ID {
 		oldCVal := p.cVal
 		oldCStrVal := p.cStrVal
-		p.nextLex()
 		funcIdent := TID.FindFunc(oldCStrVal)
+		p.nextLex()
 		if funcIdent != nil && funcIdent.Type() == lex.FUNCTION && p.cType == lex.LPAREN {
 			p.callFunc(oldCStrVal)
 		} else {

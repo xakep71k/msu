@@ -16,6 +16,7 @@ func _MakeTID() _TIDType {
 	return _TIDType{
 		funcStack: []string{"global"},
 		cur:       make([]*_Ident, 0),
+		funcTable: make(map[string]*_IdentFunc),
 	}
 }
 
@@ -41,7 +42,7 @@ func (t *_TIDType) DeclareFunc(ident _Ident, address int) bool {
 		return true
 	}
 
-	newIdent := _IdentFunc{}
+	newIdent := _IdentFunc{_Ident: ident}
 	newIdent.putValue(address)
 	newIdent.putType(lex.FUNCTION)
 	t.funcTable[name] = &newIdent
