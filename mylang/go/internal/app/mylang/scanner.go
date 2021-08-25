@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"mylang/internal/app/mylang/lex"
 	"os"
@@ -190,7 +191,7 @@ func (s *_Scanner) ScanLex() _Lex {
 				d = d*10 + (c - '0')
 			} else {
 				s.unget.Push(c)
-				return _MakeLex(lex.NUM, int(d), string(c))
+				return _MakeLex(lex.NUM, int(d), fmt.Sprint(d))
 			}
 
 		case COM:
@@ -201,12 +202,15 @@ func (s *_Scanner) ScanLex() _Lex {
 			}
 
 		case ALE:
-			str := buf.String()
-			j = look(str, TD)
+			var str string
 			if c == '=' {
 				buf.WriteRune(c)
+				str = buf.String()
+				j = look(str, TD)
 			} else {
+				str = buf.String()
 				s.unget.Push(c)
+				j = look(str, TD)
 			}
 			return _MakeLex(lex.Type(j+int(lex.FIN)), j, str)
 

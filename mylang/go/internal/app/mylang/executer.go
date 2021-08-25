@@ -164,7 +164,7 @@ func executePolize(poliz []_Lex) {
 		case lex.LEQ:
 			i = args.Pop()
 			j = args.Pop()
-			if i <= j {
+			if j <= i {
 				args.Push(1)
 			} else {
 				args.Push(0)

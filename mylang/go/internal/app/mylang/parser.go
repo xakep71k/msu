@@ -445,6 +445,7 @@ func (p *_Parser) F() {
 }
 
 func (p *_Parser) dec(ltype lex.Type) {
+
 	for len(p.stInt) != 0 {
 		i := p.stInt.Pop()
 		if TID.ICurTID(i).Declare() {
@@ -600,9 +601,11 @@ func (p *_Parser) check_op() {
 
 	if op == lex.PLUS || op == lex.MINUS || op == lex.TIMES || op == lex.SLASH {
 		r = lex.INT
-	} else if op == lex.OR || op == lex.AND {
+	}
+	if op == lex.OR || op == lex.AND {
 		t = lex.BOOL
-	} else if t1 == t2 && t1 == t {
+	}
+	if t1 == t2 && t1 == t {
 		p.stLex.Push(r)
 	} else {
 		fatalError("wrong types are in operation")
