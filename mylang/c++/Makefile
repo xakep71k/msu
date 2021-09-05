@@ -1,4 +1,5 @@
-CXXFLAGS := -g -O0 -Wall -MD
+CXXFLAGS := -O3 -Wall -MD
+#CXXFLAGS := -g -O0 -Wall -MD
 TARGET := mylang
 SRCS := main.cpp scanner.cpp parser.cpp executer.cpp ident.cpp tid.cpp
 OBJ_DIR := obj
