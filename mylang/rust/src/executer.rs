@@ -1,9 +1,10 @@
 use crate::lex;
+use std::collections::HashMap;
 
 pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
     let mut args: Vec<i32> = Vec::new();
-    let mut identsStack: Vec<crate::ident::Ident> = Vec::new();
-    identsStack.push(crate::ident::Ident::default());
+    let mut identsStack: Vec<HashMap<i32, crate::ident::Ident>> = Vec::new();
+    identsStack.push(HashMap::new());
 
     let (mut i, mut j, mut index) = (0, 0, 0);
     let size = poliz.len();
