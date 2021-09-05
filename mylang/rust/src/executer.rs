@@ -22,10 +22,50 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
             }
             lex::Kind::ID => {
                 i = pc_el.value();
-                if !idents[i].assign() {
-                    eprintln!("POLIZ: not assigned: name '{}'", idents[i].id());
+                let ident = idents.get(&i).unwrap();
+                if !ident.assign() {
+                    eprintln!("POLIZ: not assigned: name '{}'", ident.id());
                     std::process::exit(1);
                 }
+
+                args.push(ident.value());
+            }
+            lex::Kind::NOT => {
+                let i = args.pop().unwrap();
+                let v = if i == 0 { 1 } else { 0 };
+                args.push(v);
+            }
+            lex::Kind::OR => {
+                i = args.pop().unwrap();
+                j = args.pop().unwrap();
+                let v = if i != 0 || j != 0 { 1 } else { 0 };
+                args.push(v);
+            }
+            lex::Kind::AND => {
+                i = args.pop().unwrap();
+                j = args.pop().unwrap();
+                let v = if i != 0 && j != 0 { 1 } else { 0 };
+                args.push(v);
+            }
+            lex::Kind::POLIZ_CALL_FUNC => {
+                index = (pc_el.value() - 1) as usize;
+                identsStack.push(HashMap::new());
+            }
+            lex::Kind::POLIZ_GO => {
+                i = args.pop().unwrap();
+                index = (i - 1) as usize;
+            }
+            lex::Kind::POLIZ_RETURN_FUNC => {
+                j = args.pop().unwrap();
+                let ident = idents.get(&j).unwrap();
+                if !ident.assign() {
+                    eprintln!("return value not assigned: {}", TID.ICurTID(j).name());
+                    std::process::exit(1);
+                }
+                i = args.pop().unwrap();
+                index = (i - 1) as usize;
+                args.push(ident.value());
+                identsStack.pop();
             }
             default => {
                 eprintln!("POLIZ: unexpected elem: {:?}", default);
@@ -34,54 +74,6 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
         }
     }
     /*
-        switch ltype := pc_el.Type(); ltype {
-        case lex.TRUE, lex.FALSE, lex.NUM, lex.POLIZ_ADDRESS, lex.POLIZ_LABEL:
-            args.Push(pc_el.Value())
-        case lex.ID:
-            i = pc_el.Value()
-            if !idents[i].Assign() {
-                fatalError("POLIZ: not assigned: name '%s'", idents[i].ID)
-            }
-
-            args.Push(idents[i].Value())
-        case lex.NOT:
-            i = args.Pop()
-            var v int
-            if i == 0 {
-                v = 1
-            }
-            args.Push(v)
-        case lex.OR:
-            i = args.Pop()
-            j = args.Pop()
-            var v int
-            if i != 0 || j != 0 {
-                v = 1
-            }
-            args.Push(v)
-        case lex.AND:
-            i = args.Pop()
-            j = args.Pop()
-            var v int
-            if i != 0 && j != 0 {
-                v = 1
-            }
-            args.Push(v)
-        case lex.POLIZ_CALL_FUNC:
-            index = pc_el.Value() - 1
-            identsStack.PushEmptyItem()
-        case lex.POLIZ_GO:
-            i = args.Pop()
-            index = i - 1
-        case lex.POLIZ_RETURN_FUNC:
-            j = args.Pop()
-            if !idents[j].Assign() {
-                fatalError("return value not assigned: %s", TID.ICurTID(j).Name())
-            }
-            i = args.Pop()
-            index = i - 1
-            args.Push(idents[j].Value())
-            _ = identsStack.Pop()
         case lex.POLIZ_DUP:
             args.Push(args.Top())
         case lex.POLIZ_FGO:
