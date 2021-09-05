@@ -9,3 +9,4 @@ valgrind-out.txt
 mylang/*/mylang
 haskell
 .vscode
+mylang/rust/target
