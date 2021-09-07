@@ -1,6 +1,7 @@
 mod executer;
 mod ident;
 mod lex;
+mod tid;
 
 fn main() {
     let mut args = std::env::args();
