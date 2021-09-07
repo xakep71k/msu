@@ -1,6 +1,8 @@
 mod executer;
 mod ident;
 mod lex;
+mod parser;
+mod scanner;
 mod tid;
 
 fn main() {
