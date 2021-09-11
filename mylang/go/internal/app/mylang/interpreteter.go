@@ -14,6 +14,6 @@ func RunInterprepeter(sourceFile string) {
 	startE := time.Now()
 	executePolize(poliz)
 	durationE := time.Since(startE)
-	fmt.Printf("Analyzed: time difference = %v\n", durationA.Microseconds())
-	fmt.Printf("Executed: time difference = %v\n", durationE.Microseconds())
+	fmt.Printf("Analyzed: time difference = %v\n", durationA)//.Microseconds())
+	fmt.Printf("Executed: time difference = %v\n", durationE)//.Microseconds())
 }

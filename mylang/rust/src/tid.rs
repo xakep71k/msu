@@ -1,9 +1,11 @@
+use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
 pub static TID: TIDType = TIDType { cur: Vec::new() };
 
 pub struct TIDType {
 	cur: Vec<crate::ident::Ident>,
+	func_table: HashMap<String, crate::ident_func::IdentFunc>,
 }
 
 impl Index<i32> for TIDType {

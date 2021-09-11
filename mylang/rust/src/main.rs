@@ -1,5 +1,6 @@
 mod executer;
 mod ident;
+mod ident_func;
 mod lex;
 mod parser;
 mod scanner;
