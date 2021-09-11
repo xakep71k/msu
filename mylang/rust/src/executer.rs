@@ -1,9 +1,9 @@
 use crate::lex;
-use crate::tid::TID;
+use crate::tid;
 use std::collections::HashMap;
 use std::io::BufRead;
 
-pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
+pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: &tid::TIDType) {
     let mut args: Vec<i32> = Vec::new();
     let mut idents_stack: Vec<HashMap<i32, crate::ident::Ident>> = Vec::new();
     idents_stack.push(HashMap::new());
@@ -61,7 +61,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
                 j = args.pop().unwrap();
                 let ident = idents.get(&j).unwrap();
                 if !ident.assign() {
-                    eprintln!("return value not assigned: {}", TID[j].name());
+                    eprintln!("return value not assigned: {}", tid[j].name());
                     std::process::exit(1);
                 }
                 i = args.pop().unwrap();
@@ -90,7 +90,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
             lex::Kind::READ => {
                 let mut k: i32 = 0;
                 i = args.pop().unwrap();
-                match TID[i].kind() {
+                match tid[i].kind() {
                     lex::Kind::INT => loop {
                         let res = std::io::stdin()
                             .lock()
@@ -130,13 +130,13 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>) {
                         }
                     },
                     _ => {
-                        println!("unknown type {} {:?}", TID[i].value(), TID[i].kind());
+                        println!("unknown type {} {:?}", tid[i].value(), tid[i].kind());
                         std::process::exit(1);
                     }
                 }
 
                 if !idents.get(&i).unwrap().assign() {
-                    *idents.get_mut(&i).unwrap() = TID[i].clone();
+                    *idents.get_mut(&i).unwrap() = tid[i].clone();
                 }
                 idents.get_mut(&i).unwrap().put_value(k);
             }

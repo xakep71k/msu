@@ -13,6 +13,7 @@ fn main() {
         std::process::exit(1);
     }
 
+    let mut tid = crate::tid::TIDType::new();
     let mut poliz: Vec<crate::lex::Lex> = vec![];
-    crate::executer::execute_poliz(poliz);
+    crate::executer::execute_poliz(poliz, &tid);
 }

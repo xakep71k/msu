@@ -1,4 +1,5 @@
 use crate::lex;
+use crate::tid;
 use std::fs::File;
 use std::io::{self, Read};
 
@@ -39,7 +40,7 @@ impl Scanner {
         self.unget.push(ch);
     }
 
-    pub fn get_lex(&mut self) -> lex::Lex {
+    pub fn get_lex(&mut self, tid: &mut tid::TIDType) -> lex::Lex {
         #[derive(Copy, Clone)]
         enum State {
             H,
@@ -111,7 +112,7 @@ impl Scanner {
                         if j != 0 {
                             return lex::Lex::new(lex::Kind::from_i32(j), j, strBuf);
                         }
-                        j = put(strBuf);
+                        j = tid.put(&strBuf);
                         return lex::Lex::new(lex::Kind::ID, j, strBuf);
                     }
                 }
