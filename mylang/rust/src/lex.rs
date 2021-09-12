@@ -80,8 +80,8 @@ impl Lex {
         self.value
     }
 
-    pub fn value_str(&self) -> i32 {
-        self.value
+    pub fn value_str(&self) -> String {
+        self.value_str.clone()
     }
 
     pub fn kind(&self) -> Kind {

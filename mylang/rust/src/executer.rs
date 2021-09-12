@@ -3,7 +3,7 @@ use crate::tid;
 use std::collections::HashMap;
 use std::io::BufRead;
 
-pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: &tid::TIDType) {
+pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
     let mut args: Vec<i32> = Vec::new();
     let mut idents_stack: Vec<HashMap<i32, crate::ident::Ident>> = Vec::new();
     idents_stack.push(HashMap::new());
