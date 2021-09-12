@@ -61,7 +61,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                 j = args.pop().unwrap();
                 let ident = idents.get(&j).unwrap();
                 if !ident.assign() {
-                    eprintln!("return value not assigned: {}", tid[j].name());
+                    eprintln!("return value not assigned: {}", tid[j as usize].name());
                     std::process::exit(1);
                 }
                 i = args.pop().unwrap();
@@ -90,7 +90,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
             lex::Kind::READ => {
                 let mut k: i32 = 0;
                 i = args.pop().unwrap();
-                match tid[i].kind() {
+                match tid[i as usize].kind() {
                     lex::Kind::INT => loop {
                         let res = std::io::stdin()
                             .lock()
@@ -130,13 +130,17 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                         }
                     },
                     _ => {
-                        println!("unknown type {} {:?}", tid[i].value(), tid[i].kind());
+                        println!(
+                            "unknown type {} {:?}",
+                            tid[i as usize].value(),
+                            tid[i as usize].kind()
+                        );
                         std::process::exit(1);
                     }
                 }
 
                 if !idents.get(&i).unwrap().assign() {
-                    *idents.get_mut(&i).unwrap() = tid[i].clone();
+                    *idents.get_mut(&i).unwrap() = tid[i as usize].clone();
                 }
                 idents.get_mut(&i).unwrap().put_value(k);
             }

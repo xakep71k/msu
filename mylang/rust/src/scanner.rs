@@ -112,7 +112,7 @@ impl Scanner {
                         if j != 0 {
                             return lex::Lex::new(lex::Kind::from_i32(j), j, strBuf);
                         }
-                        j = tid.put(&strBuf);
+                        j = tid.put(&strBuf) as i32;
                         return lex::Lex::new(lex::Kind::ID, j, strBuf);
                     }
                 }

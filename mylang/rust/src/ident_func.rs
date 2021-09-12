@@ -4,7 +4,7 @@ use crate::lex;
 pub struct IdentFunc {
     args: Vec<crate::ident::Ident>,
     return_lex: crate::lex::Lex,
-    return_val: i32,
+    return_var: i32,
     ident: crate::ident::Ident,
 }
 
@@ -17,8 +17,23 @@ impl IdentFunc {
         IdentFunc {
             args: Vec::new(),
             return_lex: lex::Lex::new(lex::Kind::NULL, 0, String::new()),
-            return_val: 0,
+            return_var: 0,
             ident: ident,
         }
+    }
+    pub fn push_arg(&mut self, ident: ident::Ident) {
+        self.args.push(ident);
+    }
+    pub fn set_return_lex(&mut self, lex: lex::Lex) {
+        self.return_lex = lex;
+    }
+    pub fn set_return_var(&mut self, i: i32) {
+        self.return_var = i;
+    }
+    pub fn get_return_lex(&mut self) -> lex::Lex {
+        self.return_lex
+    }
+    pub fn name(&self) -> &str {
+        self.ident.name()
     }
 }

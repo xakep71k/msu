@@ -14,14 +14,12 @@ fn main() -> std::io::Result<()> {
     }
 
     let tid = crate::tid::TIDType::new();
-    let mut parser = match crate::parser::Parser::new(&args.nth(1).unwrap(), tid) {
+    let parser = match crate::parser::Parser::new(&args.nth(1).unwrap(), tid) {
         Ok(parser) => parser,
         Err(err) => return Err(err),
     };
 
-    parser.analyze();
-    let poliz = parser.poliz();
-    let tid = parser.tid();
+    let (poliz, tid) = parser.analyze();
     crate::executer::execute_poliz(poliz, tid);
     Ok(())
 }

@@ -1,4 +1,6 @@
 use crate::ident::Ident;
+use crate::ident_func::IdentFunc;
+use crate::lex::Kind;
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 
@@ -8,17 +10,17 @@ pub struct TIDType {
 	func_stack: Vec<String>,
 }
 
-impl Index<i32> for TIDType {
+impl Index<usize> for TIDType {
 	type Output = crate::ident::Ident;
 
-	fn index(&self, index: i32) -> &Self::Output {
-		&self.cur[index as usize]
+	fn index(&self, index: usize) -> &Self::Output {
+		&self.cur[index]
 	}
 }
 
-impl IndexMut<i32> for TIDType {
-	fn index_mut(&mut self, index: i32) -> &mut Self::Output {
-		&mut self.cur[index as usize]
+impl IndexMut<usize> for TIDType {
+	fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+		&mut self.cur[index]
 	}
 }
 
@@ -30,7 +32,9 @@ impl TIDType {
 			func_stack: vec![String::from("global")],
 		}
 	}
-
+	pub fn pop_back(&mut self) -> crate::ident::Ident {
+		self.cur.pop().unwrap()
+	}
 	pub fn top_func_name(&self) -> &str {
 		&self.func_stack[self.func_stack.len() - 1]
 	}
@@ -39,19 +43,48 @@ impl TIDType {
 		&mut self.cur
 	}
 
-	pub fn put(&mut self, buf: &String) -> i32 {
+	pub fn put(&mut self, buf: &str) -> usize {
 		let top_func_name = String::from(self.top_func_name());
 		let idents = self.cur();
 		let mut id = String::from(top_func_name);
 		id.push_str(buf);
 
 		if let Some(index) = idents.iter().position(|r| r.id() == id) {
-			return index as i32;
+			return index;
 		}
 
 		let mut ident = Ident::new(String::from(buf));
 		ident.set_id(id);
 		idents.push(ident);
-		return (idents.len() - 1) as i32;
+		return idents.len() - 1;
+	}
+
+	pub fn declare_func(&self, ident: &Ident, address: i32) -> bool {
+		let name = ident.name();
+		if self.func_table.contains_key(name) {
+			return true;
+		}
+		let mut ident_func = IdentFunc::from_ident(*ident);
+		ident.put_value(address);
+		ident.put_kind(Kind::FUNCTION);
+		self.func_table.insert(String::from(name), ident_func);
+		return false;
+	}
+
+	pub fn push_func(&mut self, name: &str) {
+		self.func_stack.push(String::from(name));
+	}
+
+	pub fn top_func(&mut self) -> &mut IdentFunc {
+		let func: &str = &self.func_stack[self.func_stack.len() - 1];
+		self.func_table.get_mut(func).unwrap()
+	}
+
+	pub fn len(&self) -> usize {
+		self.cur().len()
+	}
+
+	pub fn pop_func(&mut self) {
+		self.func_stack.pop();
 	}
 }
