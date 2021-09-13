@@ -8,7 +8,9 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
     let mut idents_stack: Vec<HashMap<i32, crate::ident::Ident>> = Vec::new();
     idents_stack.push(HashMap::new());
 
-    let (mut i, mut j, mut index) = (0, 0, 0);
+    let mut index = 0;
+    let mut j;
+    let mut i;
     let size = poliz.len();
 
     while index < size {
@@ -88,7 +90,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                 println!("{}", j);
             }
             lex::Kind::READ => {
-                let mut k: i32 = 0;
+                let k: i32;
                 i = args.pop().unwrap();
                 match tid[i as usize].kind() {
                     lex::Kind::INT => loop {

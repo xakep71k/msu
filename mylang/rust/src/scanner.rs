@@ -51,9 +51,10 @@ impl Scanner {
             NEQ,
         }
 
-        let mut CS = State::H;
+        let mut cs = State::H;
         let mut buf: Vec<char> = Vec::new();
-        let (mut d, mut j): (i32, i32) = (0, 0);
+        let mut d: i32 = 0;
+        let mut j: i32;
         loop {
             let c: char;
             match self.gc() {
@@ -70,35 +71,35 @@ impl Scanner {
                 }
             }
 
-            match CS {
+            match cs {
                 State::H => {
                     if c.is_whitespace() {
                         continue;
                     } else if c.is_alphabetic() {
                         buf.push(c);
-                        CS = State::IDENT;
+                        cs = State::IDENT;
                     } else if c.is_ascii_digit() {
                         d = c.to_digit(10).unwrap() as i32;
-                        CS = State::NUMB;
+                        cs = State::NUMB;
                     } else if c == '{' {
-                        CS = State::COM;
+                        cs = State::COM;
                     } else if c == ':' || c == '<' || c == '>' {
                         buf.push(c);
-                        CS = State::ALE;
+                        cs = State::ALE;
                     } else if c == '@' {
                         return lex::Lex::new(lex::Kind::FIN, 0, String::from(""));
                     } else if c == '!' {
                         buf.push(c);
-                        CS = State::NEQ;
+                        cs = State::NEQ;
                     } else {
                         buf.push(c);
-                        let strBuf: String = buf.into_iter().collect();
-                        j = look(&strBuf, &TD);
+                        let str_buf: String = buf.into_iter().collect();
+                        j = look(&str_buf, &TD);
                         if j != 0 {
                             let kind = lex::Kind::from_i32(j + lex::Kind::FIN as i32);
-                            return lex::Lex::new(kind, j, strBuf);
+                            return lex::Lex::new(kind, j, str_buf);
                         }
-                        eprintln!("identificator not found: {}", strBuf);
+                        eprintln!("identificator not found: {}", str_buf);
                         std::process::exit(1);
                     }
                 }
@@ -107,13 +108,13 @@ impl Scanner {
                         buf.push(c);
                     } else {
                         self.ungc(c);
-                        let strBuf: String = buf.into_iter().collect();
-                        j = look(&strBuf, &TW);
+                        let str_buf: String = buf.into_iter().collect();
+                        j = look(&str_buf, &TW);
                         if j != 0 {
-                            return lex::Lex::new(lex::Kind::from_i32(j), j, strBuf);
+                            return lex::Lex::new(lex::Kind::from_i32(j), j, str_buf);
                         }
-                        j = tid.put(&strBuf) as i32;
-                        return lex::Lex::new(lex::Kind::ID, j, strBuf);
+                        j = tid.put(&str_buf) as i32;
+                        return lex::Lex::new(lex::Kind::ID, j, str_buf);
                     }
                 }
                 State::NUMB => {
@@ -126,7 +127,7 @@ impl Scanner {
                 }
                 State::COM => {
                     if c == '}' {
-                        CS = State::H;
+                        cs = State::H;
                     } else if c == '@' || c == '{' {
                         eprintln!("unexepcted @ or {{");
                         std::process::exit(1);
@@ -135,23 +136,23 @@ impl Scanner {
                 State::ALE => {
                     if c == '=' {
                         buf.push(c);
-                        let strBuf: String = buf.into_iter().collect();
-                        j = look(&strBuf, &TD);
+                        let str_buf: String = buf.into_iter().collect();
+                        j = look(&str_buf, &TD);
                         let kind = lex::Kind::from_i32(j + lex::Kind::FIN as i32);
-                        return lex::Lex::new(kind, j, strBuf);
+                        return lex::Lex::new(kind, j, str_buf);
                     }
                     self.ungc(c);
-                    let strBuf: String = buf.into_iter().collect();
-                    j = look(&strBuf, &TD);
+                    let str_buf: String = buf.into_iter().collect();
+                    j = look(&str_buf, &TD);
                     let kind = lex::Kind::from_i32(j + lex::Kind::FIN as i32);
-                    return lex::Lex::new(kind, j, strBuf);
+                    return lex::Lex::new(kind, j, str_buf);
                 }
                 State::NEQ => {
                     if c == '=' {
                         buf.push(c);
-                        let strBuf: String = buf.into_iter().collect();
-                        j = look(&strBuf, &TD);
-                        return lex::Lex::new(lex::Kind::NEQ, j, strBuf);
+                        let str_buf: String = buf.into_iter().collect();
+                        j = look(&str_buf, &TD);
+                        return lex::Lex::new(lex::Kind::NEQ, j, str_buf);
                     }
                     eprintln!("expected '=' but found {}", c);
                 }
