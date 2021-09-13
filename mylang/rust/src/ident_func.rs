@@ -10,19 +10,19 @@ pub struct IdentFunc {
 
 impl IdentFunc {
     pub fn new() -> IdentFunc {
-        IdentFunc::from_ident(ident::Ident::new(String::new()))
+        IdentFunc::from_ident(&ident::Ident::new(String::new()))
     }
 
-    pub fn from_ident(ident: ident::Ident) -> IdentFunc {
+    pub fn from_ident(ident: &ident::Ident) -> IdentFunc {
         IdentFunc {
             args: Vec::new(),
             return_lex: lex::Lex::new(lex::Kind::NULL, 0, String::new()),
             return_var: 0,
-            ident: ident,
+            ident: ident.clone(),
         }
     }
     pub fn push_arg(&mut self, ident: ident::Ident) {
-        self.args.push(ident);
+        self.args.push(ident.clone());
     }
     pub fn set_return_lex(&mut self, lex: lex::Lex) {
         self.return_lex = lex;

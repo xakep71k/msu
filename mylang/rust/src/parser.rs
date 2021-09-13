@@ -89,14 +89,16 @@ impl Parser {
             std::process::exit(1);
         }
 
-        let ident_func = self.tid.pop_back();
-        if self.tid.declare_func(&ident_func, self.poliz.len() as i32) {
+        let mut ident_func = self.tid.pop_back();
+        if self
+            .tid
+            .declare_func(&mut ident_func, self.poliz.len() as i32)
+        {
             eprintln!("function already exists");
             std::process::exit(1);
         }
 
         self.tid.push_func(ident_func.name());
-        let func = self.tid.top_func();
 
         self.next_lex();
         if self.c_type != Kind::LPAREN {
@@ -120,7 +122,8 @@ impl Parser {
             if i < self.tid.len() - varsCount {
                 break;
             }
-            func.push_arg(self.tid[i]);
+            let ident = self.tid[i].clone();
+            self.tid.top_func().push_arg(ident);
             self.poliz.push(Lex::new(
                 Kind::POLIZ_ADDRESS,
                 i as i32,
@@ -146,8 +149,8 @@ impl Parser {
             std::process::exit(1);
         }
 
-        func.set_return_lex(self.curr_lex);
-        self.func_declare_ret_var(func);
+        self.tid.top_func().set_return_lex(self.curr_lex.clone());
+        self.declare_ret_var_for_top_func();
 
         self.next_lex();
         if self.c_type == Kind::VAR {
@@ -188,7 +191,7 @@ impl Parser {
         }
         count_vars
     }
-    fn var_extract(&self) -> usize {
+    fn var_extract(&mut self) -> usize {
         let mut count_vars: usize = 0;
         if self.c_type != Kind::ID {
             eprintln!("expected identificator but found {}", self.c_str_val);
@@ -239,12 +242,16 @@ impl Parser {
             self.tid[i].put_kind(kind);
         }
     }
-    fn func_declare_ret_var(&mut self, func: &mut crate::ident_func::IdentFunc) {
-        let index = self.tid.put(func.name());
+    fn declare_ret_var_for_top_func(&mut self) {
+        let top_func = self.tid.top_func();
+        let name = String::from(top_func.name());
+        let kind = top_func.get_return_lex().kind();
+        let index = self.tid.put(&name);
         self.tid[index].set_ret();
         self.st_int.push(index as i32);
-        self.dec(func.get_return_lex().kind());
-        func.set_return_var(index as i32);
+        self.dec(kind);
+        let top_func = self.tid.top_func();
+        top_func.set_return_var(index as i32);
         self.poliz.push(Lex::new(
             Kind::POLIZ_ADDRESS,
             index as i32,

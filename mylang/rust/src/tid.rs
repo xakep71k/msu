@@ -39,13 +39,17 @@ impl TIDType {
 		&self.func_stack[self.func_stack.len() - 1]
 	}
 
-	pub fn cur(&mut self) -> &mut Vec<Ident> {
+	pub fn cur_mt(&mut self) -> &mut Vec<Ident> {
 		&mut self.cur
+	}
+
+	pub fn cur(&self) -> &Vec<Ident> {
+		&self.cur
 	}
 
 	pub fn put(&mut self, buf: &str) -> usize {
 		let top_func_name = String::from(self.top_func_name());
-		let idents = self.cur();
+		let idents = self.cur_mt();
 		let mut id = String::from(top_func_name);
 		id.push_str(buf);
 
@@ -59,14 +63,16 @@ impl TIDType {
 		return idents.len() - 1;
 	}
 
-	pub fn declare_func(&self, ident: &Ident, address: i32) -> bool {
+	pub fn declare_func(&mut self, ident: &mut Ident, address: i32) -> bool {
 		let name = ident.name();
 		if self.func_table.contains_key(name) {
 			return true;
 		}
-		let mut ident_func = IdentFunc::from_ident(ident.clone());
+		let clone = ident.clone();
+		let ident_func = IdentFunc::from_ident(&clone);
 		ident.put_value(address);
 		ident.put_kind(Kind::FUNCTION);
+		let name = ident.name();
 		self.func_table.insert(String::from(name), ident_func);
 		return false;
 	}
