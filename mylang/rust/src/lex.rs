@@ -54,7 +54,7 @@ pub enum Kind {
     POLIZ_INIT_FUNC_ARG,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Lex {
     kind: Kind,
     value: i32,

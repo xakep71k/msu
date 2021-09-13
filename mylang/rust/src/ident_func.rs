@@ -30,8 +30,8 @@ impl IdentFunc {
     pub fn set_return_var(&mut self, i: i32) {
         self.return_var = i;
     }
-    pub fn get_return_lex(&mut self) -> lex::Lex {
-        self.return_lex
+    pub fn get_return_lex(&self) -> lex::Lex {
+        self.return_lex.clone()
     }
     pub fn name(&self) -> &str {
         self.ident.name()

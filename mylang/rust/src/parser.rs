@@ -239,7 +239,7 @@ impl Parser {
             self.tid[i].put_kind(kind);
         }
     }
-    fn func_declare_ret_var(&mut self, func: &crate::ident_func::IdentFunc) {
+    fn func_declare_ret_var(&mut self, func: &mut crate::ident_func::IdentFunc) {
         let index = self.tid.put(func.name());
         self.tid[index].set_ret();
         self.st_int.push(index as i32);
@@ -251,4 +251,5 @@ impl Parser {
             String::from(""),
         ));
     }
+    fn b(&mut self) {}
 }

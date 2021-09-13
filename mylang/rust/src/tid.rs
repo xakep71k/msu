@@ -64,7 +64,7 @@ impl TIDType {
 		if self.func_table.contains_key(name) {
 			return true;
 		}
-		let mut ident_func = IdentFunc::from_ident(*ident);
+		let mut ident_func = IdentFunc::from_ident(ident.clone());
 		ident.put_value(address);
 		ident.put_kind(Kind::FUNCTION);
 		self.func_table.insert(String::from(name), ident_func);
