@@ -1,5 +1,6 @@
 use crate::ident;
 use crate::lex;
+use std::ops::{Index, IndexMut};
 
 pub struct IdentFunc {
     args: Vec<crate::ident::Ident>,
@@ -35,5 +36,31 @@ impl IdentFunc {
     }
     pub fn name(&self) -> &str {
         self.ident.name()
+    }
+    pub fn value(&self) -> i32 {
+        self.ident.value()
+    }
+    pub fn kind(&self) -> crate::lex::Kind {
+        self.ident.kind()
+    }
+    pub fn size_args(&self) -> usize {
+        self.args.len()
+    }
+    pub fn clone_args(&self) -> Vec<crate::ident::Ident> {
+        self.args.clone()
+    }
+}
+
+impl Index<usize> for IdentFunc {
+    type Output = crate::ident::Ident;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.args[index]
+    }
+}
+
+impl IndexMut<usize> for IdentFunc {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.args[index]
     }
 }

@@ -1,4 +1,5 @@
 use crate::lex::{Kind, Lex};
+use std::collections::HashSet;
 use std::io;
 
 pub struct Parser {
@@ -15,7 +16,7 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new<'a>(filename: &str, tid: crate::tid::TIDType) -> io::Result<Parser> {
+    pub fn new(filename: &str, tid: crate::tid::TIDType) -> io::Result<Parser> {
         let scan = crate::scanner::Scanner::new(filename)?;
         let parser = Parser {
             tid,
@@ -284,10 +285,10 @@ impl Parser {
     }
 
     fn s(&mut self) {
-        let mut pl0;
-        let mut pl1;
-        let mut pl2;
-        let mut pl3;
+        let pl0;
+        let pl1;
+        let pl2;
+        let pl3;
 
         if self.c_type == Kind::IF {
             self.next_lex();
@@ -398,14 +399,16 @@ impl Parser {
                 .push(Lex::new(lex_write, 0, String::from("WRITE/WRITELN")));
         } else if self.c_type == Kind::ID {
             let old_c_val = self.c_val;
-            let old_c_str_val = self.c_str_val;
+            let old_c_str_val = self.c_str_val.clone();
             self.next_lex();
-            if self.tid.find_func(old_c_str_val).kind() == Kind::FUNCTION
-                && self.c_type == Kind: LPAREN
+            let func = self.tid.find_func(&old_c_str_val);
+            if func.is_some()
+                && func.unwrap().kind() == Kind::FUNCTION
+                && self.c_type == Kind::LPAREN
             {
-                self.call_func(old_c_str_val);
+                self.call_func(&old_c_str_val);
             } else {
-                self.check_id(old_c_val);
+                self.check_id(old_c_val as usize);
                 self.poliz.push(Lex::new(
                     Kind::POLIZ_ADDRESS,
                     old_c_val,
@@ -425,6 +428,403 @@ impl Parser {
             }
         } else {
             self.b();
+        }
+    }
+
+    fn e(&mut self) {
+        self.deep_S += 1;
+        self.e1();
+        match self.c_type {
+            Kind::EQ | Kind::LSS | Kind::GTR | Kind::LEQ | Kind::GEQ | Kind::NEQ => {
+                self.st_lex.push(self.c_type);
+                self.next_lex();
+                self.e1();
+                self.check_op();
+            }
+            _ => {}
+        }
+    }
+
+    fn e1(&mut self) {
+        self.t();
+        let c_type = self.c_type;
+        while c_type == Kind::PLUS || c_type == Kind::MINUS || c_type == Kind::OR {
+            self.st_lex.push(c_type);
+            self.next_lex();
+            self.t();
+            self.check_op();
+        }
+    }
+
+    fn t(&mut self) {
+        self.f();
+        let c_type = self.c_type;
+        while c_type == Kind::PLUS || c_type == Kind::MINUS || c_type == Kind::OR {
+            self.st_lex.push(c_type);
+            self.next_lex();
+            self.f();
+            self.check_op();
+        }
+    }
+
+    fn f(&mut self) {
+        if self.c_type == Kind::ID {
+            if self.tid.find_func(&self.c_str_val).is_some() {
+                let func_name = self.c_str_val.clone();
+                self.next_lex();
+                if self.c_type != Kind::LPAREN {
+                    eprintln!("expected {{ but found {}", self.c_str_val);
+                    std::process::exit(1);
+                }
+                self.call_func(&func_name);
+                let return_lex_kind = self
+                    .tid
+                    .find_func(&self.c_str_val)
+                    .unwrap()
+                    .get_return_lex()
+                    .kind();
+                self.st_lex.push(return_lex_kind);
+            } else {
+                self.check_id(self.c_val as usize);
+                self.poliz
+                    .push(Lex::new(Kind::ID, self.c_val, String::from("LEX_ID F()")));
+                self.next_lex();
+            }
+        } else if self.c_type == Kind::NUM {
+            self.st_lex.push(Kind::INT);
+            self.poliz.push(self.curr_lex.clone());
+            self.next_lex();
+        } else if self.c_type == Kind::TRUE {
+            self.st_lex.push(Kind::BOOL);
+            self.poliz
+                .push(Lex::new(self.c_type, 0, String::from("true")));
+            self.next_lex();
+        } else if self.c_type == Kind::FALSE {
+            self.st_lex.push(Kind::BOOL);
+            self.poliz
+                .push(Lex::new(self.c_type, 0, String::from("false")));
+            self.next_lex();
+        } else if self.c_type == Kind::NOT {
+            self.next_lex();
+            self.f();
+            self.check_not();
+        } else if self.c_type == Kind::LPAREN {
+            self.next_lex();
+            self.e();
+            if self.c_type == Kind::RPAREN {
+                self.next_lex();
+            } else {
+                eprintln!("expected identificator, }} but found {}", self.c_str_val);
+                std::process::exit(1);
+            }
+        } else {
+            eprintln!(
+                "expected identificator, number, true, false, not or {{ but found {}",
+                self.c_str_val
+            );
+            std::process::exit(1);
+        }
+    }
+
+    fn eq_bool(&mut self) {
+        if self.c_type != Kind::BOOL {
+            eprintln!("expression not boolean");
+            std::process::exit(1);
+        }
+        self.st_lex.pop();
+    }
+
+    fn case_of(&mut self) {
+        let mut pl1;
+        let mut labels: Vec<usize> = Vec::new();
+        let mut consts: HashSet<i32> = HashSet::new();
+
+        // забираем выражение внутри скобок case(<выражение>)
+        self.next_lex();
+        self.e();
+        if self.c_type != Kind::CASE {
+            eprintln!("expected case but found {}", self.c_str_val);
+            std::process::exit(1);
+        }
+
+        // все константы дожны быть одного типа с выражением case(<выражение>)
+        let case_type = self.st_lex[self.st_lex.len() - 1];
+        self.next_lex();
+        loop {
+            let mut const_lexes: Vec<Lex> = Vec::new();
+            // забираем все константы, разделённые запятой, одной ветки до знака :
+            loop {
+                self.check_const_case_type(case_type);
+
+                // проверяем была ли константа уже упомянута
+                if consts.insert(self.c_val) {
+                    eprintln!("case/of has duplicate branch");
+                    std::process::exit(1);
+                }
+
+                const_lexes.push(Lex::new(
+                    self.c_type,
+                    self.get_case_val(),
+                    self.c_str_val.clone(),
+                ));
+                self.next_lex();
+                if self.c_type != Kind::COMMA {
+                    break;
+                }
+
+                // забираем следующую константу
+                self.next_lex();
+            }
+            // формируем условия для выполенния ветки: добавляем сравнение с каждой константой
+            for clex in const_lexes.iter() {
+                self.poliz
+                    .push(Lex::new(Kind::POLIZ_DUP, 0, String::from("dup")));
+                self.poliz.push(clex.clone());
+                self.poliz
+                    .push(Lex::new(Kind::NEQ, 0, String::from("case NEQ")));
+                labels.push(self.poliz.len());
+                self.poliz.push(Lex::default()); // адрес тела ветки
+                self.poliz
+                    .push(Lex::new(Kind::POLIZ_FGO, 0, String::from("FGO")));
+            }
+
+            if const_lexes.len() == 0 {
+                eprintln!("no constants specified");
+                std::process::exit(1);
+            }
+
+            // ни одно из условий не выполнено, идём к следующей ветки
+            pl1 = self.poliz.len();
+            self.poliz.push(Lex::default());
+            self.poliz
+                .push(Lex::new(Kind::POLIZ_GO, 0, String::from("GO")));
+
+            // заполняем пропущенные адреса на тело ветки case of
+            let mut i = 0;
+            loop {
+                if i >= const_lexes.len() {
+                    break;
+                }
+                let ilabel = labels.pop().unwrap();
+                self.poliz[ilabel] = Lex::new(
+                    Kind::POLIZ_LABEL,
+                    self.poliz.len() as i32,
+                    String::from("POLIZ_LABEL to case branch"),
+                );
+                i += 1;
+            }
+
+            // пропускаем символ :
+            if self.c_type != Kind::COLON {
+                eprintln!("expected : but found {}", self.c_str_val);
+                std::process::exit(1);
+            }
+
+            // тело ветки case/of
+            self.poliz.push(Lex::new(
+                Kind::POLIZ_DEL_ARG,
+                0,
+                String::from("pop value of dup"),
+            ));
+            self.next_lex();
+            self.s();
+
+            // сюда запишется адрес выхода из ветки
+            labels.push(self.poliz.len());
+            self.poliz
+                .push(Lex::new(Kind::POLIZ_LABEL, 0, String::from("BREAK CASE")));
+            self.poliz
+                .push(Lex::new(Kind::POLIZ_GO, 0, String::from("GO")));
+            self.poliz[pl1] = Lex::new(
+                Kind::POLIZ_LABEL,
+                self.poliz.len() as i32,
+                String::from("NEXT BRANCH"),
+            );
+
+            if self.c_type == Kind::END {
+                break;
+            }
+        }
+
+        if consts.len() == 0 {
+            eprintln!("case/of must have at least one const");
+            std::process::exit(1);
+        }
+
+        // помечаем последнюю метку, если мы на неё попали, значит ни одна ветка не сработала
+        self.poliz.push(Lex::new(
+            Kind::POLIZ_FAIL,
+            0,
+            String::from("branch of case not found"),
+        ));
+
+        // заполняем LABEL'ы верными адресами для выхода из тела веток case'а
+        while labels.len() != 0 {
+            let ilabel = labels.pop().unwrap();
+            self.poliz[ilabel] = Lex::new(
+                Kind::POLIZ_LABEL,
+                self.poliz.len() as i32,
+                String::from("BREAK CASE"),
+            )
+        }
+
+        self.next_lex();
+    }
+
+    fn check_id_in_read(&mut self) {
+        if !self.tid[self.c_val as usize].declare() {
+            let item = &self.tid[self.c_val as usize];
+            let name = item.name();
+            let id = item.id();
+            eprintln!("check_id_in_read: not declared {} {}", name, id);
+            std::process::exit(1);
+        }
+    }
+
+    fn call_func(&mut self, func_name: &str) {
+        if self.deep_S == 1 {
+            eprintln!("return value of function '{}' not used", func_name);
+            std::process::exit(1);
+        }
+
+        let func = self.tid.find_func(func_name);
+        if func.is_none() {
+            eprintln!("unction not declared: '{}'", func_name);
+            std::process::exit(1);
+        }
+        let func = func.unwrap();
+        let func_args = func.clone_args();
+        let func_name = String::from(func.name());
+        let func_value = func.value();
+        self.next_lex();
+        let mut rparent_found = false;
+        let mut end = false;
+        let return_index_label = self.poliz.len();
+        self.poliz.push(Lex::default());
+        if func_args.len() != 0 {
+            let mut i = func_args.len() - 1;
+            while !rparent_found {
+                let t: Kind;
+                self.e();
+                t = self.st_lex.pop().unwrap();
+                if func_args[i].kind() != t {
+                    eprintln!("wrong type of arg");
+                    std::process::exit(1);
+                }
+                rparent_found = self.c_type == Kind::RPAREN;
+                self.next_lex();
+                if i == 0 {
+                    end = true;
+                    break;
+                }
+                i -= 1;
+            }
+            if !end || !rparent_found {
+                eprintln!("wrong number of args in function {}", func_name);
+                std::process::exit(1);
+            }
+        } else {
+            if self.c_type != Kind::RPAREN {
+                eprintln!("exepcted }} but found {}", self.c_str_val);
+                std::process::exit(1);
+            }
+            self.next_lex();
+        }
+
+        self.poliz
+            .push(Lex::new(Kind::POLIZ_CALL_FUNC, func_value, func_name));
+        self.poliz[return_index_label] = Lex::new(
+            Kind::POLIZ_LABEL,
+            self.poliz.len() as i32,
+            String::from("return label"),
+        );
+    }
+
+    fn check_id(&mut self, addr: usize) {
+        if self.tid[addr].declare() {
+            self.st_lex.push(self.tid[addr].kind());
+        } else {
+            let name = self.tid[addr].name();
+            let id = self.tid[addr].id();
+            eprintln!("check_id: not declared {} {}", name, id);
+            std::process::exit(1);
+        }
+    }
+
+    fn eq_type(&mut self) {
+        let t = self.st_lex.pop().unwrap();
+        let top = self.st_lex[self.st_lex.len() - 1];
+        if t != top {
+            eprintln!("wrong types are in :=");
+            std::process::exit(1);
+        }
+    }
+
+    fn check_op(&mut self) {
+        let t2 = self.st_lex.pop().unwrap();
+        let op = self.st_lex.pop().unwrap();
+        let t1 = self.st_lex.pop().unwrap();
+        let mut t = Kind::INT;
+        let mut r = Kind::BOOL;
+
+        if op == Kind::PLUS || op == Kind::MINUS || op == Kind::TIMES || op == Kind::SLASH {
+            r = Kind::INT;
+        }
+        if op == Kind::OR || op == Kind::AND {
+            t = Kind::BOOL;
+        }
+        if t1 == t2 && t1 == t {
+            self.st_lex.push(r);
+        } else {
+            eprintln!("wrong types are in operation");
+            std::process::exit(1);
+        }
+        self.poliz.push(Lex::new(op, 0, String::from("op")));
+    }
+
+    fn check_not(&mut self) {
+        let top = self.st_lex[self.st_lex.len() - 1];
+        if top != Kind::BOOL {
+            eprintln!("wrong type is in not");
+            std::process::exit(1);
+        }
+    }
+
+    fn check_const_case_type(&self, case_type: Kind) {
+        if case_type == Kind::BOOL {
+            match self.c_type {
+                Kind::FALSE => {}
+                Kind::TRUE => {}
+                _ => {
+                    eprintln!(
+                        "wrong const type of case: must be true/false: {}",
+                        self.c_type as i32
+                    );
+                    std::process::exit(1);
+                }
+            }
+        } else if case_type == Kind::INT {
+            match self.c_type {
+                Kind::INT => {}
+                _ => {
+                    eprintln!(
+                        "wrong const type of case: must be num: {}",
+                        self.c_type as i32
+                    );
+                    std::process::exit(1);
+                }
+            }
+        } else {
+            eprintln!("wrong case type");
+            std::process::exit(1);
+        }
+    }
+
+    fn get_case_val(&self) -> i32 {
+        match self.c_type {
+            Kind::FALSE => return 1,
+            Kind::TRUE => return 0,
+            _ => return self.c_val,
         }
     }
 }
