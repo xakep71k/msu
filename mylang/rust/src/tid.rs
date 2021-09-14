@@ -94,10 +94,6 @@ impl TIDType {
 		self.func_stack.pop();
 	}
 
-	pub fn find_func_mut(&mut self, name: &str) -> std::option::Option<&mut IdentFunc> {
-		self.func_table.get_mut(name)
-	}
-
 	pub fn find_func(&self, name: &str) -> std::option::Option<&IdentFunc> {
 		self.func_table.get(name)
 	}

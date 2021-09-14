@@ -10,10 +10,6 @@ pub struct IdentFunc {
 }
 
 impl IdentFunc {
-    pub fn new() -> IdentFunc {
-        IdentFunc::from_ident(&ident::Ident::new(String::new()))
-    }
-
     pub fn from_ident(ident: &ident::Ident) -> IdentFunc {
         IdentFunc {
             args: Vec::new(),

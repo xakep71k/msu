@@ -12,7 +12,7 @@ pub struct Parser {
     st_int: Vec<i32>,
     st_lex: Vec<Kind>,
     poliz: Vec<Lex>,
-    deep_S: i32,
+    deep_s: i32,
 }
 
 impl Parser {
@@ -28,7 +28,7 @@ impl Parser {
             st_int: Vec::new(),
             st_lex: Vec::new(),
             poliz: Vec::new(),
-            deep_S: 0,
+            deep_s: 0,
         };
         Ok(parser)
     }
@@ -265,10 +265,10 @@ impl Parser {
     fn b(&mut self) {
         if self.c_type == Kind::BEGIN {
             self.next_lex();
-            self.deep_S = 0;
+            self.deep_s = 0;
             self.s();
             while self.c_type == Kind::SEMICOLON {
-                self.deep_S = 0;
+                self.deep_s = 0;
                 self.next_lex();
                 self.s();
             }
@@ -432,7 +432,7 @@ impl Parser {
     }
 
     fn e(&mut self) {
-        self.deep_S += 1;
+        self.deep_s += 1;
         self.e1();
         match self.c_type {
             Kind::EQ | Kind::LSS | Kind::GTR | Kind::LEQ | Kind::GEQ | Kind::NEQ => {
@@ -682,7 +682,7 @@ impl Parser {
     }
 
     fn call_func(&mut self, func_name: &str) {
-        if self.deep_S == 1 {
+        if self.deep_s == 1 {
             eprintln!("return value of function '{}' not used", func_name);
             std::process::exit(1);
         }

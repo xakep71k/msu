@@ -56,10 +56,6 @@ impl Ident {
         self.kind = k
     }
 
-    pub fn ret(&self) -> bool {
-        self.ret
-    }
-
     pub fn set_ret(&mut self) {
         self.ret = true
     }
