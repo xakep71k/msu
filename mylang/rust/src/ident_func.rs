@@ -10,12 +10,12 @@ pub struct IdentFunc {
 }
 
 impl IdentFunc {
-    pub fn from_ident(ident: &ident::Ident) -> IdentFunc {
+    pub fn from_ident(ident: ident::Ident) -> IdentFunc {
         IdentFunc {
             args: Vec::new(),
             return_lex: lex::Lex::new(lex::Kind::NULL, 0, String::new()),
             return_var: 0,
-            ident: ident.clone(),
+            ident: ident,
         }
     }
     pub fn push_arg(&mut self, ident: ident::Ident) {
@@ -38,9 +38,6 @@ impl IdentFunc {
     }
     pub fn kind(&self) -> crate::lex::Kind {
         self.ident.kind()
-    }
-    pub fn size_args(&self) -> usize {
-        self.args.len()
     }
     pub fn clone_args(&self) -> Vec<crate::ident::Ident> {
         self.args.clone()

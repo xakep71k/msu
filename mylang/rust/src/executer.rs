@@ -8,14 +8,14 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
     let mut idents_stack: Vec<HashMap<i32, crate::ident::Ident>> = Vec::new();
     idents_stack.push(HashMap::new());
 
-    let mut index = 0;
+    let mut index: i32 = 0;
     let mut j;
     let mut i;
-    let size = poliz.len();
+    let size = poliz.len() as i32;
 
     while index < size {
-        let mut idents = idents_stack.last().unwrap().clone();
-        let pc_el = &poliz[index];
+        let idents = idents_stack.last_mut().unwrap();
+        let pc_el = &poliz[index as usize];
         match pc_el.kind() {
             lex::Kind::TRUE
             | lex::Kind::FALSE
@@ -26,13 +26,17 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
             }
             lex::Kind::ID => {
                 i = pc_el.value();
-                let ident = idents.get(&i).unwrap();
-                if !ident.assign() {
-                    eprintln!("POLIZ: not assigned: name '{}'", ident.id());
+                let ident = idents.get(&i);
+                if ident.is_none() {
+                    eprintln!("POLIZ: unknown address {}", i);
+                    std::process::exit(1);
+                }
+                if !ident.unwrap().assign() {
+                    eprintln!("POLIZ: not assigned: name '{}' {}", ident.unwrap().id(), i);
                     std::process::exit(1);
                 }
 
-                args.push(ident.value());
+                args.push(ident.unwrap().value());
             }
             lex::Kind::NOT => {
                 let i = args.pop().unwrap();
@@ -52,23 +56,23 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                 args.push(v);
             }
             lex::Kind::POLIZ_CALL_FUNC => {
-                index = (pc_el.value() - 1) as usize;
+                index = pc_el.value() - 1;
                 idents_stack.push(HashMap::new());
             }
             lex::Kind::POLIZ_GO => {
                 i = args.pop().unwrap();
-                index = (i - 1) as usize;
+                index = i - 1;
             }
             lex::Kind::POLIZ_RETURN_FUNC => {
                 j = args.pop().unwrap();
-                let ident = idents.get(&j).unwrap();
-                if !ident.assign() {
+                let ident = idents.get(&j);
+                if ident.is_none() {
                     eprintln!("return value not assigned: {}", tid[j as usize].name());
                     std::process::exit(1);
                 }
                 i = args.pop().unwrap();
-                index = (i - 1) as usize;
-                args.push(ident.value());
+                index = i - 1;
+                args.push(ident.unwrap().value());
                 idents_stack.pop();
             }
             lex::Kind::POLIZ_DUP => {
@@ -78,7 +82,7 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                 i = args.pop().unwrap();
                 j = args.pop().unwrap();
                 if j == 0 {
-                    index = (i - 1) as usize;
+                    index = i - 1;
                 }
             }
             lex::Kind::WRITE => {
@@ -92,8 +96,10 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
             lex::Kind::READ => {
                 let k: i32;
                 i = args.pop().unwrap();
-                match tid[i as usize].kind() {
+                let index = i as usize;
+                match tid[index].kind() {
                     lex::Kind::INT => loop {
+                        println!("Input int value for {} ", tid[index].name());
                         let res = std::io::stdin()
                             .lock()
                             .lines()
@@ -141,8 +147,9 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
                     }
                 }
 
-                if !idents.get(&i).unwrap().assign() {
-                    *idents.get_mut(&i).unwrap() = tid[i as usize].clone();
+                let ident = idents.get(&i);
+                if ident.is_none() || !ident.unwrap().assign() {
+                    idents.insert(i, tid[i as usize].clone());
                 }
                 idents.get_mut(&i).unwrap().put_value(k);
             }
@@ -203,12 +210,20 @@ pub fn execute_poliz(poliz: Vec<crate::lex::Lex>, tid: tid::TIDType) {
             lex::Kind::ASSIGN => {
                 i = args.pop().unwrap();
                 j = args.pop().unwrap();
-                idents.get_mut(&j).unwrap().put_value(i);
+                if idents.get(&j).is_none() {
+                    let mut ident = crate::ident::Ident::new(String::new());
+                    ident.put_value(i);
+                    idents.insert(j, ident);
+                } else {
+                    idents.get_mut(&j).unwrap().put_value(i);
+                }
             }
             lex::Kind::POLIZ_INIT_FUNC_ARG => {
                 j = args.pop().unwrap();
                 i = args.pop().unwrap();
-                idents.get_mut(&j).unwrap().put_value(i);
+                let mut ident = crate::ident::Ident::new(String::new());
+                ident.put_value(i);
+                idents.insert(j, ident);
             }
             lex::Kind::POLIZ_FAIL => {
                 eprintln!("{}", pc_el.value_str());

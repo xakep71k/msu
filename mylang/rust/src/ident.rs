@@ -49,7 +49,8 @@ impl Ident {
     }
 
     pub fn put_value(&mut self, v: i32) {
-        self.value = v
+        self.value = v;
+        self.assign = true;
     }
 
     pub fn put_kind(&mut self, k: crate::lex::Kind) {

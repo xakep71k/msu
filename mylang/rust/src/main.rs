@@ -5,6 +5,7 @@ mod lex;
 mod parser;
 mod scanner;
 mod tid;
+use std::time::Instant;
 
 fn main() -> std::io::Result<()> {
     let mut args = std::env::args();
@@ -19,7 +20,13 @@ fn main() -> std::io::Result<()> {
         Err(err) => return Err(err),
     };
 
+    let now = Instant::now();
     let (poliz, tid) = parser.analyze();
+    let elapsed = now.elapsed();
+    println!("Analyzed: time difference = {:?}", elapsed);
+    let now = Instant::now();
     crate::executer::execute_poliz(poliz, tid);
+    let elapsed = now.elapsed();
+    println!("Executed: time difference = {:?}", elapsed);
     Ok(())
 }

@@ -115,14 +115,15 @@ impl Parser {
         if self.c_type != Kind::RPAREN {
             vars_count = self.var_declaration();
             if self.c_type != Kind::RPAREN {
-                eprintln!("expected {{ but found {}", self.c_str_val);
+                eprintln!("expected ) but found {}", self.c_str_val);
                 std::process::exit(1);
             }
         }
 
         let mut i = self.tid.len() - 1;
+        let len = self.tid.len() - vars_count;
         loop {
-            if i < self.tid.len() - vars_count {
+            if i < len {
                 break;
             }
             let ident = self.tid[i].clone();
@@ -137,6 +138,9 @@ impl Parser {
                 0,
                 String::from("init func arg"),
             ));
+            if i == 0 {
+                break;
+            }
             i -= 1;
         }
 
@@ -148,7 +152,10 @@ impl Parser {
 
         self.next_lex();
         if self.c_type != Kind::BOOL && self.c_type != Kind::INT {
-            eprintln!("expected bool or int but found {}", self.c_str_val);
+            eprintln!(
+                "expected bool or int but found {} {}",
+                self.c_type as i32, self.c_str_val
+            );
             std::process::exit(1);
         }
 
@@ -195,7 +202,7 @@ impl Parser {
         count_vars
     }
     fn var_extract(&mut self) -> usize {
-        let mut count_vars: usize = 0;
+        let mut count_vars: usize = 1;
         if self.c_type != Kind::ID {
             eprintln!("expected identificator but found {}", self.c_str_val);
             std::process::exit(1);
@@ -220,7 +227,7 @@ impl Parser {
         }
 
         self.next_lex();
-        if self.c_type == Kind::BOOL {
+        if self.c_type == Kind::INT {
             self.dec(Kind::INT);
             self.next_lex();
         } else if self.c_type == Kind::BOOL {
@@ -238,7 +245,7 @@ impl Parser {
         while self.st_int.len() != 0 {
             i = self.st_int.pop().unwrap() as usize;
             if self.tid[i].declare() {
-                eprintln!("declated twice {}", self.tid[i].name());
+                eprintln!("declared twice {}", self.tid[i].name());
                 std::process::exit(1);
             }
             self.tid[i].put_declare();
@@ -284,11 +291,13 @@ impl Parser {
         }
     }
 
+    // логические конструкции
     fn s(&mut self) {
         let pl0;
         let pl1;
         let pl2;
         let pl3;
+        self.deep_s += 1;
 
         if self.c_type == Kind::IF {
             self.next_lex();
@@ -309,7 +318,7 @@ impl Parser {
             pl3 = self.poliz.len();
             self.poliz.push(Lex::default());
             self.poliz
-                .push(Lex::new(Kind::POLIZ_FGO, 0, String::from("POLIZ_FGO")));
+                .push(Lex::new(Kind::POLIZ_GO, 0, String::from("POLIZ_GO")));
 
             self.poliz[pl2] = Lex::new(
                 Kind::POLIZ_LABEL,
@@ -317,8 +326,19 @@ impl Parser {
                 String::from("POLIZ_LABEL"),
             );
             if self.c_type == Kind::ELSE {
+                self.poliz[pl2] = Lex::new(
+                    Kind::POLIZ_LABEL,
+                    self.poliz.len() as i32,
+                    String::from("POLIZ_LABEL"),
+                );
                 self.next_lex();
                 self.s();
+            } else {
+                self.poliz[pl2] = Lex::new(
+                    Kind::POLIZ_LABEL,
+                    self.poliz.len() as i32,
+                    String::from("POLIZ_LABEL"),
+                );
             }
 
             self.poliz[pl3] = Lex::new(
@@ -371,26 +391,29 @@ impl Parser {
             self.poliz.push(Lex::new(
                 Kind::POLIZ_ADDRESS,
                 self.c_val,
-                String::from("POLIZ_ADDRESS"),
+                String::from("address for read"),
             ));
             self.next_lex();
 
-            if self.c_type != Kind::LPAREN {
-                eprintln!("expected }} but found {}", self.c_str_val);
+            if self.c_type != Kind::RPAREN {
+                eprintln!("expected1 ( but found {}", self.c_str_val);
                 std::process::exit(1);
             }
+            self.next_lex();
+            self.poliz
+                .push(Lex::new(Kind::READ, 0, String::from("READ")));
         } else if self.c_type == Kind::WRITE || self.c_type == Kind::WRITELN {
             let lex_write = self.c_type;
             self.next_lex();
             if self.c_type != Kind::LPAREN {
-                eprintln!("expected {{ but found {}", self.c_str_val);
+                eprintln!("expected2 ( but found {}", self.c_str_val);
                 std::process::exit(1);
             }
 
             self.next_lex();
             self.e();
-            if self.c_type != Kind::LPAREN {
-                eprintln!("expected }} but found {}", self.c_str_val);
+            if self.c_type != Kind::RPAREN {
+                eprintln!("expected3 ( but found {}", self.c_str_val);
                 std::process::exit(1);
             }
 
@@ -447,9 +470,8 @@ impl Parser {
 
     fn e1(&mut self) {
         self.t();
-        let c_type = self.c_type;
-        while c_type == Kind::PLUS || c_type == Kind::MINUS || c_type == Kind::OR {
-            self.st_lex.push(c_type);
+        while self.c_type == Kind::PLUS || self.c_type == Kind::MINUS || self.c_type == Kind::OR {
+            self.st_lex.push(self.c_type);
             self.next_lex();
             self.t();
             self.check_op();
@@ -458,9 +480,8 @@ impl Parser {
 
     fn t(&mut self) {
         self.f();
-        let c_type = self.c_type;
-        while c_type == Kind::PLUS || c_type == Kind::MINUS || c_type == Kind::OR {
-            self.st_lex.push(c_type);
+        while self.c_type == Kind::TIMES || self.c_type == Kind::SLASH || self.c_type == Kind::AND {
+            self.st_lex.push(self.c_type);
             self.next_lex();
             self.f();
             self.check_op();
@@ -479,7 +500,7 @@ impl Parser {
                 self.call_func(&func_name);
                 let return_lex_kind = self
                     .tid
-                    .find_func(&self.c_str_val)
+                    .find_func(&func_name)
                     .unwrap()
                     .get_return_lex()
                     .kind();
@@ -527,11 +548,14 @@ impl Parser {
     }
 
     fn eq_bool(&mut self) {
-        if self.c_type != Kind::BOOL {
-            eprintln!("expression not boolean");
+        let top = self.st_lex.pop().unwrap();
+        if top != Kind::BOOL {
+            eprintln!(
+                "expression not boolean {} {}",
+                self.c_type as i32, self.c_str_val
+            );
             std::process::exit(1);
         }
-        self.st_lex.pop();
     }
 
     fn case_of(&mut self) {
@@ -725,7 +749,7 @@ impl Parser {
             }
         } else {
             if self.c_type != Kind::RPAREN {
-                eprintln!("exepcted }} but found {}", self.c_str_val);
+                eprintln!("exepcted ) but found {}", self.c_str_val);
                 std::process::exit(1);
             }
             self.next_lex();
