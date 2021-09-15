@@ -120,28 +120,30 @@ impl Parser {
             }
         }
 
-        let mut i = self.tid.len() - 1;
-        let len = self.tid.len() - vars_count;
-        loop {
-            if i < len {
-                break;
+        if self.tid.len() > 0 {
+            let mut i = self.tid.len() - 1;
+            let len = self.tid.len() - vars_count;
+            loop {
+                if i < len {
+                    break;
+                }
+                let ident = self.tid[i].clone();
+                self.tid.top_func().push_arg(ident);
+                self.poliz.push(Lex::new(
+                    Kind::POLIZ_ADDRESS,
+                    i as i32,
+                    String::from("addr func arg"),
+                ));
+                self.poliz.push(Lex::new(
+                    Kind::POLIZ_INIT_FUNC_ARG,
+                    0,
+                    String::from("init func arg"),
+                ));
+                if i == 0 {
+                    break;
+                }
+                i -= 1;
             }
-            let ident = self.tid[i].clone();
-            self.tid.top_func().push_arg(ident);
-            self.poliz.push(Lex::new(
-                Kind::POLIZ_ADDRESS,
-                i as i32,
-                String::from("addr func arg"),
-            ));
-            self.poliz.push(Lex::new(
-                Kind::POLIZ_INIT_FUNC_ARG,
-                0,
-                String::from("init func arg"),
-            ));
-            if i == 0 {
-                break;
-            }
-            i -= 1;
         }
 
         self.next_lex();
@@ -566,7 +568,7 @@ impl Parser {
         // забираем выражение внутри скобок case(<выражение>)
         self.next_lex();
         self.e();
-        if self.c_type != Kind::CASE {
+        if self.c_type != Kind::OF {
             eprintln!("expected case but found {}", self.c_str_val);
             std::process::exit(1);
         }
@@ -581,7 +583,7 @@ impl Parser {
                 self.check_const_case_type(case_type);
 
                 // проверяем была ли константа уже упомянута
-                if consts.insert(self.c_val) {
+                if !consts.insert(self.c_val) {
                     eprintln!("case/of has duplicate branch");
                     std::process::exit(1);
                 }
@@ -829,7 +831,7 @@ impl Parser {
             }
         } else if case_type == Kind::INT {
             match self.c_type {
-                Kind::INT => {}
+                Kind::NUM => {}
                 _ => {
                     eprintln!(
                         "wrong const type of case: must be num: {}",
