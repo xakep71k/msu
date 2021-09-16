@@ -14,8 +14,7 @@ fn main() -> std::io::Result<()> {
         std::process::exit(1);
     }
 
-    let tid = crate::tid::TIDType::new();
-    let parser = match crate::parser::Parser::new(&args.nth(1).unwrap(), tid) {
+    let parser = match crate::parser::Parser::new(&args.nth(1).unwrap()) {
         Ok(parser) => parser,
         Err(err) => return Err(err),
     };
@@ -25,7 +24,7 @@ fn main() -> std::io::Result<()> {
     let elapsed = now.elapsed();
     println!("Analyzed: time difference = {:?}", elapsed);
     let now = Instant::now();
-    crate::executer::execute_poliz(poliz, tid);
+    crate::executer::execute_poliz(poliz, &tid);
     let elapsed = now.elapsed();
     println!("Executed: time difference = {:?}", elapsed);
     Ok(())

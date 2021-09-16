@@ -16,10 +16,10 @@ pub struct Parser {
 }
 
 impl Parser {
-    pub fn new(filename: &str, tid: crate::tid::TIDType) -> io::Result<Parser> {
+    pub fn new(filename: &str) -> io::Result<Parser> {
         let scan = crate::scanner::Scanner::new(filename)?;
         let parser = Parser {
-            tid,
+            tid: crate::tid::TIDType::new(),
             scan,
             curr_lex: Lex::default(),
             c_type: Kind::default(),
