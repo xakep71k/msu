@@ -1,23 +1,39 @@
 # -*- coding: utf-8 -*-
 
 #
+# Реализовать класс Tlist:
+#
+
+#
 # операторы  << и >> осуществляют циклический сдвиг массива влево и вправо соответственно. 
 #
-class TList:
-    def __init__(self, vec):
-        self.vec = vec
+class Tlist:
+    def __init__(self, vec, p):
+        vec = list(vec)
+        i = 0
+        reverse = False
+        result = list()
+
+        while i < len(vec):
+            tmp = vec[i: i+p]
+            tmp.sort(reverse=reverse)
+            result.extend(tmp)
+            i += p
+            reverse = not reverse
+
+        self.vec = result
 
     def __rshift__(self, other):
         while other != 0:
-            self.rshift()
+            self._rshift()
             other -= 1
 
     def __lshift__(self, other):
         while other != 0:
-            self.lshift()
+            self._lshift()
             other -= 1
 
-    def rshift(self):
+    def _rshift(self):
         if len(self.vec) == 0:
             return
 
@@ -31,7 +47,7 @@ class TList:
         self.vec[0] = next_item
 
 
-    def lshift(self):
+    def _lshift(self):
         if len(self.vec) == 0:
             return
         
@@ -46,11 +62,27 @@ class TList:
 
         self.vec[last] = prev_item
 
+    def ispol(self, vec):
+        i = 0
+        j = len(vec) - 1
+        vec = list(vec)
+
+        while i < j:
+            if vec[i] != vec[j]:
+                return False
+            i += 1
+            j -= 1
+
+        return True
+
 if __name__ == '__main__':
-    objTList = TList([0, 1, 2, 3, 4, 5, 6])
-    objTList >> 2
-    assert objTList.vec == [5, 6, 0, 1, 2, 3, 4]
+    obj = Tlist('batyfghpoiuy',3)
+    assert obj.vec == ['a', 'b', 't', 'y', 'g', 'f', 'h', 'o', 'p', 'y', 'u', 'i']
+    obj >> 1
+    assert obj.vec == ['i', 'a', 'b', 't', 'y', 'g', 'f', 'h', 'o', 'p', 'y', 'u']
+    obj << 1
+    assert obj.vec == ['a', 'b', 't', 'y', 'g', 'f', 'h', 'o', 'p', 'y', 'u', 'i']
 
-    objTList << 2
-    assert objTList.vec == [0, 1, 2, 3, 4, 5, 6]
-
+    assert obj.ispol("aba") == True
+    assert obj.ispol("abba") == True
+    assert obj.ispol("abbaa") == False
