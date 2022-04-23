@@ -56,7 +56,7 @@ class Real_text:
 
     def save_to_file(self, filename):
         with open(filename, 'w') as f:
-            print(str(self), file=f)
+            f.write(str(self))
 
     def __str__(self):
         return ' '.join(map(str, self.strings))
