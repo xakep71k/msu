@@ -66,6 +66,14 @@ if __name__ == '__main__':
     assert rstring <= 'abcd'
     assert rstring >= 'ab'
     assert rstring != 'a'
+    assert rstring <= RealString('abc')
+    assert rstring >= RealString('abc')
+    assert rstring == RealString('abc')
+    assert rstring < RealString('abcd')
+    assert rstring > RealString('ab')
+    assert rstring <= RealString('abcd')
+    assert rstring >= RealString('ab')
+    assert rstring != RealString('a')
 
     text1 = Real_text(sys.argv[1])
     text2 = Real_text(sys.argv[2])
