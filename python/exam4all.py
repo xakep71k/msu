@@ -66,6 +66,12 @@ if __name__ == '__main__':
     assert rstring <= 'abcd'
     assert rstring >= 'ab'
     assert rstring != 'a'
+    assert not (rstring <= 'ab')
+    assert not (rstring >= 'abcd')
+    assert not (rstring == '1')
+    assert not (rstring < '2')
+    assert not (rstring > 'abcd')
+    assert not (rstring != 'abc')
     assert rstring <= RealString('abc')
     assert rstring >= RealString('abc')
     assert rstring == RealString('abc')
