@@ -54,6 +54,13 @@ class Real_text:
         new.strings = strings
         return new
 
+    def save_to_file(self, filename):
+        with open(filename, 'w') as f:
+            print(str(self), file=f)
+
+    def __str__(self):
+        return ' '.join(map(str, self.strings))
+
 if __name__ == '__main__':
     import sys
 
@@ -84,10 +91,12 @@ if __name__ == '__main__':
     text1 = Real_text(sys.argv[1])
     text2 = Real_text(sys.argv[2])
 
-    print("text1:", ' '.join(map(str, text1.strings)))
-    print("text2:", ' '.join(map(str, text2.strings)))
+    print("text1:", str(text1))
+    print("text2:", str(text2))
 
     text3 = text1 + text2
-    print("text3:", ' '.join(map(str, text3.strings)))
+    print("text3:", str(text3))
 
     assert text3.strings == text1.strings + text2.strings
+
+    text3.save_to_file(sys.argv[3])
