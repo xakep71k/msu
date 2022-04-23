@@ -40,9 +40,9 @@ class RealString:
 # Реализовать метод + сумма двух экземпляров,т.е. Real_text =Real_text+ Real_text.
 # Реализовать метод сохранения Real_text в файл. Не забываем  слова сохранять через пробел.
 class Real_text:
-    def __init__(self, filename):
+    def __init__(self, filename=None):
         self.strings = list()
-        if len(filename) != 0:
+        if filename:
             with open(filename,'r') as file:
                 for line in file:
                     for word in line.split():
@@ -50,7 +50,7 @@ class Real_text:
 
     def	__add__(self, o):
         strings = self.strings + o.strings
-        new = Real_text("")
+        new = Real_text()
         new.strings = strings
         return new
 
