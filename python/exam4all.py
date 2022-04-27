@@ -37,7 +37,6 @@ class RealString:
     def isPolindrom(self):
         i = 0
         j = len(self.s) - 1
-        vec = list(self.s)
 
         while i < j:
             if self.s[i] != self.s[j]:
