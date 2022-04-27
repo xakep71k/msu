@@ -34,7 +34,7 @@ class RealString:
     def __str__(self):
         return self.s
 
-    def isPolindrom(self):
+    def isPalindrom(self):
         i = 0
         j = len(self.s) - 1
 
@@ -103,8 +103,8 @@ if __name__ == '__main__':
     text1 = Real_text(sys.argv[1])
     text2 = Real_text(sys.argv[2])
 
-    assert not rstring.isPolindrom()
-    assert RealString('abcba').isPolindrom()
+    assert not rstring.isPalindrom()
+    assert RealString('abcba').isPalindrom()
 
     print("text1:", str(text1))
     print("text2:", str(text2))
