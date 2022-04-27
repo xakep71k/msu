@@ -34,6 +34,19 @@ class RealString:
     def __str__(self):
         return self.s
 
+    def isPolindrom(self):
+        i = 0
+        j = len(self.s) - 1
+        vec = list(self.s)
+
+        while i < j:
+            if self.s[i] != self.s[j]:
+                return False
+            i += 1
+            j -= 1
+
+        return True
+
 # 2. задание:
 # Реализовать класс Real_text. Элементом которого является список из элементов RealString.
 # Реализовать в этом классе конструктор чтения слов из файла.
@@ -90,6 +103,9 @@ if __name__ == '__main__':
 
     text1 = Real_text(sys.argv[1])
     text2 = Real_text(sys.argv[2])
+
+    assert not rstring.isPolindrom()
+    assert RealString('abcba').isPolindrom()
 
     print("text1:", str(text1))
     print("text2:", str(text2))
