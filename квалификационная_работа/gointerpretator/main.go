@@ -20,11 +20,12 @@ func main() {
 		return
 	}
 
-	result, err := interpreter.Expr()
+	nodes, err := interpreter.Expr()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
+	result := impl.Visit(nodes)
 	fmt.Printf("%+v\n", result)
 }
