@@ -1,122 +1,109 @@
 package impl
 
-import (
-	"errors"
-)
-
-var (
-	ErrInvalidSyntax error = errors.New("invalid syntax")
-)
+import "fmt"
 
 type Interpreter struct {
-	currentToken Token
-	lexer        *Lexer
+	parser      *Parser
+	globalScope map[string]any
 }
 
-func NewInterpreter(lexer *Lexer) (*Interpreter, error) {
-	token, err := lexer.NextToken()
-	if err != nil {
-		return nil, err
-	}
+func NewInterpreter(parser *Parser) *Interpreter {
 	return &Interpreter{
-		lexer:        lexer,
-		currentToken: token,
-	}, nil
-}
-
-func (r *Interpreter) eat(ttype string) error {
-	if r.currentToken.Type != ttype {
-		return ErrInvalidSyntax
+		parser:      parser,
+		globalScope: make(map[string]any),
 	}
-
-	var err error
-	r.currentToken, err = r.lexer.NextToken()
-	return err
 }
 
-func (r *Interpreter) factor() (AST, error) {
-	token := r.currentToken
-	if token.Type == INTEGER {
-		if err := r.eat(INTEGER); err != nil {
-			return 0, err
-		}
+func (intr *Interpreter) Interpret() (any, error) {
+	tree, err := intr.parser.Parse()
 
-		return MakeNum(token), nil
-	} else if token.Type == LPARENT {
-		if err := r.eat(LPARENT); err != nil {
-			return 0, err
-		}
-
-		node, err := r.Expr()
-		if err != nil {
-			return 0, err
-		}
-
-		if err := r.eat(RPARENT); err != nil {
-			return 0, err
-		}
-
-		return node, nil
-	}
-
-	return nil, ErrInvalidSyntax
-}
-
-func (r *Interpreter) term() (AST, error) {
-	node, err := r.factor()
 	if err != nil {
 		return nil, err
 	}
 
-	for r.currentToken.Type == MUL || r.currentToken.Type == DIV {
-		token := r.currentToken
-		switch token.Type {
-		case MUL:
-			if err := r.eat(MUL); err != nil {
-				return nil, err
-			}
-		case DIV:
-			if err := r.eat(DIV); err != nil {
-				return nil, err
-			}
-		}
+	fmt.Printf("%+v\n", tree)
 
-		right, err := r.factor()
-		if err != nil {
-			return nil, err
-		}
-		node = MakeBinOp(node, token, right)
-	}
-
-	return node, nil
+	return intr.visit(tree), nil
 }
 
-func (r *Interpreter) Expr() (AST, error) {
-	node, err := r.term()
-	if err != nil {
-		return 0, err
+func (intr *Interpreter) visit(node AST) any {
+	switch n := node.(type) {
+	case BinOp:
+		return intr.visit_BinOp(n)
+	case Num:
+		return intr.visit_Num(n)
+	case UnaryOp:
+		return intr.visit_UnaryOp(n)
+	case Compound:
+		return intr.visit_Compound(n)
+	case Assign:
+		return intr.visit_Assign(n)
+	case Var:
+		return intr.visit_Var(n)
+	case NoOp:
+		return intr.visit_NoOp(n)
+	default:
+		panic("unknown type node")
+	}
+}
+
+func (intr *Interpreter) visit_BinOp(node BinOp) any {
+	switch node.Op.Type {
+	case PLUS:
+		return intr.visit(node.Left).(int) + intr.visit(node.Right).(int)
+	case MINUS:
+		return intr.visit(node.Left).(int) - intr.visit(node.Right).(int)
+	case MUL:
+		return intr.visit(node.Left).(int) * intr.visit(node.Right).(int)
+	case DIV:
+		return intr.visit(node.Left).(int) / intr.visit(node.Right).(int)
+	default:
+		panic("unknown op")
 	}
 
-	for r.currentToken.Type == PLUS || r.currentToken.Type == MINUS {
-		token := r.currentToken
+}
 
-		switch token.Type {
-		case PLUS:
-			if err := r.eat(PLUS); err != nil {
-				return 0, err
-			}
-		case MINUS:
-			if err := r.eat(MINUS); err != nil {
-				return 0, err
-			}
-		}
+func (intr *Interpreter) visit_Num(node Num) any {
+	return node.Value
+}
 
-		right, err := r.term()
-		if err != nil {
-			return nil, err
-		}
-		node = MakeBinOp(node, token, right)
+func (intr *Interpreter) visit_UnaryOp(node UnaryOp) any {
+	op := node.Op.Type
+	if op == "+" {
+		return intr.visit(node.Expr)
+	} else if op == "-" {
+		return -intr.visit(node.Expr).(int)
 	}
 
-	return node, nil
+	panic("invalid operation")
+}
+
+func (intr *Interpreter) visit_Compound(cmp Compound) any {
+	for _, node := range cmp.Children {
+		intr.visit(node)
+	}
+
+	return nil
+}
+
+func (intr *Interpreter) visit_Assign(node Assign) any {
+	varName := node.left.Value.(string)
+	intr.globalScope[varName] = intr.visit(node.right)
+
+	return nil
+}
+
+func (intr *Interpreter) visit_Var(node Var) any {
+	varName := node.Value.(string)
+	val := intr.globalScope[varName]
+
+	if val == nil {
+		panic("name error")
+	}
+
+	return val
+}
+
+func (intr *Interpreter) visit_NoOp(node NoOp) any {
+	return nil
 }

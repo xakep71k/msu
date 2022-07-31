@@ -1,14 +1,21 @@
 package impl
 
+import "fmt"
+
 const (
-	INTEGER string = "INTEGER"
-	PLUS    string = "PLUS"
-	MINUS   string = "MINUS"
-	MUL     string = "MUL"
-	DIV     string = "DIV"
-	LPARENT string = "LPARENT"
-	RPARENT string = "RPARENT"
-	EOF     string = "EOF"
+	INTEGER = "INTEGER"
+	PLUS    = "PLUS"
+	MINUS   = "MINUS"
+	MUL     = "MUL"
+	DIV     = "DIV"
+	LPARENT = "("
+	RPARENT = ")"
+	ID      = "ID"
+	ASSIGN  = "ASSIGN"
+	NEWLINE = "NEWLINE"
+	BEGIN   = "{"
+	END     = "}"
+	EOF     = "EOF"
 )
 
 type Token struct {
@@ -18,4 +25,8 @@ type Token struct {
 
 func MakeToken(Type string, Value interface{}) Token {
 	return Token{Type, Value}
+}
+
+func (t *Token) String() string {
+	return fmt.Sprintf("Token(%v, %v)", t.Type, t.Value)
 }

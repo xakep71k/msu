@@ -14,18 +14,13 @@ func main() {
 		return
 	}
 	lexer := impl.NewLexer(string(data))
-	interpreter, err := impl.NewInterpreter(lexer)
+	parser := impl.NewParser(lexer)
+	interpreter := impl.NewInterpreter(parser)
+	result, err := interpreter.Interpret()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
-	nodes, err := interpreter.Expr()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
-	}
-
-	result := impl.Visit(nodes)
 	fmt.Printf("%+v\n", result)
 }
