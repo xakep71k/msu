@@ -29,5 +29,9 @@ func main() {
 	}
 
 	symTableBuilder := impl.MakeSymbolTableBuilder()
-	symTableBuilder.Build(tree)
+	err = symTableBuilder.Build(tree)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
 }

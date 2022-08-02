@@ -3,7 +3,7 @@ package impl
 import "fmt"
 
 var (
-	ErrNameNodeDefined = "name node defined"
+	ErrNameNodeDefined = "variable not declared"
 )
 
 type Symbol interface {
@@ -81,55 +81,62 @@ func MakeSymbolTableBuilder() SymbolTableBuilder {
 	return SymbolTableBuilder{MakeSymbolTable()}
 }
 
-func (stb *SymbolTableBuilder) Build(node AST) any {
+func (stb *SymbolTableBuilder) Build(tree AST) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
+
+	stb.build(tree)
+
+	return err
+}
+
+func (stb *SymbolTableBuilder) build(node AST) {
 	switch n := node.(type) {
 	case BinOp:
-		return stb.visit_BinOp(n)
+		stb.visit_BinOp(n)
 	case Num:
-		return stb.visit_Num(n)
+		stb.visit_Num(n)
 	case UnaryOp:
-		return stb.visit_UnaryOp(n)
+		stb.visit_UnaryOp(n)
 	case Compound:
-		return stb.visit_Compound(n)
+		stb.visit_Compound(n)
 	case Assign:
-		return stb.visit_Assign(n)
+		stb.visit_Assign(n)
 	case Var:
-		return stb.visit_Var(n)
+		stb.visit_Var(n)
 	case VarDecl:
-		return stb.visit_VarDecl(n)
+		stb.visit_VarDecl(n)
 	case Type:
-		return stb.visit_Type(n)
+		stb.visit_Type(n)
 	case NoOp:
-		return stb.visit_NoOp(n)
+		stb.visit_NoOp(n)
 	default:
 		panic("unknown type node")
 	}
 }
 
-func (stb *SymbolTableBuilder) visit_BinOp(node BinOp) any {
-	stb.Build(node.Left)
-	stb.Build(node.Right)
-	return nil
+func (stb *SymbolTableBuilder) visit_BinOp(node BinOp) {
+	stb.build(node.Left)
+	stb.build(node.Right)
 }
 
-func (stb *SymbolTableBuilder) visit_Num(node Num) any {
-	return nil
+func (stb *SymbolTableBuilder) visit_Num(node Num) {
 }
 
-func (stb *SymbolTableBuilder) visit_UnaryOp(node UnaryOp) any {
-	return stb.Build(node.Expr)
+func (stb *SymbolTableBuilder) visit_UnaryOp(node UnaryOp) {
+	stb.build(node.Expr)
 }
 
-func (stb *SymbolTableBuilder) visit_Compound(cmp Compound) any {
+func (stb *SymbolTableBuilder) visit_Compound(cmp Compound) {
 	for _, node := range cmp.Children {
-		stb.Build(node)
+		stb.build(node)
 	}
-
-	return nil
 }
 
-func (stb *SymbolTableBuilder) visit_NoOp(node NoOp) any {
-	return nil
+func (stb *SymbolTableBuilder) visit_NoOp(node NoOp) {
 }
 
 func (stb *SymbolTableBuilder) visit_VarDecl(node VarDecl) any {
@@ -141,19 +148,16 @@ func (stb *SymbolTableBuilder) visit_VarDecl(node VarDecl) any {
 	return nil
 }
 
-func (stb *SymbolTableBuilder) visit_Assign(node Assign) any {
+func (stb *SymbolTableBuilder) visit_Assign(node Assign) {
 	varName := node.left.Value
 	varSymbol := stb.SymTable.lookup(varName)
 	if varSymbol == nil {
 		panic(fmt.Errorf("%s: %s", ErrNameNodeDefined, varName))
 	}
-	return nil
 }
 
-func (stb *SymbolTableBuilder) visit_Var(node Var) any {
-	return nil
+func (stb *SymbolTableBuilder) visit_Var(node Var) {
 }
 
-func (stb *SymbolTableBuilder) visit_Type(node Type) any {
-	return nil
+func (stb *SymbolTableBuilder) visit_Type(node Type) {
 }
