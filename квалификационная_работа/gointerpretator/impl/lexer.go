@@ -6,8 +6,10 @@ import (
 )
 
 var REVERSED_KEYWORDS = map[string]Token{
-	"{": MakeToken("BEGIN", "{"),
-	"}": MakeToken("END", "}"),
+	"{":   MakeToken(BEGIN, "{"),
+	"}":   MakeToken(END, "}"),
+	"var": MakeToken(VAR, "var"),
+	"int": MakeToken(INT, "int"),
 }
 
 type Lexer struct {
@@ -92,6 +94,13 @@ func (r *Lexer) NextToken() (Token, error) {
 			return r.id(), nil
 		}
 
+		if r.currentChar == '/' && r.peek() == '/' {
+			r.advance()
+			r.advance()
+			r.skipComments()
+			continue
+		}
+
 		currentChar := r.currentChar
 		switch r.currentChar {
 		case '=':
@@ -147,4 +156,11 @@ func (r *Lexer) id() Token {
 	}
 
 	return MakeToken(ID, name)
+}
+
+func (r *Lexer) skipComments() {
+	for r.currentChar != '\n' {
+		r.advance()
+	}
+	r.advance()
 }

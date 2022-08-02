@@ -60,6 +60,24 @@ func MakeVar(tok Token) Var {
 	return Var{tok, tok.Value}
 }
 
+type VarDecl struct {
+	Var  Var
+	Type Type
+}
+
+func MakeVarDecl(v Var, t Type) VarDecl {
+	return VarDecl{v, t}
+}
+
+type Type struct {
+	Tok   Token
+	Value any
+}
+
+func MakeType(tok Token) Type {
+	return Type{tok, tok.Value}
+}
+
 type NoOp struct{}
 
 func MakeNoOp() NoOp {

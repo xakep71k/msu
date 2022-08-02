@@ -125,6 +125,11 @@ func (p *Parser) statement() (AST, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if p.currToken.Type == VAR {
+		node, err = p.declarations()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		node = p.empty()
 	}
@@ -161,6 +166,44 @@ func (p *Parser) variable() (Var, error) {
 	}
 
 	return node, nil
+}
+
+func (p *Parser) declarations() (VarDecl, error) {
+	if err := p.eat(VAR); err != nil {
+		return VarDecl{}, err
+	}
+
+	varDecl, err := p.variableDeclaration()
+	if err != nil {
+		return VarDecl{}, err
+	}
+
+	return varDecl, nil
+}
+
+func (p *Parser) variableDeclaration() (VarDecl, error) {
+	varNode := MakeVar(p.currToken)
+
+	if err := p.eat(ID); err != nil {
+		return VarDecl{}, err
+	}
+
+	typeSpec, err := p.typeSpec()
+	if err != nil {
+		return VarDecl{}, err
+	}
+
+	return MakeVarDecl(varNode, typeSpec), nil
+}
+
+func (p *Parser) typeSpec() (Type, error) {
+	token := p.currToken
+
+	if err := p.eat(INT); err != nil {
+		return Type{}, err
+	}
+
+	return MakeType(token), nil
 }
 
 func (p *Parser) empty() NoOp {

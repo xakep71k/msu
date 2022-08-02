@@ -15,6 +15,8 @@ const (
 	NEWLINE = "NEWLINE"
 	BEGIN   = "{"
 	END     = "}"
+	VAR     = "VAR"
+	INT     = "INT"
 	EOF     = "EOF"
 )
 

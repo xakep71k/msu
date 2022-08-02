@@ -40,6 +40,10 @@ func (intr *Interpreter) visit(node AST) any {
 		return intr.visit_Assign(n)
 	case Var:
 		return intr.visit_Var(n)
+	case VarDecl:
+		return intr.visit_VarDecl(n)
+	case Type:
+		return intr.visit_Type(n)
 	case NoOp:
 		return intr.visit_NoOp(n)
 	default:
@@ -105,5 +109,13 @@ func (intr *Interpreter) visit_Var(node Var) any {
 }
 
 func (intr *Interpreter) visit_NoOp(node NoOp) any {
+	return nil
+}
+
+func (intr *Interpreter) visit_VarDecl(node VarDecl) any {
+	return nil
+}
+
+func (intr *Interpreter) visit_Type(node Type) any {
 	return nil
 }
