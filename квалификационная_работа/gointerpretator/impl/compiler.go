@@ -3,24 +3,16 @@ package impl
 import "fmt"
 
 type Compiler struct {
-	parser      *Parser
 	globalScope map[string]any
 }
 
-func NewCompiler(parser *Parser) *Compiler {
+func NewCompiler() *Compiler {
 	return &Compiler{
-		parser:      parser,
 		globalScope: make(map[string]any),
 	}
 }
 
-func (intr *Compiler) Interpret() (any, error) {
-	tree, err := intr.parser.Parse()
-
-	if err != nil {
-		return nil, err
-	}
-
+func (intr *Compiler) Compile(tree AST) (any, error) {
 	fmt.Printf("%+v\n", tree)
 
 	return intr.visit(tree), nil
@@ -91,14 +83,14 @@ func (intr *Compiler) visit_Compound(cmp Compound) any {
 }
 
 func (intr *Compiler) visit_Assign(node Assign) any {
-	varName := node.left.Value.(string)
+	varName := node.left.Value
 	intr.globalScope[varName] = intr.visit(node.right)
 
 	return nil
 }
 
 func (intr *Compiler) visit_Var(node Var) any {
-	varName := node.Value.(string)
+	varName := node.Value
 	val := intr.globalScope[varName]
 
 	if val == nil {

@@ -53,11 +53,11 @@ func MakeAssign(left Var, op Token, right AST) Assign {
 
 type Var struct {
 	Tok   Token
-	Value interface{}
+	Value string
 }
 
 func MakeVar(tok Token) Var {
-	return Var{tok, tok.Value}
+	return Var{tok, tok.Value.(string)}
 }
 
 type VarDecl struct {
@@ -71,11 +71,11 @@ func MakeVarDecl(v Var, t Type) VarDecl {
 
 type Type struct {
 	Tok   Token
-	Value any
+	Value string
 }
 
 func MakeType(tok Token) Type {
-	return Type{tok, tok.Value}
+	return Type{tok, tok.Value.(string)}
 }
 
 type NoOp struct{}

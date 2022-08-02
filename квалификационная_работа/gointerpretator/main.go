@@ -15,12 +15,19 @@ func main() {
 	}
 	lexer := impl.NewLexer(string(data))
 	parser := impl.NewParser(lexer)
-	interpreter := impl.NewCompiler(parser)
-	result, err := interpreter.Interpret()
+	tree, err := parser.Parse()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
-	fmt.Printf("%+v\n", result)
+	compiler := impl.NewCompiler()
+	_, err = compiler.Compile(tree)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return
+	}
+
+	symTableBuilder := impl.MakeSymbolTableBuilder()
+	symTableBuilder.Build(tree)
 }
