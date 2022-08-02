@@ -2,19 +2,19 @@ package impl
 
 import "fmt"
 
-type Interpreter struct {
+type Compiler struct {
 	parser      *Parser
 	globalScope map[string]any
 }
 
-func NewInterpreter(parser *Parser) *Interpreter {
-	return &Interpreter{
+func NewCompiler(parser *Parser) *Compiler {
+	return &Compiler{
 		parser:      parser,
 		globalScope: make(map[string]any),
 	}
 }
 
-func (intr *Interpreter) Interpret() (any, error) {
+func (intr *Compiler) Interpret() (any, error) {
 	tree, err := intr.parser.Parse()
 
 	if err != nil {
@@ -26,7 +26,7 @@ func (intr *Interpreter) Interpret() (any, error) {
 	return intr.visit(tree), nil
 }
 
-func (intr *Interpreter) visit(node AST) any {
+func (intr *Compiler) visit(node AST) any {
 	switch n := node.(type) {
 	case BinOp:
 		return intr.visit_BinOp(n)
@@ -51,7 +51,7 @@ func (intr *Interpreter) visit(node AST) any {
 	}
 }
 
-func (intr *Interpreter) visit_BinOp(node BinOp) any {
+func (intr *Compiler) visit_BinOp(node BinOp) any {
 	switch node.Op.Type {
 	case PLUS:
 		return intr.visit(node.Left).(int) + intr.visit(node.Right).(int)
@@ -67,11 +67,11 @@ func (intr *Interpreter) visit_BinOp(node BinOp) any {
 
 }
 
-func (intr *Interpreter) visit_Num(node Num) any {
+func (intr *Compiler) visit_Num(node Num) any {
 	return node.Value
 }
 
-func (intr *Interpreter) visit_UnaryOp(node UnaryOp) any {
+func (intr *Compiler) visit_UnaryOp(node UnaryOp) any {
 	op := node.Op.Type
 	if op == "+" {
 		return intr.visit(node.Expr)
@@ -82,7 +82,7 @@ func (intr *Interpreter) visit_UnaryOp(node UnaryOp) any {
 	panic("invalid operation")
 }
 
-func (intr *Interpreter) visit_Compound(cmp Compound) any {
+func (intr *Compiler) visit_Compound(cmp Compound) any {
 	for _, node := range cmp.Children {
 		intr.visit(node)
 	}
@@ -90,14 +90,14 @@ func (intr *Interpreter) visit_Compound(cmp Compound) any {
 	return nil
 }
 
-func (intr *Interpreter) visit_Assign(node Assign) any {
+func (intr *Compiler) visit_Assign(node Assign) any {
 	varName := node.left.Value.(string)
 	intr.globalScope[varName] = intr.visit(node.right)
 
 	return nil
 }
 
-func (intr *Interpreter) visit_Var(node Var) any {
+func (intr *Compiler) visit_Var(node Var) any {
 	varName := node.Value.(string)
 	val := intr.globalScope[varName]
 
@@ -108,14 +108,14 @@ func (intr *Interpreter) visit_Var(node Var) any {
 	return val
 }
 
-func (intr *Interpreter) visit_NoOp(node NoOp) any {
+func (intr *Compiler) visit_NoOp(node NoOp) any {
 	return nil
 }
 
-func (intr *Interpreter) visit_VarDecl(node VarDecl) any {
+func (intr *Compiler) visit_VarDecl(node VarDecl) any {
 	return nil
 }
 
-func (intr *Interpreter) visit_Type(node Type) any {
+func (intr *Compiler) visit_Type(node Type) any {
 	return nil
 }

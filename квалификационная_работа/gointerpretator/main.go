@@ -15,7 +15,7 @@ func main() {
 	}
 	lexer := impl.NewLexer(string(data))
 	parser := impl.NewParser(lexer)
-	interpreter := impl.NewInterpreter(parser)
+	interpreter := impl.NewCompiler(parser)
 	result, err := interpreter.Interpret()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
