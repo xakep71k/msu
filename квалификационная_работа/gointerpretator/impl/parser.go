@@ -1,6 +1,9 @@
 package impl
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrInvalidSyntax = errors.New("invalid syntax")
@@ -31,6 +34,7 @@ func (p *Parser) Parse() (AST, error) {
 	}
 
 	if p.currToken.Type != EOF {
+		fmt.Println("unexpected EOF")
 		return nil, ErrInvalidSyntax
 	}
 
@@ -47,6 +51,7 @@ func (p *Parser) eat(tokenType string) error {
 		return nil
 	}
 
+	fmt.Println("unexpected token", p.currToken)
 	return ErrInvalidSyntax
 }
 
@@ -199,7 +204,7 @@ func (p *Parser) variableDeclaration() (VarDecl, error) {
 func (p *Parser) typeSpec() (Type, error) {
 	token := p.currToken
 
-	if err := p.eat(INT); err != nil {
+	if err := p.eat(FLOAT32); err != nil {
 		return Type{}, err
 	}
 
@@ -321,5 +326,6 @@ func (p *Parser) factor() (AST, error) {
 		return node, nil
 	}
 
+	fmt.Println("unknown token:", p.currToken)
 	return nil, ErrInvalidSyntax
 }

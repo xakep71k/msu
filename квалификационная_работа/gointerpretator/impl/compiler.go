@@ -56,7 +56,6 @@ func (intr *Compiler) visit_BinOp(node BinOp) any {
 	default:
 		panic("unknown op")
 	}
-
 }
 
 func (intr *Compiler) visit_Num(node Num) any {

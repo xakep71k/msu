@@ -53,6 +53,7 @@ func MakeSymbolTable() SymbolTable {
 	}
 
 	stable.define(NewBuiltinTypeSymbol("int"))
+	stable.define(NewBuiltinTypeSymbol("float"))
 	return stable
 }
 

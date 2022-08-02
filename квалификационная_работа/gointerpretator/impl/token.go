@@ -16,7 +16,7 @@ const (
 	BEGIN   = "{"
 	END     = "}"
 	VAR     = "VAR"
-	INT     = "INT"
+	FLOAT32 = "FLOAT32"
 	EOF     = "EOF"
 )
 
