@@ -17,6 +17,7 @@ const (
 	END     = "}"
 	VAR     = "VAR"
 	FUNC    = "func"
+	PRINTLN = "Println"
 	FLOAT32 = "FLOAT32"
 	EOF     = "EOF"
 )

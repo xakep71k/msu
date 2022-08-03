@@ -36,6 +36,8 @@ func (intr *Compiler) visit(node AST) any {
 		return intr.visit_VarDecl(n)
 	case Type:
 		return intr.visit_Type(n)
+	case Print:
+		return intr.visit_Print(n)
 	case NoOp:
 		return intr.visit_NoOp(n)
 	default:
@@ -108,5 +110,9 @@ func (intr *Compiler) visit_VarDecl(node VarDecl) any {
 }
 
 func (intr *Compiler) visit_Type(node Type) any {
+	return nil
+}
+
+func (intr *Compiler) visit_Print(node Print) any {
 	return nil
 }

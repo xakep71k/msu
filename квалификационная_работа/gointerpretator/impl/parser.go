@@ -168,11 +168,37 @@ func (p *Parser) statement() (AST, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if p.currToken.Type == PRINTLN {
+		if err := p.eat(PRINTLN); err != nil {
+			return nil, err
+		}
+
+		node, err = p.println()
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		node = p.empty()
 	}
 
 	return node, nil
+}
+
+func (p *Parser) println() (Print, error) {
+	if err := p.eat(LPARENT); err != nil {
+		return Print{}, err
+	}
+
+	tok := p.currToken
+	if err := p.eat(ID); err != nil {
+		return Print{}, err
+	}
+
+	if err := p.eat(RPARENT); err != nil {
+		return Print{}, err
+	}
+
+	return MakePrint(tok), nil
 }
 
 func (p *Parser) assignmentStatement() (Assign, error) {

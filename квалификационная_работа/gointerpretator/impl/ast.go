@@ -83,3 +83,13 @@ type NoOp struct{}
 func MakeNoOp() NoOp {
 	return NoOp{}
 }
+
+type Print struct {
+	Var Var
+}
+
+func MakePrint(tok Token) Print {
+	return Print{
+		Var: MakeVar(tok),
+	}
+}

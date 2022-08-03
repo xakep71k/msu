@@ -112,6 +112,8 @@ func (stb *SymbolTableBuilder) build(node AST) {
 		stb.visit_VarDecl(n)
 	case Type:
 		stb.visit_Type(n)
+	case Print:
+		stb.visit_Print(n)
 	case NoOp:
 		stb.visit_NoOp(n)
 	default:
@@ -151,6 +153,14 @@ func (stb *SymbolTableBuilder) visit_VarDecl(node VarDecl) any {
 
 func (stb *SymbolTableBuilder) visit_Assign(node Assign) {
 	varName := node.left.Value
+	varSymbol := stb.SymTable.lookup(varName)
+	if varSymbol == nil {
+		panic(fmt.Errorf("%s: %s", ErrNameNodeDefined, varName))
+	}
+}
+
+func (stb *SymbolTableBuilder) visit_Print(node Print) {
+	varName := node.Var.Value
 	varSymbol := stb.SymTable.lookup(varName)
 	if varSymbol == nil {
 		panic(fmt.Errorf("%s: %s", ErrNameNodeDefined, varName))

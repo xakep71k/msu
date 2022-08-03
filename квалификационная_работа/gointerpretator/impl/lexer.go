@@ -6,11 +6,12 @@ import (
 )
 
 var REVERSED_KEYWORDS = map[string]Token{
-	"{":     MakeToken(BEGIN, "{"),
-	"}":     MakeToken(END, "}"),
-	"var":   MakeToken(VAR, "var"),
-	"func":  MakeToken(FUNC, "func"),
-	"float": MakeToken(FLOAT32, "float"),
+	"{":       MakeToken(BEGIN, "{"),
+	"}":       MakeToken(END, "}"),
+	"var":     MakeToken(VAR, "var"),
+	"func":    MakeToken(FUNC, "func"),
+	"float":   MakeToken(FLOAT32, "float"),
+	"Println": MakeToken(PRINTLN, "Println"),
 }
 
 type Lexer struct {
