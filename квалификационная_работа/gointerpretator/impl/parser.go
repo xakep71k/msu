@@ -152,13 +152,15 @@ func (p *Parser) statement() (AST, error) {
 	var node AST
 	var err error
 
+	/* compund statement не поддерживается в связи
+	с отсутствием стека
 	if p.currToken.Type == BEGIN {
 		node, err = p.compoundStatement()
 
 		if err != nil {
 			return nil, err
 		}
-	} else if p.currToken.Type == ID {
+	} else */if p.currToken.Type == ID {
 		node, err = p.assignmentStatement()
 		if err != nil {
 			return nil, err
