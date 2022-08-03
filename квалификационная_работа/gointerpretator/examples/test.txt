@@ -1,5 +1,5 @@
 // function main
-{
+func main() {
     var a float
-    a = 1 + 2 * 3
+    a = 1 + 2
 }

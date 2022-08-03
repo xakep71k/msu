@@ -16,16 +16,17 @@ const (
 	BEGIN   = "{"
 	END     = "}"
 	VAR     = "VAR"
+	FUNC    = "func"
 	FLOAT32 = "FLOAT32"
 	EOF     = "EOF"
 )
 
 type Token struct {
 	Type  string
-	Value interface{}
+	Value any
 }
 
-func MakeToken(Type string, Value interface{}) Token {
+func MakeToken(Type string, Value any) Token {
 	return Token{Type, Value}
 }
 

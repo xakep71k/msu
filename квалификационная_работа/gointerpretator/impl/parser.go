@@ -56,12 +56,41 @@ func (p *Parser) eat(tokenType string) error {
 }
 
 func (p *Parser) program() (AST, error) {
+	if err := p.main(); err != nil {
+		return nil, err
+	}
+
 	node, err := p.compoundStatement()
 	if err != nil {
 		return nil, err
 	}
 
 	return node, nil
+}
+
+func (p *Parser) main() error {
+	if err := p.eat("func"); err != nil {
+		return err
+	}
+
+	currToken := p.currToken
+	if err := p.eat("ID"); err != nil {
+		return err
+	}
+
+	if currToken.Value.(string) != "main" {
+		return ErrInvalidSyntax
+	}
+
+	if err := p.eat(LPARENT); err != nil {
+		return err
+	}
+
+	if err := p.eat(RPARENT); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *Parser) compoundStatement() (Compound, error) {
