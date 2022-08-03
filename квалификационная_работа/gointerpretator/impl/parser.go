@@ -90,6 +90,10 @@ func (p *Parser) main() error {
 		return err
 	}
 
+	if p.currToken.Type == NEWLINE {
+		_ = p.eat(NEWLINE)
+	}
+
 	return nil
 }
 
