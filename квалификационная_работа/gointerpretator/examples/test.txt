@@ -1,4 +1,3 @@
-// function main
 func main() {
     var a float
     a = 1 + 2
