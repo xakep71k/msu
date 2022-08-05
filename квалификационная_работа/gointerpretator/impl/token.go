@@ -4,6 +4,7 @@ import "fmt"
 
 const (
 	INTEGER       = "INTEGER"
+	FORLOOP       = "for"
 	FLOAT32       = "FLOAT32"
 	INTEGER_CONST = "INTEGER_CONST"
 	FLOAT32_CONST = "FLOAT32_CONST"
