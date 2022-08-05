@@ -11,6 +11,7 @@ var REVERSED_KEYWORDS = map[string]Token{
 	"var":     MakeToken(VAR, "var"),
 	"func":    MakeToken(FUNC, "func"),
 	"float":   MakeToken(FLOAT32, "float"),
+	"int":     MakeToken(FLOAT32, "int"),
 	"Println": MakeToken(PRINTLN, "Println"),
 }
 
@@ -65,20 +66,36 @@ func IsSpace(r rune) bool {
 	}
 }
 
-func (r *Lexer) integer() int {
-	intRunes := make([]rune, 0)
+func (r *Lexer) number() Token {
+	numRunes := make([]rune, 0)
 
 	for unicode.IsDigit(r.currentChar) {
-		intRunes = append(intRunes, r.currentChar)
+		numRunes = append(numRunes, r.currentChar)
 		r.advance()
 	}
 
-	i, err := strconv.ParseInt(string(intRunes), 10, 32)
+	if r.currentChar != '.' {
+		i, err := strconv.ParseInt(string(numRunes), 10, 32)
+		if err != nil {
+			panic(err)
+		}
+		return MakeToken(INTEGER_CONST, int(i))
+	}
+
+	numRunes = append(numRunes, r.currentChar)
+	r.advance()
+
+	for unicode.IsDigit(r.currentChar) {
+		numRunes = append(numRunes, r.currentChar)
+		r.advance()
+	}
+
+	f, err := strconv.ParseFloat(string(numRunes), 32)
 	if err != nil {
 		panic(err)
 	}
 
-	return int(i)
+	return MakeToken(FLOAT32_CONST, float32(f))
 }
 
 func (r *Lexer) NextToken() (Token, error) {
@@ -89,7 +106,7 @@ func (r *Lexer) NextToken() (Token, error) {
 		}
 
 		if unicode.IsDigit(r.currentChar) {
-			return MakeToken(INTEGER, r.integer()), nil
+			return r.number(), nil
 		}
 
 		if unicode.IsLetter(r.currentChar) {

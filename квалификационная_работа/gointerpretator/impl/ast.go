@@ -93,3 +93,13 @@ func MakePrint(tok Token) Print {
 		Var: MakeVar(tok),
 	}
 }
+
+// type ForLoop struct {
+// 	Var Var
+// }
+
+// func MakeForLoop(tok Token, step int, comp Compound) Print {
+// 	return Print{
+// 		Var: MakeVar(tok),
+// 	}
+// }
