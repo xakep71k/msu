@@ -116,9 +116,15 @@ func (stb *SymbolTableBuilder) build(node AST) {
 		stb.visit_Print(n)
 	case NoOp:
 		stb.visit_NoOp(n)
+	case ForLoop:
+		stb.visit_ForLoop(n)
 	default:
 		panic("unknown type node")
 	}
+}
+
+func (intr *SymbolTableBuilder) visit_ForLoop(node ForLoop) any {
+	return nil
 }
 
 func (stb *SymbolTableBuilder) visit_BinOp(node BinOp) {

@@ -74,7 +74,7 @@ func (p *Parser) main() error {
 	}
 
 	currToken := p.currToken
-	if err := p.eat("ID"); err != nil {
+	if err := p.eat(ID); err != nil {
 		return err
 	}
 
@@ -179,6 +179,45 @@ func (p *Parser) statement() (AST, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else if p.currToken.Type == FORLOOP {
+		if err := p.eat(FORLOOP); err != nil {
+			return nil, err
+		}
+
+		assign, err := p.assignmentStatement()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := p.eat(SEMI); err != nil {
+			return nil, err
+		}
+
+		boolExpr, err := p.boolExpr()
+		if err != nil {
+			return nil, err
+		}
+
+		if err := p.eat(SEMI); err != nil {
+			return nil, err
+		}
+
+		expr, err := p.assignmentStatement()
+		if err != nil {
+			return nil, err
+		}
+
+		compound, err := p.compoundStatement()
+		if err != nil {
+			return nil, err
+		}
+
+		return MakeForLoop(
+			assign,
+			boolExpr,
+			expr,
+			compound,
+		), nil
 	} else {
 		node = p.empty()
 	}
@@ -278,6 +317,29 @@ func (p *Parser) typeSpec() (Type, error) {
 
 func (p *Parser) empty() NoOp {
 	return MakeNoOp()
+}
+
+func (p *Parser) boolExpr() (BinOp, error) {
+	left, err := p.expr()
+	if err != nil {
+		return BinOp{}, err
+	}
+
+	token := p.currToken
+
+	switch token.Type {
+	case LESS:
+		if err := p.eat(LESS); err != nil {
+			return BinOp{}, err
+		}
+	}
+
+	right, err := p.expr()
+	if err != nil {
+		return BinOp{}, err
+	}
+
+	return MakeBinOp(left, token, right), nil
 }
 
 func (p *Parser) expr() (AST, error) {
@@ -380,6 +442,12 @@ func (p *Parser) factor() (AST, error) {
 		}
 
 		return MakeNum(token), nil
+	case ID:
+		if err := p.eat(ID); err != nil {
+			return nil, err
+		}
+
+		return MakeVar(token), nil
 	case LPARENT:
 		if err := p.eat(LPARENT); err != nil {
 			return nil, err

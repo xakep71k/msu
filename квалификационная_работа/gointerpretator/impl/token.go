@@ -22,6 +22,9 @@ const (
 	VAR           = "VAR"
 	FUNC          = "func"
 	PRINTLN       = "Println"
+	LESS          = "<"
+	MORE          = ">"
+	SEMI          = ";"
 	EOF           = "EOF"
 )
 

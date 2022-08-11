@@ -40,6 +40,8 @@ func (intr *CompilerUM3) visit(node AST) any {
 		return intr.visit_Print(n)
 	case NoOp:
 		return intr.visit_NoOp(n)
+	case ForLoop:
+		return intr.visit_ForLoop(n)
 	default:
 		panic("unknown type node")
 	}
@@ -115,5 +117,9 @@ func (intr *CompilerUM3) visit_Type(node Type) any {
 }
 
 func (intr *CompilerUM3) visit_Print(node Print) any {
+	return nil
+}
+
+func (intr *CompilerUM3) visit_ForLoop(node ForLoop) any {
 	return nil
 }

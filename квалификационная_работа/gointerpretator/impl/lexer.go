@@ -144,6 +144,15 @@ func (r *Lexer) NextToken() (Token, error) {
 		case '*':
 			r.advance()
 			return MakeToken(MUL, currentChar), nil
+		case '<':
+			r.advance()
+			return MakeToken(LESS, currentChar), nil
+		case '>':
+			r.advance()
+			return MakeToken(MORE, currentChar), nil
+		case ';':
+			r.advance()
+			return MakeToken(SEMI, currentChar), nil
 		case '/':
 			r.advance()
 			return MakeToken(DIV, currentChar), nil

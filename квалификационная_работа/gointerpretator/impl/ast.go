@@ -94,12 +94,18 @@ func MakePrint(tok Token) Print {
 	}
 }
 
-// type ForLoop struct {
-// 	Var Var
-// }
+type ForLoop struct {
+	Assign Assign
+	BinOp  BinOp
+	Expr   Assign
+	Comp   Compound
+}
 
-// func MakeForLoop(tok Token, step int, comp Compound) Print {
-// 	return Print{
-// 		Var: MakeVar(tok),
-// 	}
-// }
+func MakeForLoop(assign Assign, boolBinOp BinOp, expr Assign, comp Compound) ForLoop {
+	return ForLoop{
+		Assign: assign,
+		BinOp:  boolBinOp,
+		Expr:   expr,
+		Comp:   comp,
+	}
+}
