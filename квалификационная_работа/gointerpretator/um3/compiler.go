@@ -41,10 +41,11 @@ func (comp *Compiler) Compile(tree impl.AST) ([]string, error) {
 func (comp *Compiler) convertCommands2String() (res []string) {
 	for _, cmd := range comp.commands {
 		line := fmt.Sprintf(
-			"%s %s %s",
+			"%s %s %s %s",
 			cmd.OpCode,
 			cmd.Arg1.(_Arg).Arg,
 			cmd.Arg2.(_Arg).Arg,
+			cmd.Arg3.(_Arg).Arg,
 		)
 		res = append(res, line)
 	}
@@ -56,12 +57,17 @@ func (comp *Compiler) replaceAddresses(addrs map[string]int, until int) {
 	for i := range comp.commands[:until] {
 		switch v := comp.commands[i].Arg1.(type) {
 		case _Addr:
-			comp.commands[i].Arg1 = _Arg{Arg: fmt.Sprintf("%06x", addrs[v.Addr])}
+			comp.commands[i].Arg1 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
 		}
 
 		switch v := comp.commands[i].Arg2.(type) {
 		case _Addr:
-			comp.commands[i].Arg2 = _Arg{Arg: fmt.Sprintf("%06x", addrs[v.Addr])}
+			comp.commands[i].Arg2 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
+		}
+
+		switch v := comp.commands[i].Arg3.(type) {
+		case _Addr:
+			comp.commands[i].Arg3 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
 		}
 	}
 }
@@ -74,12 +80,14 @@ func (comp *Compiler) packVarsAsCommands() map[string]int {
 
 		if v.Type == VAR {
 			command.OpCode = "0000"
-			command.Arg1 = _Arg{Arg: "000000"}
-			command.Arg2 = _Arg{Arg: "000000"}
+			command.Arg1 = _Arg{Arg: "0000"}
+			command.Arg2 = _Arg{Arg: "0000"}
+			command.Arg3 = _Arg{Arg: "0000"}
 		} else {
 			command.OpCode = k[:4]
-			command.Arg1 = _Arg{Arg: k[4:10]}
-			command.Arg2 = _Arg{Arg: k[10:16]}
+			command.Arg1 = _Arg{Arg: k[4:8]}
+			command.Arg2 = _Arg{Arg: k[8:12]}
+			command.Arg3 = _Arg{Arg: k[12:16]}
 		}
 		comp.commands = append(comp.commands, command)
 		addrs[v.Addr] = len(comp.commands)
@@ -182,10 +190,11 @@ func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 func (comp *Compiler) visit_Assign(node impl.Assign) any {
 	cmd := _Command{
 		OpCode: "000B",
-		Arg1:   _Addr{comp.zeroAddress},
+		Arg1:   _Addr{comp.vars[node.Left.Value].Addr},
+		Arg2:   _Addr{comp.zeroAddress},
 	}
 
-	cmd.Arg2 = comp.visit(node.Right)
+	cmd.Arg3 = comp.visit(node.Right)
 
 	comp.commands = append(comp.commands, cmd)
 

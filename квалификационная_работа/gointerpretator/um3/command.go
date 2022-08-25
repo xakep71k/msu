@@ -12,4 +12,5 @@ type _Command struct {
 	OpCode string
 	Arg1   any
 	Arg2   any
+	Arg3   any
 }
