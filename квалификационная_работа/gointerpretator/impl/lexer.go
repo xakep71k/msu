@@ -80,7 +80,7 @@ func (r *Lexer) number() Token {
 		if err != nil {
 			panic(err)
 		}
-		return MakeToken(INTEGER_CONST, int(i))
+		return MakeToken(INT32_CONST, int32(i))
 	}
 
 	numRunes = append(numRunes, r.currentChar)

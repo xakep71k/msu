@@ -158,7 +158,7 @@ func (stb *SymbolTableBuilder) visit_VarDecl(node VarDecl) any {
 }
 
 func (stb *SymbolTableBuilder) visit_Assign(node Assign) {
-	varName := node.left.Value
+	varName := node.Left.Value
 	varSymbol := stb.SymTable.lookup(varName)
 	if varSymbol == nil {
 		panic(fmt.Errorf("%s: %s", ErrNameNodeDefined, varName))

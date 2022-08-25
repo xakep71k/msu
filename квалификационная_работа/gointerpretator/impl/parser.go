@@ -152,7 +152,7 @@ func (p *Parser) statement() (AST, error) {
 	var node AST
 	var err error
 
-	/* compund statement не поддерживается в связи
+	/* compound statement не поддерживается в связи
 	с отсутствием стека
 	if p.currToken.Type == BEGIN {
 		node, err = p.compoundStatement()
@@ -304,8 +304,8 @@ func (p *Parser) variableDeclaration() (VarDecl, error) {
 func (p *Parser) typeSpec() (Type, error) {
 	token := p.currToken
 
-	if p.currToken.Type == INTEGER {
-		if err := p.eat(INTEGER); err != nil {
+	if p.currToken.Type == INT32 {
+		if err := p.eat(INT32); err != nil {
 			return Type{}, err
 		}
 	} else if err := p.eat(FLOAT32); err != nil {
@@ -430,8 +430,8 @@ func (p *Parser) factor() (AST, error) {
 		}
 
 		return MakeUnaryOp(token, expr), nil
-	case INTEGER_CONST:
-		if err := p.eat(INTEGER_CONST); err != nil {
+	case INT32_CONST:
+		if err := p.eat(INT32_CONST); err != nil {
 			return nil, err
 		}
 

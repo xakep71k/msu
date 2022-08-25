@@ -3,11 +3,11 @@ package impl
 import "fmt"
 
 const (
-	INTEGER       = "INTEGER"
+	INT32         = "INT32"
 	FORLOOP       = "for"
 	FLOAT32       = "FLOAT32"
-	INTEGER_CONST = "INTEGER_CONST"
-	FLOAT32_CONST = "FLOAT32_CONST"
+	INT32_CONST   = "INT32_CONST"
+	FLOAT32_CONST = "FLOAT64_CONST"
 	PLUS          = "PLUS"
 	MINUS         = "MINUS"
 	MUL           = "MUL"

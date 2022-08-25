@@ -42,9 +42,9 @@ func MakeCompound(children []AST) Compound {
 }
 
 type Assign struct {
-	left  Var
-	op    Token
-	right AST
+	Left  Var
+	Op    Token
+	Right AST
 }
 
 func MakeAssign(left Var, op Token, right AST) Assign {

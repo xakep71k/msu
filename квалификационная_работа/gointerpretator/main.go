@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"gointerpretator/impl"
+	"gointerpretator/um3"
 )
 
 func main() {
@@ -21,17 +22,21 @@ func main() {
 		return
 	}
 
-	compiler := impl.NewCompiler()
-	_, err = compiler.Compile(tree)
+	compiler := um3.NewCompiler()
+	machineCode, err := compiler.Compile(tree)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
-	symTableBuilder := impl.MakeSymbolTableBuilder()
-	err = symTableBuilder.Build(tree)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
+	for _, line := range machineCode {
+		fmt.Println(line)
 	}
+
+	// symTableBuilder := impl.MakeSymbolTableBuilder()
+	// err = symTableBuilder.Build(tree)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, err)
+	// 	return
+	// }
 }
