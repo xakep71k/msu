@@ -162,7 +162,7 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 	return nil
 }
 
-func (comp *Compiler) visit_Num(node impl.Num) any {
+func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
 	switch v := node.Value.(type) {
 	case float64:
 		f := math.Float64bits(v)
@@ -173,16 +173,16 @@ func (comp *Compiler) visit_Num(node impl.Num) any {
 				Addr: uuid.New().String(),
 			}
 		}
-		return _Addr{comp.vars[s].Addr}
+		return comp.vars[s]
 	case int64:
-		k := fmt.Sprintf("%016x", v)
-		if _, ok := comp.vars[k]; !ok {
-			comp.vars[k] = _VarMeta{
+		s := fmt.Sprintf("%016x", v)
+		if _, ok := comp.vars[s]; !ok {
+			comp.vars[s] = _VarMeta{
 				Type: INT64_CONST,
 				Addr: uuid.New().String(),
 			}
 		}
-		return _Addr{comp.vars[k].Addr}
+		return comp.vars[s]
 	default:
 		panic("unsupported type")
 	}
@@ -209,12 +209,19 @@ func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 
 func (comp *Compiler) visit_Assign(node impl.Assign) any {
 	cmd := _Command{
-		OpCode: "0001",
-		Arg1:   _Addr{comp.vars[node.Left.Value].Addr},
-		Arg2:   _Addr{comp.zeroAddress},
+		Arg1: _Addr{comp.vars[node.Left.Value].Addr},
+		Arg2: _Addr{comp.zeroAddress},
 	}
 
-	cmd.Arg3 = comp.visit(node.Right)
+	varMeta := comp.visit(node.Right).(_VarMeta)
+	cmd.Arg3 = _Addr{varMeta.Addr}
+
+	switch varMeta.Type {
+	case FLOAT64_CONST, FLOAT64_VAR:
+		cmd.OpCode = "0001"
+	case INT64_CONST, INT64_VAR:
+		cmd.OpCode = "000B"
+	}
 
 	comp.commands = append(comp.commands, cmd)
 
