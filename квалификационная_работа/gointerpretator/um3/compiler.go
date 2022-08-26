@@ -38,7 +38,7 @@ func (comp *Compiler) Compile(tree impl.AST) (cmds []string, err error) {
 		}
 	}()
 
-	comp.visit(tree)
+	comp.visitTree(tree)
 	comp.appendStopCommand()
 	addrs := comp.packVariablesAsCommands()
 	comp.replaceAddresses(addrs, len(comp.commands))
@@ -124,7 +124,7 @@ func (comp *Compiler) packVariablesAsCommands() map[string]int {
 	return addrs
 }
 
-func (comp *Compiler) visit(node impl.AST) any {
+func (comp *Compiler) visitTree(node impl.AST) any {
 	switch n := node.(type) {
 	case impl.BinOp:
 		return comp.visit_BinOp(n)
@@ -207,9 +207,9 @@ func (comp *Compiler) addNum(value any, addr string) _VarMeta {
 func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
 	op := node.Op.Type
 	if op == impl.PLUS {
-		return comp.visit(node.Expr)
+		return comp.visitTree(node.Expr)
 	} else if op == impl.MINUS {
-		varMeta := comp.visit(node.Expr).(_VarMeta)
+		varMeta := comp.visitTree(node.Expr).(_VarMeta)
 		delete(comp.vars, varMeta.Key)
 		switch v := varMeta.Value.(type) {
 		case float64:
@@ -225,7 +225,7 @@ func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
 
 func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 	for _, node := range cmp.Children {
-		comp.visit(node)
+		comp.visitTree(node)
 	}
 
 	return nil
@@ -237,7 +237,7 @@ func (comp *Compiler) visit_Assign(node impl.Assign) any {
 		Arg2: _Addr{comp.zeroAddress},
 	}
 
-	varMeta := comp.visit(node.Right).(_VarMeta)
+	varMeta := comp.visitTree(node.Right).(_VarMeta)
 	cmd.Arg3 = _Addr{varMeta.Addr}
 
 	switch varMeta.Type {
@@ -310,6 +310,6 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
-	comp.visit(node.Assign)
+	comp.visitTree(node.Assign)
 	return nil
 }
