@@ -21,7 +21,7 @@ func NewCompiler() *Compiler {
 
 	c.zeroAddress = uuid.New().String()
 	c.vars[fmt.Sprintf("%016d", 0)] = _VarMeta{
-		Type: INT_CONST,
+		Type: INT32_CONST,
 		Addr: c.zeroAddress,
 	}
 	return c
@@ -29,13 +29,29 @@ func NewCompiler() *Compiler {
 
 func (comp *Compiler) Compile(tree impl.AST) ([]string, error) {
 	// fmt.Printf("%+v\n", tree)
+	comp.commands = append(comp.commands, _Command{
+		OpCode: "03",
+		Arg1:   _Arg{},
+		Arg2:   _Arg{},
+		Arg3:   _Arg{},
+	})
 	comp.visit(tree)
 	// fmt.Println(comp.vars)
 
-	addrs := comp.packVarsAsCommands()
+	comp.appendStopCommand()
+	addrs := comp.packVariablesAsCommands()
 	comp.replaceAddresses(addrs, len(comp.commands))
 
 	return comp.convertCommands2String(), nil
+}
+
+func (comp *Compiler) appendStopCommand() {
+	comp.commands = append(comp.commands, _Command{
+		OpCode: "001F",
+		Arg1:   _Arg{Arg: "0000"},
+		Arg2:   _Arg{Arg: "0000"},
+		Arg3:   _Arg{Arg: "0000"},
+	})
 }
 
 func (comp *Compiler) convertCommands2String() (res []string) {
@@ -72,13 +88,13 @@ func (comp *Compiler) replaceAddresses(addrs map[string]int, until int) {
 	}
 }
 
-func (comp *Compiler) packVarsAsCommands() map[string]int {
+func (comp *Compiler) packVariablesAsCommands() map[string]int {
 	addrs := make(map[string]int)
 
 	for k, v := range comp.vars {
 		command := _Command{}
 
-		if v.Type == VAR {
+		if v.Type == FLOAT32_VAR || v.Type == INT32_VAR {
 			command.OpCode = "0000"
 			command.Arg1 = _Arg{Arg: "0000"}
 			command.Arg2 = _Arg{Arg: "0000"}
@@ -149,7 +165,7 @@ func (comp *Compiler) visit_Num(node impl.Num) any {
 		s := fmt.Sprintf("%016x", f)
 		if _, ok := comp.vars[s]; !ok {
 			comp.vars[s] = _VarMeta{
-				Type: FLOAT_CONST,
+				Type: FLOAT32_CONST,
 				Addr: uuid.New().String(),
 			}
 		}
@@ -158,7 +174,7 @@ func (comp *Compiler) visit_Num(node impl.Num) any {
 		k := fmt.Sprintf("%016x", v)
 		if _, ok := comp.vars[k]; !ok {
 			comp.vars[k] = _VarMeta{
-				Type: INT_CONST,
+				Type: INT32_CONST,
 				Addr: uuid.New().String(),
 			}
 		}
@@ -201,7 +217,7 @@ func (comp *Compiler) visit_Assign(node impl.Assign) any {
 	return nil
 }
 
-func (comp *Compiler) visit_Var(node impl.Var) any {
+func (comp *Compiler) visit_Var(node impl.Var) _VarMeta {
 	varName := node.Value
 	val, ok := comp.vars[varName]
 
@@ -217,10 +233,18 @@ func (comp *Compiler) visit_NoOp(node impl.NoOp) any {
 }
 
 func (comp *Compiler) visit_VarDecl(node impl.VarDecl) any {
-	comp.vars[node.Var.Value] = _VarMeta{
-		Type: VAR,
+	m := _VarMeta{
 		Addr: node.Var.Value,
 	}
+
+	switch node.Type.Tok.Type {
+	case impl.FLOAT32:
+		m.Type = FLOAT32_VAR
+	case impl.INT32:
+		m.Type = INT32_VAR
+	}
+
+	comp.vars[node.Var.Value] = m
 	return nil
 }
 
@@ -229,6 +253,24 @@ func (comp *Compiler) visit_Type(node impl.Type) any {
 }
 
 func (comp *Compiler) visit_Print(node impl.Print) any {
+	varMeta := comp.visit_Var(node.Var)
+
+	cmd := _Command{
+		Arg1: _Addr{varMeta.Addr},
+		Arg2: _Arg{fmt.Sprintf("%04d", 1)},
+		Arg3: _Arg{fmt.Sprintf("%04d", 0)},
+	}
+
+	switch varMeta.Type {
+	case FLOAT32_CONST, FLOAT32_VAR:
+		cmd.OpCode = "000F"
+	case INT32_CONST, INT32_VAR:
+		cmd.OpCode = "0010"
+	default:
+		panic(fmt.Sprintf("unknown var type %d", varMeta.Type))
+	}
+	comp.commands = append(comp.commands, cmd)
+
 	return nil
 }
 

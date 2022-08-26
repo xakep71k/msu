@@ -7,5 +7,5 @@ func main() {
 
     //}
 
-    // Println(a)
+    Println(a)
 }
