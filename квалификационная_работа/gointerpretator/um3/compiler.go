@@ -21,7 +21,7 @@ func NewCompiler() *Compiler {
 
 	c.zeroAddress = uuid.New().String()
 	c.vars[fmt.Sprintf("%016d", 0)] = _VarMeta{
-		Type: INT32_CONST,
+		Type: INT64_CONST,
 		Addr: c.zeroAddress,
 	}
 	return c
@@ -29,20 +29,24 @@ func NewCompiler() *Compiler {
 
 func (comp *Compiler) Compile(tree impl.AST) ([]string, error) {
 	// fmt.Printf("%+v\n", tree)
-	comp.commands = append(comp.commands, _Command{
-		OpCode: "03",
-		Arg1:   _Arg{},
-		Arg2:   _Arg{},
-		Arg3:   _Arg{},
-	})
 	comp.visit(tree)
 	// fmt.Println(comp.vars)
 
 	comp.appendStopCommand()
 	addrs := comp.packVariablesAsCommands()
 	comp.replaceAddresses(addrs, len(comp.commands))
+	comp.prependMetaHeader()
 
 	return comp.convertCommands2String(), nil
+}
+
+func (comp *Compiler) prependMetaHeader() {
+	comp.commands = append([]_Command{{
+		OpCode: "03",
+		Arg1:   _Arg{},
+		Arg2:   _Arg{},
+		Arg3:   _Arg{},
+	}}, comp.commands...)
 }
 
 func (comp *Compiler) appendStopCommand() {
@@ -94,7 +98,7 @@ func (comp *Compiler) packVariablesAsCommands() map[string]int {
 	for k, v := range comp.vars {
 		command := _Command{}
 
-		if v.Type == FLOAT32_VAR || v.Type == INT32_VAR {
+		if v.Type == FLOAT64_VAR || v.Type == INT64_VAR {
 			command.OpCode = "0000"
 			command.Arg1 = _Arg{Arg: "0000"}
 			command.Arg2 = _Arg{Arg: "0000"}
@@ -105,8 +109,8 @@ func (comp *Compiler) packVariablesAsCommands() map[string]int {
 			command.Arg2 = _Arg{Arg: k[8:12]}
 			command.Arg3 = _Arg{Arg: k[12:16]}
 		}
-		comp.commands = append(comp.commands, command)
 		addrs[v.Addr] = len(comp.commands)
+		comp.commands = append(comp.commands, command)
 	}
 
 	return addrs
@@ -160,21 +164,21 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 
 func (comp *Compiler) visit_Num(node impl.Num) any {
 	switch v := node.Value.(type) {
-	case float32:
-		f := math.Float32bits(v)
+	case float64:
+		f := math.Float64bits(v)
 		s := fmt.Sprintf("%016x", f)
 		if _, ok := comp.vars[s]; !ok {
 			comp.vars[s] = _VarMeta{
-				Type: FLOAT32_CONST,
+				Type: FLOAT64_CONST,
 				Addr: uuid.New().String(),
 			}
 		}
 		return _Addr{comp.vars[s].Addr}
-	case int32:
+	case int64:
 		k := fmt.Sprintf("%016x", v)
 		if _, ok := comp.vars[k]; !ok {
 			comp.vars[k] = _VarMeta{
-				Type: INT32_CONST,
+				Type: INT64_CONST,
 				Addr: uuid.New().String(),
 			}
 		}
@@ -205,7 +209,7 @@ func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 
 func (comp *Compiler) visit_Assign(node impl.Assign) any {
 	cmd := _Command{
-		OpCode: "000B",
+		OpCode: "0001",
 		Arg1:   _Addr{comp.vars[node.Left.Value].Addr},
 		Arg2:   _Addr{comp.zeroAddress},
 	}
@@ -238,10 +242,10 @@ func (comp *Compiler) visit_VarDecl(node impl.VarDecl) any {
 	}
 
 	switch node.Type.Tok.Type {
-	case impl.FLOAT32:
-		m.Type = FLOAT32_VAR
-	case impl.INT32:
-		m.Type = INT32_VAR
+	case impl.FLOAT64:
+		m.Type = FLOAT64_VAR
+	case impl.INT64:
+		m.Type = INT64_VAR
 	}
 
 	comp.vars[node.Var.Value] = m
@@ -262,9 +266,9 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 	}
 
 	switch varMeta.Type {
-	case FLOAT32_CONST, FLOAT32_VAR:
+	case FLOAT64_CONST, FLOAT64_VAR:
 		cmd.OpCode = "000F"
-	case INT32_CONST, INT32_VAR:
+	case INT64_CONST, INT64_VAR:
 		cmd.OpCode = "0010"
 	default:
 		panic(fmt.Sprintf("unknown var type %d", varMeta.Type))

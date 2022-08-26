@@ -1,10 +1,10 @@
 package um3
 
 const (
-	FLOAT32_VAR = iota
-	INT32_VAR
-	FLOAT32_CONST
-	INT32_CONST
+	FLOAT64_VAR = iota
+	INT64_VAR
+	FLOAT64_CONST
+	INT64_CONST
 )
 
 type _VarMeta struct {

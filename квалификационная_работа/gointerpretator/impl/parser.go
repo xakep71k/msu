@@ -304,11 +304,11 @@ func (p *Parser) variableDeclaration() (VarDecl, error) {
 func (p *Parser) typeSpec() (Type, error) {
 	token := p.currToken
 
-	if p.currToken.Type == INT32 {
-		if err := p.eat(INT32); err != nil {
+	if p.currToken.Type == INT64 {
+		if err := p.eat(INT64); err != nil {
 			return Type{}, err
 		}
-	} else if err := p.eat(FLOAT32); err != nil {
+	} else if err := p.eat(FLOAT64); err != nil {
 		return Type{}, err
 	}
 
@@ -430,14 +430,14 @@ func (p *Parser) factor() (AST, error) {
 		}
 
 		return MakeUnaryOp(token, expr), nil
-	case INT32_CONST:
-		if err := p.eat(INT32_CONST); err != nil {
+	case INT64_CONST:
+		if err := p.eat(INT64_CONST); err != nil {
 			return nil, err
 		}
 
 		return MakeNum(token), nil
-	case FLOAT32_CONST:
-		if err := p.eat(FLOAT32_CONST); err != nil {
+	case FLOAT64_CONST:
+		if err := p.eat(FLOAT64_CONST); err != nil {
 			return nil, err
 		}
 

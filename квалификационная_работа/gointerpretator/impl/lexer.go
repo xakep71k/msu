@@ -10,8 +10,8 @@ var REVERSED_KEYWORDS = map[string]Token{
 	"}":       MakeToken(END, "}"),
 	"var":     MakeToken(VAR, "var"),
 	"func":    MakeToken(FUNC, "func"),
-	"float":   MakeToken(FLOAT32, "float"),
-	"int":     MakeToken(FLOAT32, "int"),
+	"float":   MakeToken(FLOAT64, "float"),
+	"int":     MakeToken(FLOAT64, "int"),
 	"for":     MakeToken(FORLOOP, "for"),
 	"Println": MakeToken(PRINTLN, "Println"),
 }
@@ -80,7 +80,7 @@ func (r *Lexer) number() Token {
 		if err != nil {
 			panic(err)
 		}
-		return MakeToken(INT32_CONST, int32(i))
+		return MakeToken(INT64_CONST, int64(i))
 	}
 
 	numRunes = append(numRunes, r.currentChar)
@@ -96,7 +96,7 @@ func (r *Lexer) number() Token {
 		panic(err)
 	}
 
-	return MakeToken(FLOAT32_CONST, float32(f))
+	return MakeToken(FLOAT64_CONST, float64(f))
 }
 
 func (r *Lexer) NextToken() (Token, error) {
