@@ -1,6 +1,7 @@
 package um3
 
 import (
+	"errors"
 	"fmt"
 	"gointerpretator/impl"
 	"math"
@@ -27,17 +28,24 @@ func NewCompiler() *Compiler {
 	return c
 }
 
-func (comp *Compiler) Compile(tree impl.AST) ([]string, error) {
+func (comp *Compiler) Compile(tree impl.AST) (cmds []string, err error) {
 	// fmt.Printf("%+v\n", tree)
-	comp.visit(tree)
 	// fmt.Println(comp.vars)
 
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New(r.(string))
+		}
+	}()
+
+	comp.visit(tree)
 	comp.appendStopCommand()
 	addrs := comp.packVariablesAsCommands()
 	comp.replaceAddresses(addrs, len(comp.commands))
 	comp.prependMetaHeader()
+	cmds = comp.convertCommands2String()
 
-	return comp.convertCommands2String(), nil
+	return
 }
 
 func (comp *Compiler) prependMetaHeader() {
