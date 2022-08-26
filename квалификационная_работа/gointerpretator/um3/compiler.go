@@ -82,20 +82,24 @@ func (comp *Compiler) convertCommands2String() (res []string) {
 }
 
 func (comp *Compiler) replaceAddresses(addrs map[string]int, until int) {
+	makeArg := func(addr string) _Arg {
+		return _Arg{Arg: fmt.Sprintf("%04x", addrs[addr])}
+	}
+
 	for i := range comp.commands[:until] {
 		switch v := comp.commands[i].Arg1.(type) {
 		case _Addr:
-			comp.commands[i].Arg1 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
+			comp.commands[i].Arg1 = makeArg(v.Addr)
 		}
 
 		switch v := comp.commands[i].Arg2.(type) {
 		case _Addr:
-			comp.commands[i].Arg2 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
+			comp.commands[i].Arg2 = makeArg(v.Addr)
 		}
 
 		switch v := comp.commands[i].Arg3.(type) {
 		case _Addr:
-			comp.commands[i].Arg3 = _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
+			comp.commands[i].Arg3 = makeArg(v.Addr)
 		}
 	}
 }
