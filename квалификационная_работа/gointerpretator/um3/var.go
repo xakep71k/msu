@@ -8,6 +8,8 @@ const (
 )
 
 type _VarMeta struct {
-	Type int
-	Addr string
+	Type  int
+	Addr  string
+	Key   string
+	Value any
 }

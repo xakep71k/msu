@@ -163,14 +163,20 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 }
 
 func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
-	switch v := node.Value.(type) {
+	return comp.addNum(node.Value, uuid.New().String())
+}
+
+func (comp *Compiler) addNum(value any, addr string) _VarMeta {
+	switch v := value.(type) {
 	case float64:
 		f := math.Float64bits(v)
 		s := fmt.Sprintf("%016x", f)
 		if _, ok := comp.vars[s]; !ok {
 			comp.vars[s] = _VarMeta{
-				Type: FLOAT64_CONST,
-				Addr: uuid.New().String(),
+				Type:  FLOAT64_CONST,
+				Addr:  addr,
+				Key:   s,
+				Value: v,
 			}
 		}
 		return comp.vars[s]
@@ -178,8 +184,10 @@ func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
 		s := fmt.Sprintf("%016x", v)
 		if _, ok := comp.vars[s]; !ok {
 			comp.vars[s] = _VarMeta{
-				Type: INT64_CONST,
-				Addr: uuid.New().String(),
+				Type:  INT64_CONST,
+				Addr:  addr,
+				Key:   s,
+				Value: v,
 			}
 		}
 		return comp.vars[s]
@@ -190,13 +198,21 @@ func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
 
 func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
 	op := node.Op.Type
-	if op == "+" {
+	if op == impl.PLUS {
 		return comp.visit(node.Expr)
-	} else if op == "-" {
-		return -comp.visit(node.Expr).(int)
+	} else if op == impl.MINUS {
+		varMeta := comp.visit(node.Expr).(_VarMeta)
+		delete(comp.vars, varMeta.Key)
+		switch v := varMeta.Value.(type) {
+		case float64:
+			varMeta.Value = -v
+		case int64:
+			varMeta.Value = -v
+		}
+		return comp.addNum(varMeta.Value, varMeta.Key)
 	}
 
-	panic("invalid operation")
+	panic(fmt.Sprintf("invalid operation %s", op))
 }
 
 func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
