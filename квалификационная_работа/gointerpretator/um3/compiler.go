@@ -38,7 +38,7 @@ func (comp *Compiler) Compile(tree impl.AST) (cmds []string, err error) {
 		}
 	}()
 
-	comp.visitTree(tree)
+	comp.buildMachineCode(tree)
 	comp.appendStopCommand()
 	addrs := comp.packVariablesAsCommands()
 	comp.replaceAddresses(addrs, len(comp.commands))
@@ -82,25 +82,19 @@ func (comp *Compiler) convertCommands2String() (res []string) {
 }
 
 func (comp *Compiler) replaceAddresses(addrs map[string]int, until int) {
-	makeArg := func(addr string) _Arg {
-		return _Arg{Arg: fmt.Sprintf("%04x", addrs[addr])}
+	makeArgFromAddr := func(arg any) any {
+		switch v := arg.(type) {
+		case _Addr:
+			return _Arg{Arg: fmt.Sprintf("%04x", addrs[v.Addr])}
+		default:
+			return v
+		}
 	}
 
 	for i := range comp.commands[:until] {
-		switch v := comp.commands[i].Arg1.(type) {
-		case _Addr:
-			comp.commands[i].Arg1 = makeArg(v.Addr)
-		}
-
-		switch v := comp.commands[i].Arg2.(type) {
-		case _Addr:
-			comp.commands[i].Arg2 = makeArg(v.Addr)
-		}
-
-		switch v := comp.commands[i].Arg3.(type) {
-		case _Addr:
-			comp.commands[i].Arg3 = makeArg(v.Addr)
-		}
+		comp.commands[i].Arg1 = makeArgFromAddr(comp.commands[i].Arg1)
+		comp.commands[i].Arg2 = makeArgFromAddr(comp.commands[i].Arg2)
+		comp.commands[i].Arg3 = makeArgFromAddr(comp.commands[i].Arg3)
 	}
 }
 
@@ -128,7 +122,7 @@ func (comp *Compiler) packVariablesAsCommands() map[string]int {
 	return addrs
 }
 
-func (comp *Compiler) visitTree(node impl.AST) any {
+func (comp *Compiler) buildMachineCode(node impl.AST) any {
 	switch n := node.(type) {
 	case impl.BinOp:
 		return comp.visit_BinOp(n)
@@ -211,9 +205,9 @@ func (comp *Compiler) addNum(value any, addr string) _VarMeta {
 func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
 	op := node.Op.Type
 	if op == impl.PLUS {
-		return comp.visitTree(node.Expr)
+		return comp.buildMachineCode(node.Expr)
 	} else if op == impl.MINUS {
-		varMeta := comp.visitTree(node.Expr).(_VarMeta)
+		varMeta := comp.buildMachineCode(node.Expr).(_VarMeta)
 		delete(comp.vars, varMeta.Key)
 		switch v := varMeta.Value.(type) {
 		case float64:
@@ -229,7 +223,7 @@ func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
 
 func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 	for _, node := range cmp.Children {
-		comp.visitTree(node)
+		comp.buildMachineCode(node)
 	}
 
 	return nil
@@ -241,7 +235,7 @@ func (comp *Compiler) visit_Assign(node impl.Assign) any {
 		Arg2: _Addr{comp.zeroAddress},
 	}
 
-	varMeta := comp.visitTree(node.Right).(_VarMeta)
+	varMeta := comp.buildMachineCode(node.Right).(_VarMeta)
 	cmd.Arg3 = _Addr{varMeta.Addr}
 
 	switch varMeta.Type {
@@ -314,6 +308,6 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
-	comp.visitTree(node.Assign)
+	comp.buildMachineCode(node.Assign)
 	return nil
 }
