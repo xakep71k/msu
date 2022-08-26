@@ -51,7 +51,7 @@ func (comp *Compiler) prependMetaHeader() {
 
 func (comp *Compiler) appendStopCommand() {
 	comp.commands = append(comp.commands, _Command{
-		OpCode: "001F",
+		OpCode: CMD_STOP,
 		Arg1:   _Arg{Arg: "0000"},
 		Arg2:   _Arg{Arg: "0000"},
 		Arg3:   _Arg{Arg: "0000"},
@@ -138,8 +138,8 @@ func (comp *Compiler) visit(node impl.AST) any {
 		return comp.visit_Print(n)
 	case impl.NoOp:
 		return comp.visit_NoOp(n)
-	// case impl.ForLoop:
-	// 	return intr.visit_ForLoop(n)
+	case impl.ForLoop:
+		return comp.visit_ForLoop(n)
 	default:
 		return nil
 		//panic("unknown type node")
@@ -218,9 +218,9 @@ func (comp *Compiler) visit_Assign(node impl.Assign) any {
 
 	switch varMeta.Type {
 	case FLOAT64_CONST, FLOAT64_VAR:
-		cmd.OpCode = "0001"
+		cmd.OpCode = CMD_ADD_FLOAT
 	case INT64_CONST, INT64_VAR:
-		cmd.OpCode = "000B"
+		cmd.OpCode = CMD_ADD_INT
 	}
 
 	comp.commands = append(comp.commands, cmd)
@@ -274,9 +274,9 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 
 	switch varMeta.Type {
 	case FLOAT64_CONST, FLOAT64_VAR:
-		cmd.OpCode = "000F"
+		cmd.OpCode = CMD_PRINT_FLOAT
 	case INT64_CONST, INT64_VAR:
-		cmd.OpCode = "0010"
+		cmd.OpCode = CMD_PRINT_INT
 	default:
 		panic(fmt.Sprintf("unknown var type %d", varMeta.Type))
 	}
@@ -286,5 +286,6 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
+	comp.visit(node.Assign)
 	return nil
 }
