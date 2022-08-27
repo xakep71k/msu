@@ -1,7 +1,6 @@
 package um3
 
 import (
-	"errors"
 	"fmt"
 	"gointerpretator/impl"
 	"math"
@@ -32,11 +31,11 @@ func (comp *Compiler) Compile(tree impl.AST) (cmds []string, err error) {
 	// fmt.Printf("%+v\n", tree)
 	// fmt.Println(comp.vars)
 
-	defer func() {
-		if r := recover(); r != nil {
-			err = errors.New(r.(string))
-		}
-	}()
+	// defer func() {
+	// 	if r := recover(); r != nil {
+	// 		err = errors.New(r.(string))
+	// 	}
+	// }()
 
 	comp.buildMachineCode(tree)
 	comp.appendStopCommand()
@@ -153,19 +152,50 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 }
 
 func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
-	// switch node.Op.Type {
-	// case PLUS:
-	// 	return intr.visit(node.Left).(int) + intr.visit(node.Right).(int)
-	// case MINUS:
-	// 	return intr.visit(node.Left).(int) - intr.visit(node.Right).(int)
+	switch node.Op.Type {
+	case impl.PLUS:
+		tmpVar := uuid.New().String()
+		varMeta := _VarMeta{
+			Key:  tmpVar,
+			Addr: uuid.New().String(),
+		}
+
+		left := comp.buildMachineCode(node.Left).(_VarMeta)
+		right := comp.buildMachineCode(node.Right).(_VarMeta)
+
+		cmd := _Command{
+			Arg1: _Addr{varMeta.Addr},
+			Arg2: _Addr{left.Addr},
+			Arg3: _Addr{right.Addr},
+		}
+
+		switch left.Type {
+		case INT64_VAR, INT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				varMeta.Type = INT64_VAR
+				cmd.OpCode = CMD_ADD_INT
+			default:
+				panic("not supported type")
+			}
+		default:
+			panic("not supported type")
+		}
+
+		comp.vars[tmpVar] = varMeta
+		comp.commands = append(comp.commands, cmd)
+		return varMeta
+	// case impl.MINUS:
+	// 	return comp.buildMachineCode(node.Left).(int) - comp.buildMachineCode(node.Right).(int)
 	// case MUL:
-	// 	return intr.visit(node.Left).(int) * intr.visit(node.Right).(int)
+	// return intr.visit(node.Left).(int) * intr.visit(node.Right).(int)
 	// case DIV:
-	// 	return intr.visit(node.Left).(int) / intr.visit(node.Right).(int)
-	// default:
-	// 	panic("unknown op")
-	// }
-	return nil
+	// return intr.visit(node.Left).(int) / intr.visit(node.Right).(int)
+	case impl.LESS:
+		return nil
+	default:
+		panic("unknown op")
+	}
 }
 
 func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
@@ -308,6 +338,9 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
-	comp.buildMachineCode(node.Assign)
+	comp.visit_Assign(node.Assign)
+	comp.visit_BinOp(node.BoolExpr)
+	comp.visit_Assign(node.Expr)
+	comp.visit_Compound(node.Body)
 	return nil
 }

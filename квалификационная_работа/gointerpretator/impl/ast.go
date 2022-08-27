@@ -95,17 +95,17 @@ func MakePrint(tok Token) Print {
 }
 
 type ForLoop struct {
-	Assign Assign
-	BinOp  BinOp
-	Expr   Assign
-	Comp   Compound
+	Assign   Assign
+	BoolExpr BinOp
+	Expr     Assign
+	Body     Compound
 }
 
 func MakeForLoop(assign Assign, boolBinOp BinOp, expr Assign, comp Compound) ForLoop {
 	return ForLoop{
-		Assign: assign,
-		BinOp:  boolBinOp,
-		Expr:   expr,
-		Comp:   comp,
+		Assign:   assign,
+		BoolExpr: boolBinOp,
+		Expr:     expr,
+		Body:     comp,
 	}
 }

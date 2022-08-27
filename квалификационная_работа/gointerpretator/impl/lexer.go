@@ -11,7 +11,7 @@ var REVERSED_KEYWORDS = map[string]Token{
 	"var":     MakeToken(VAR, "var"),
 	"func":    MakeToken(FUNC, "func"),
 	"float":   MakeToken(FLOAT64, "float"),
-	"int":     MakeToken(FLOAT64, "int"),
+	"int":     MakeToken(INT64, "int"),
 	"for":     MakeToken(FORLOOP, "for"),
 	"Println": MakeToken(PRINTLN, "Println"),
 }
