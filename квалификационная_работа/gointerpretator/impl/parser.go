@@ -319,10 +319,10 @@ func (p *Parser) empty() NoOp {
 	return MakeNoOp()
 }
 
-func (p *Parser) boolExpr() (BinOp, error) {
+func (p *Parser) boolExpr() (BoolOp, error) {
 	left, err := p.expr()
 	if err != nil {
-		return BinOp{}, err
+		return BoolOp{}, err
 	}
 
 	token := p.currToken
@@ -330,16 +330,16 @@ func (p *Parser) boolExpr() (BinOp, error) {
 	switch token.Type {
 	case LESS:
 		if err := p.eat(LESS); err != nil {
-			return BinOp{}, err
+			return BoolOp{}, err
 		}
 	}
 
 	right, err := p.expr()
 	if err != nil {
-		return BinOp{}, err
+		return BoolOp{}, err
 	}
 
-	return MakeBinOp(left, token, right), nil
+	return MakeBoolOp(left, token, right), nil
 }
 
 func (p *Parser) expr() (AST, error) {

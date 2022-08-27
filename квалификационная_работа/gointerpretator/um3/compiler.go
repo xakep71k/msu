@@ -152,6 +152,9 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 }
 
 func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
+
 	switch node.Op.Type {
 	case impl.PLUS:
 		tmpVar := uuid.New().String()
@@ -159,9 +162,6 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 			Key:  tmpVar,
 			Addr: uuid.New().String(),
 		}
-
-		left := comp.buildMachineCode(node.Left).(_VarMeta)
-		right := comp.buildMachineCode(node.Right).(_VarMeta)
 
 		cmd := _Command{
 			Arg1: _Addr{varMeta.Addr},
@@ -176,10 +176,10 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 				varMeta.Type = INT64_VAR
 				cmd.OpCode = CMD_ADD_INT
 			default:
-				panic("not supported type")
+				panic("not supported type1")
 			}
 		default:
-			panic("not supported type")
+			panic("not supported type2")
 		}
 
 		comp.vars[tmpVar] = varMeta
@@ -191,8 +191,6 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 	// return intr.visit(node.Left).(int) * intr.visit(node.Right).(int)
 	// case DIV:
 	// return intr.visit(node.Left).(int) / intr.visit(node.Right).(int)
-	case impl.LESS:
-		return nil
 	default:
 		panic("unknown op")
 	}
@@ -337,9 +335,13 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 	return nil
 }
 
+func (comp *Compiler) visit_BoolOp(node impl.BoolOp) any {
+	return nil
+}
+
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
 	comp.visit_Assign(node.Assign)
-	comp.visit_BinOp(node.BoolExpr)
+	comp.visit_BoolOp(node.BoolExpr)
 	comp.visit_Assign(node.Expr)
 	comp.visit_Compound(node.Body)
 	return nil

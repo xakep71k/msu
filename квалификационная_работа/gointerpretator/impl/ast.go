@@ -14,6 +14,17 @@ func MakeBinOp(left AST, op Token, right AST) BinOp {
 	return BinOp{left, op, op, right}
 }
 
+type BoolOp struct {
+	Left  AST
+	Token Token
+	Op    Token
+	Right AST
+}
+
+func MakeBoolOp(left AST, op Token, right AST) BoolOp {
+	return BoolOp{left, op, op, right}
+}
+
 type Num struct {
 	Token Token
 	Value any
@@ -96,12 +107,12 @@ func MakePrint(tok Token) Print {
 
 type ForLoop struct {
 	Assign   Assign
-	BoolExpr BinOp
+	BoolExpr BoolOp
 	Expr     Assign
 	Body     Compound
 }
 
-func MakeForLoop(assign Assign, boolBinOp BinOp, expr Assign, comp Compound) ForLoop {
+func MakeForLoop(assign Assign, boolBinOp BoolOp, expr Assign, comp Compound) ForLoop {
 	return ForLoop{
 		Assign:   assign,
 		BoolExpr: boolBinOp,
