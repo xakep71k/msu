@@ -335,14 +335,89 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 	return nil
 }
 
-func (comp *Compiler) visit_BoolOp(node impl.BoolOp) any {
-	return nil
+func (comp *Compiler) visit_BoolOp(node impl.BoolOp) int {
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
+
+	switch left.Type {
+	case INT64_CONST, INT64_VAR:
+		switch right.Type {
+		case INT64_CONST, INT64_VAR:
+			tmpVar := uuid.New().String()
+			varMeta := _VarMeta{
+				Type: INT64_VAR,
+				Key:  tmpVar,
+				Addr: uuid.New().String(),
+			}
+			comp.vars[tmpVar] = varMeta
+
+			cmd := _Command{
+				OpCode: CMD_SUB_INT,
+				Arg1:   _Addr{varMeta.Addr},
+				Arg2:   _Addr{left.Addr},
+				Arg3:   _Addr{right.Addr},
+			}
+
+			comp.commands = append(comp.commands, cmd)
+		default:
+			panic("not supported")
+		}
+	default:
+		panic("not supported")
+	}
+
+	nextAddress := fmt.Sprintf("%04d", len(comp.commands)+1)
+	cmd := _Command{
+		OpCode: CMD_COND_JUMP,
+		Arg1:   _Arg{nextAddress},
+		Arg2:   _Arg{nextAddress},
+		Arg3:   _Arg{nextAddress},
+	}
+
+	switch node.Op.Type {
+	case impl.LESS:
+		cmd.Arg3 = _JumpOutAddr{}
+	}
+
+	comp.commands = append(comp.commands, cmd)
+	return len(comp.commands) - 1
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
 	comp.visit_Assign(node.Assign)
-	comp.visit_BoolOp(node.BoolExpr)
-	comp.visit_Assign(node.Expr)
+	startLoopIndex := len(comp.commands)
+	jumpOutIndex := comp.visit_BoolOp(node.BoolExpr)
 	comp.visit_Compound(node.Body)
+	comp.visit_Assign(node.Expr)
+	comp.appendCondJump(startLoopIndex)
+	comp.correctJumpOutAddr(jumpOutIndex, len(comp.commands))
 	return nil
+}
+
+func (comp *Compiler) appendCondJump(index int) {
+	comp.commands = append(comp.commands, _Command{
+		OpCode: CMD_JUMP,
+		Arg1:   _Arg{"0000"},
+		Arg2:   _Arg{fmt.Sprintf("%04d", index)},
+		Arg3:   _Arg{"0000"},
+	})
+}
+
+func (comp *Compiler) correctJumpOutAddr(cmdJumpIndex int, outIndex int) {
+	cmd := comp.commands[cmdJumpIndex]
+
+	correct := func(arg any) any {
+		switch v := arg.(type) {
+		case _JumpOutAddr:
+			return _Arg{fmt.Sprintf("%04d", outIndex)}
+		default:
+			return v
+		}
+	}
+
+	cmd.Arg1 = correct(cmd.Arg1)
+	cmd.Arg2 = correct(cmd.Arg2)
+	cmd.Arg3 = correct(cmd.Arg3)
+
+	comp.commands[cmdJumpIndex] = cmd
 }
