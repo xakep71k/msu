@@ -217,7 +217,7 @@ func (comp *Compiler) addNum(value any, addr string) _VarMeta {
 		}
 		return comp.vars[s]
 	case int64:
-		s := fmt.Sprintf("%016x", v)
+		s := fmt.Sprintf("%016x", uint64(v))
 		if _, ok := comp.vars[s]; !ok {
 			comp.vars[s] = _VarMeta{
 				Type:  INT64_CONST,
