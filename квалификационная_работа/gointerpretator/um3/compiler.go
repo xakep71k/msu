@@ -147,7 +147,6 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 		return comp.visit_ForLoop(n)
 	default:
 		return nil
-		//panic("unknown type node")
 	}
 }
 
