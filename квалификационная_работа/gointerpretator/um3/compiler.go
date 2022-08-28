@@ -20,7 +20,7 @@ func NewCompiler() *Compiler {
 	}
 
 	c.zeroAddress = uuid.New().String()
-	c.vars[fmt.Sprintf("%016d", 0)] = _VarMeta{
+	c.vars[fmt.Sprintf("%016x", 0)] = _VarMeta{
 		Type: INT64_CONST,
 		Addr: c.zeroAddress,
 	}
@@ -373,8 +373,8 @@ func (comp *Compiler) visit_Print(node impl.Print) any {
 
 	cmd := _Command{
 		Arg1: _Addr{varMeta.Addr},
-		Arg2: _Arg{fmt.Sprintf("%04d", 1)},
-		Arg3: _Arg{fmt.Sprintf("%04d", 0)},
+		Arg2: _Arg{fmt.Sprintf("%04x", 1)},
+		Arg3: _Arg{fmt.Sprintf("%04x", 0)},
 	}
 
 	switch varMeta.Type {
@@ -421,7 +421,7 @@ func (comp *Compiler) visit_BoolOp(node impl.BoolOp) int {
 		panic("not supported")
 	}
 
-	nextAddress := fmt.Sprintf("%04d", len(comp.commands)+1)
+	nextAddress := fmt.Sprintf("%04x", len(comp.commands)+1)
 	cmd := _Command{
 		OpCode: CMD_COND_JUMP,
 		Arg1:   _Arg{nextAddress},
@@ -453,7 +453,7 @@ func (comp *Compiler) appendCondJump(index int) {
 	comp.commands = append(comp.commands, _Command{
 		OpCode: CMD_JUMP,
 		Arg1:   _Arg{"0000"},
-		Arg2:   _Arg{fmt.Sprintf("%04d", index)},
+		Arg2:   _Arg{fmt.Sprintf("%04x", index)},
 		Arg3:   _Arg{"0000"},
 	})
 }
