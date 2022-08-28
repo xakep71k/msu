@@ -154,15 +154,14 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 	left := comp.buildMachineCode(node.Left).(_VarMeta)
 	right := comp.buildMachineCode(node.Right).(_VarMeta)
+	tmpVar := uuid.New().String()
+	varMeta := _VarMeta{
+		Key:  tmpVar,
+		Addr: uuid.New().String(),
+	}
 
 	switch node.Op.Type {
 	case impl.PLUS:
-		tmpVar := uuid.New().String()
-		varMeta := _VarMeta{
-			Key:  tmpVar,
-			Addr: uuid.New().String(),
-		}
-
 		cmd := _Command{
 			Arg1: _Addr{varMeta.Addr},
 			Arg2: _Addr{left.Addr},
@@ -178,22 +177,78 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 			default:
 				panic("not supported type1")
 			}
+
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case FLOAT64_VAR, FLOAT64_CONST:
+				varMeta.Type = FLOAT64_VAR
+				cmd.OpCode = CMD_ADD_FLOAT
+			default:
+				panic("not supported type3")
+			}
 		default:
 			panic("not supported type2")
 		}
 
-		comp.vars[tmpVar] = varMeta
 		comp.commands = append(comp.commands, cmd)
-		return varMeta
 	// case impl.MINUS:
 	// 	return comp.buildMachineCode(node.Left).(int) - comp.buildMachineCode(node.Right).(int)
 	// case MUL:
 	// return intr.visit(node.Left).(int) * intr.visit(node.Right).(int)
-	// case DIV:
+	case impl.DIV:
+		switch left.Type {
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				right = comp.castINT642FLOAT64(right)
+			case FLOAT64_VAR, FLOAT64_CONST:
+			default:
+				panic("not supported type1")
+			}
+
+			cmd := _Command{
+				OpCode: CMD_DIV_FLOAT64,
+				Arg1:   _Addr{varMeta.Addr},
+				Arg2:   _Addr{left.Addr},
+				Arg3:   _Addr{right.Addr},
+			}
+			comp.commands = append(comp.commands, cmd)
+		default:
+			panic("not supported type2")
+		}
 	// return intr.visit(node.Left).(int) / intr.visit(node.Right).(int)
 	default:
 		panic("unknown op")
 	}
+
+	comp.vars[tmpVar] = varMeta
+	return varMeta
+}
+
+func (comp *Compiler) castINT642FLOAT64(v _VarMeta) _VarMeta {
+	switch v.Type {
+	case FLOAT64_VAR, FLOAT64_CONST:
+		panic("only int32")
+	}
+
+	tmpVar := uuid.New().String()
+	tmpVarMeta := _VarMeta{
+		Type: FLOAT64_VAR,
+		Key:  tmpVar,
+		Addr: uuid.New().String(),
+	}
+	comp.vars[tmpVar] = tmpVarMeta
+
+	cmd := _Command{
+		OpCode: CMD_CAST_INT64_TO_FLOAT64,
+		Arg1:   _Addr{tmpVarMeta.Addr},
+		Arg2:   _Arg{"0000"},
+		Arg3:   _Addr{v.Addr},
+	}
+
+	comp.commands = append(comp.commands, cmd)
+
+	return tmpVarMeta
 }
 
 func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
@@ -409,7 +464,7 @@ func (comp *Compiler) correctJumpOutAddr(cmdJumpIndex int, outIndex int) {
 	correct := func(arg any) any {
 		switch v := arg.(type) {
 		case _JumpOutAddr:
-			return _Arg{fmt.Sprintf("%04d", outIndex)}
+			return _Arg{fmt.Sprintf("%04x", outIndex)}
 		default:
 			return v
 		}
