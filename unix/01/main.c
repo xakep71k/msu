@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 struct Word {
-    char * data;
+    char *data;
     size_t len;
     size_t cap;
 };
@@ -85,12 +85,13 @@ struct Words read_words() {
         if (ch == EOF) {
             if (word.data != NULL) {
                 append_word(&words, word);
-                word = create_empty_word();
             }
             break;
-        } else if (isspace(ch) && word.data != NULL ) {
-            append_word(&words, word);
-            word = create_empty_word();
+        } else if (isspace(ch)) {
+            if (word.data != NULL) {
+                append_word(&words, word);
+                word = create_empty_word();
+            }
         } else {
             append_char(&word, ch);
         }
