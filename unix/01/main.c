@@ -27,7 +27,7 @@ void append_char(struct Word *w, char ch) {
         w->len = 0;
     } else if (w->len + 1 >= w->cap){
         w->cap *= 2;
-        w->data = realloc(w->data, w->cap);
+        w->data = realloc(w->data, sizeof(char)*w->cap);
     }
 
     if (w->data == NULL) {
