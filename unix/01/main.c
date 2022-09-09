@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 struct Word {
     char *data;
@@ -13,6 +14,48 @@ struct Words {
     size_t len;
     size_t cap;
 };
+
+struct Words read_words();
+void print_words(struct Words words);
+void free_words(struct Words words);
+int compare_words(const void* a, const void* b);
+
+int main() {
+    struct Words words = read_words();
+    qsort(words.data, words.len, sizeof(struct Word), compare_words);
+    print_words(words);
+    free_words(words);
+}
+
+struct Word create_empty_word();
+void append_char(struct Word *w, char ch);
+void append_word(struct Words *ww, struct Word w);
+
+struct Words read_words() {
+    int ch;
+    struct Word word = create_empty_word();
+    struct Words words = {0};
+
+    for (;;) {
+        ch = getchar();
+
+        if (ch == EOF) {
+            if (word.data != NULL) {
+                append_word(&words, word);
+            }
+            break;
+        } else if (isspace(ch)) {
+            if (word.data != NULL) {
+                append_word(&words, word);
+                word = create_empty_word();
+            }
+        } else {
+            append_char(&word, ch);
+        }
+    }
+
+    return words;
+}
 
 struct Word create_empty_word() {
     struct Word w = {0};
@@ -78,34 +121,8 @@ void free_words(struct Words words) {
     free(words.data);
 }
 
-struct Words read_words() {
-    int ch;
-    struct Word word = create_empty_word();
-    struct Words words = {0};
-
-    for (;;) {
-        ch = getchar();
-
-        if (ch == EOF) {
-            if (word.data != NULL) {
-                append_word(&words, word);
-            }
-            break;
-        } else if (isspace(ch)) {
-            if (word.data != NULL) {
-                append_word(&words, word);
-                word = create_empty_word();
-            }
-        } else {
-            append_char(&word, ch);
-        }
-    }
-
-    return words;
-}
-
-int main() {
-    struct Words words = read_words();
-    print_words(words);
-    free_words(words);
+int compare_words(const void* a, const void* b) {
+    const struct Word* word1 = a;
+    const struct Word* word2 = b;
+    return strcmp(word1->data, word2->data);
 }
