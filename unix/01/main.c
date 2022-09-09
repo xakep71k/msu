@@ -24,8 +24,10 @@ void append_char(struct Word *w, char ch) {
         size_t init_capacity = 2;
         w->data = malloc(sizeof(char)*init_capacity);
         w->cap = init_capacity;
+        w->len = 0;
     } else if (w->len + 1 >= w->cap){
-        w->data = realloc(w->data, w->cap*2);
+        w->cap *= 2;
+        w->data = realloc(w->data, w->cap);
     }
 
     if (w->data == NULL) {
@@ -40,11 +42,13 @@ void append_char(struct Word *w, char ch) {
 
 void append_word(struct Words *ww, struct Word w) {
     if (ww->data == NULL) {
-        size_t init_capacity = 2;
+        size_t init_capacity = 1;
         ww->data = malloc(sizeof(struct Word)*init_capacity);
         ww->cap = init_capacity;
+        ww->len = 0;
     } else if (ww->len >= ww->cap){
-        ww->data = realloc(ww->data, ww->cap*2);
+        ww->cap *= 2;
+        ww->data = realloc(ww->data, sizeof(struct Word)*ww->cap);
     }
 
     if (ww->data == NULL) {
