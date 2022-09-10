@@ -30,6 +30,7 @@ int main() {
 struct Word create_empty_word();
 void append_char(struct Word *w, char ch);
 void append_word(struct Words *ww, struct Word w);
+int is_word_empty(struct Word word);
 
 struct Words read_words() {
     int ch;
@@ -40,12 +41,25 @@ struct Words read_words() {
         ch = getchar();
 
         if (ch == EOF) {
-            if (word.data != NULL) {
+            if (!is_word_empty(word)) {
                 append_word(&words, word);
             }
             break;
         } else if (isspace(ch)) {
-            if (word.data != NULL) {
+            if (!is_word_empty(word)) {
+                append_word(&words, word);
+                word = create_empty_word();
+            }
+        } else if (ch == ';') {
+            if (!is_word_empty(word)) {
+                append_word(&words, word);
+                word = create_empty_word();
+            }
+            append_char(&word, ch);
+            append_word(&words, word);
+            word = create_empty_word();
+        } else if (ch == '|' || ch == '&'){
+            if (!is_word_empty(word)) {
                 append_word(&words, word);
                 word = create_empty_word();
             }
@@ -55,6 +69,10 @@ struct Words read_words() {
     }
 
     return words;
+}
+
+int is_word_empty(struct Word word) {
+    return word.data == NULL;
 }
 
 struct Word create_empty_word() {
