@@ -63,6 +63,19 @@ struct Words read_words() {
                 append_word(&words, word);
                 word = create_empty_word();
             }
+
+            int prev_ch = ch;
+            append_char(&word, ch);
+
+            ch = getchar();
+            if (prev_ch == ch) {
+                append_char(&word, prev_ch);
+            } else {
+                ungetc(ch, stdin);
+            }
+
+            append_word(&words, word);
+            word = create_empty_word();
         } else {
             append_char(&word, ch);
         }
