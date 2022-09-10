@@ -76,6 +76,19 @@ struct Words read_words() {
 
             append_word(&words, word);
             word = create_empty_word();
+        } else if (ch == '"' || ch == '\'') {
+            const int quot = ch;
+            while ((ch = getchar()) != EOF) {
+                if (quot == ch) {
+                    break;
+                }
+                append_char(&word, ch);
+            }
+
+            if (ch != quot) {
+                fprintf(stderr, "%c not closed", quot);
+                exit(1);
+            }
         } else {
             append_char(&word, ch);
         }
