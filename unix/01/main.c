@@ -64,7 +64,7 @@ struct Words read_words() {
                 word = create_empty_word();
             }
 
-            int prev_ch = ch;
+            const int prev_ch = ch;
             append_char(&word, ch);
 
             ch = getchar();
