@@ -14,7 +14,7 @@ type Compiler struct {
 	zeroAddress string
 }
 
-func NewCompiler() *Compiler {
+func NewCompiler() impl.Compiler {
 	c := &Compiler{
 		vars: make(map[string]_VarMeta),
 	}

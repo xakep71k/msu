@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	data, err := os.ReadFile(os.Args[1])
+	opts := readOptsFromCLI()
+	data, err := os.ReadFile(opts.SourceFile)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return
@@ -22,7 +23,16 @@ func main() {
 		return
 	}
 
-	compiler := um3.NewCompiler()
+	var compiler impl.Compiler
+
+	switch opts.MachineType {
+	case "um3":
+		compiler = um3.NewCompiler()
+	default:
+		fmt.Println("unknown machine type")
+		os.Exit(1)
+	}
+
 	machineCode, err := compiler.Compile(tree)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -32,11 +42,23 @@ func main() {
 	for _, line := range machineCode {
 		fmt.Println(line)
 	}
+}
 
-	// symTableBuilder := impl.MakeSymbolTableBuilder()
-	// err = symTableBuilder.Build(tree)
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, err)
-	// 	return
-	// }
+type Opts struct {
+	SourceFile  string
+	MachineType string
+}
+
+func readOptsFromCLI() Opts {
+	if len(os.Args) != 3 {
+		fmt.Println("wrong arguments")
+		os.Exit(1)
+	}
+
+	opts := Opts{
+		MachineType: os.Args[1],
+		SourceFile:  os.Args[2],
+	}
+
+	return opts
 }
