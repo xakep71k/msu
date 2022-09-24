@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const MSIZE = 1000
+const MSIZE = 5000
 
 func main() {
 	// создаём две матрицы с рандомным числами типа float64
