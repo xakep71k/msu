@@ -31,7 +31,6 @@ func main() {
 	// считаем ГФлопс
 	// делим количество операций / время в секундах
 	gflops := big.NewFloat(0).Quo(big.NewFloat(0).SetInt(countOps), elapsed)
-	// (elapsed, countOps)
 	fmt.Println(gflops.String())
 }
 
