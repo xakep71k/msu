@@ -2,37 +2,47 @@ package main
 
 import (
 	"fmt"
+	"math/big"
 	"math/rand"
+	"time"
 )
 
-const MSIZE = 2000
+const MSIZE = 1000
 
 func main() {
-	fmt.Println("begin init matrix")
+	// создаём две матрицы с рандомным числами типа float64
 	m1 := newMatrixWithRandom()
 	m2 := newMatrixWithRandom()
+
+	// и третью матрицу для записывания туда результата
 	result := newMatrix()
-	fmt.Println("end init matrix")
-	countOps := multiplyMatrix(m1, m2, result)
-	// fmt.Println(m1)
-	// fmt.Println(m2)
-	// fmt.Println(result)
-	fmt.Println(countOps)
+
+	// засекаем время умножения матрица
+	start := time.Now()
+	multiplyMatrix(m1, m2, result)
+	// останавливаем тамйер
+	elapsed := big.NewFloat(float64(time.Since(start) / time.Second))
+
+	// количестов операция для умножения матриц заранее известно
+	// это countOps = 2*MSIZE^3
+	countOps := big.NewInt(0).Exp(big.NewInt(MSIZE), big.NewInt(3), nil)
+	countOps = big.NewInt(0).Mul(countOps, big.NewInt(2))
+
+	// считаем ГФлопс
+	// делим количество операций / время в секундах
+	gflops := big.NewFloat(0).Quo(big.NewFloat(0).SetInt(countOps), elapsed)
+	// (elapsed, countOps)
+	fmt.Println(gflops.String())
 }
 
-func multiplyMatrix(m1, m2, result [][]float64) int64 {
-	var countOps int64
-
+func multiplyMatrix(m1, m2, result [][]float64) {
 	for i := 0; i < MSIZE; i++ {
 		for j := 0; j < MSIZE; j++ {
 			for k := 0; k < MSIZE; k++ {
 				result[i][j] += m1[i][k] * m2[k][j]
-				countOps += 2
 			}
 		}
 	}
-
-	return countOps
 }
 
 func newMatrixWithRandom() [][]float64 {
