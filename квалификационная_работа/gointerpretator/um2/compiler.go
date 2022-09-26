@@ -186,6 +186,16 @@ func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
 }
 
 func (comp *Compiler) visit_Assign(node impl.Assign) any {
+	cmd := _Command{
+		OpCode: CMD_MOVE,
+		Arg1:   _Addr{comp.vars[node.Left.Value].Addr},
+	}
+
+	varMeta := comp.buildMachineCode(node.Right).(_VarMeta)
+	cmd.Arg2 = _Addr{varMeta.Addr}
+
+	comp.commands = append(comp.commands, cmd)
+
 	return nil
 }
 
