@@ -182,12 +182,57 @@ func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
 		}
 
 		comp.commands = append(comp.commands, cmd)
+	case impl.DIV:
+		switch left.Type {
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				right = comp.castINT642FLOAT64(right)
+			case FLOAT64_VAR, FLOAT64_CONST:
+			default:
+				panic("not supported type1")
+			}
+
+			cmd := _Command{
+				OpCode: CMD_DIV_FLOAT64,
+				Arg1:   _Addr{varMeta.Addr},
+				Arg2:   _Addr{right.Addr},
+			}
+			comp.commands = append(comp.commands, cmd)
+		default:
+			panic("not supported type2")
+		}
 	default:
 		panic("unknown op")
 	}
 
 	comp.vars[tmpVar] = varMeta
 	return varMeta
+}
+
+func (comp *Compiler) castINT642FLOAT64(v _VarMeta) _VarMeta {
+	switch v.Type {
+	case FLOAT64_VAR, FLOAT64_CONST:
+		panic("only int32")
+	}
+
+	tmpVar := uuid.New().String()
+	tmpVarMeta := _VarMeta{
+		Type: FLOAT64_VAR,
+		Key:  tmpVar,
+		Addr: uuid.New().String(),
+	}
+	comp.vars[tmpVar] = tmpVarMeta
+
+	cmd := _Command{
+		OpCode: CMD_CAST_INT64_TO_FLOAT64,
+		Arg1:   _Addr{tmpVarMeta.Addr},
+		Arg2:   _Addr{v.Addr},
+	}
+
+	comp.commands = append(comp.commands, cmd)
+
+	return tmpVarMeta
 }
 
 func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
