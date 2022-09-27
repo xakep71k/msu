@@ -136,7 +136,58 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 }
 
 func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
-	return nil
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
+
+	tmpVar := uuid.New().String()
+	varMeta := _VarMeta{
+		Key:  tmpVar,
+		Addr: uuid.New().String(),
+	}
+
+	cmdMove := _Command{
+		OpCode: CMD_MOVE,
+		Arg1:   _Addr{varMeta.Addr},
+		Arg2:   _Addr{left.Addr},
+	}
+
+	comp.commands = append(comp.commands, cmdMove)
+
+	switch node.Op.Type {
+	case impl.PLUS:
+		cmd := _Command{
+			Arg1: _Addr{varMeta.Addr},
+			Arg2: _Addr{right.Addr},
+		}
+
+		switch left.Type {
+		case INT64_VAR, INT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				varMeta.Type = INT64_VAR
+				cmd.OpCode = CMD_ADD_INT
+			default:
+				panic("not supported type1")
+			}
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case FLOAT64_VAR, FLOAT64_CONST:
+				varMeta.Type = FLOAT64_VAR
+				cmd.OpCode = CMD_ADD_FLOAT
+			default:
+				panic("not supported type3")
+			}
+		default:
+			panic("not supported type2")
+		}
+
+		comp.commands = append(comp.commands, cmd)
+	default:
+		panic("unknown op")
+	}
+
+	comp.vars[tmpVar] = varMeta
+	return varMeta
 }
 
 func (comp *Compiler) visit_Num(node impl.Num) _VarMeta {
