@@ -6,8 +6,6 @@ func main() {
     n = 8
     for i = 1; i < n; i = i + 1 {
         y = y + 1.0 / i
-    //    Println(i)
+        Println(y)
     }
-
-    Println(y)
 }
