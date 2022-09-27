@@ -174,7 +174,22 @@ func (comp *Compiler) addNum(value any, addr string) _VarMeta {
 }
 
 func (comp *Compiler) visit_UnaryOp(node impl.UnaryOp) any {
-	return nil
+	op := node.Op.Type
+	if op == impl.PLUS {
+		return comp.buildMachineCode(node.Expr)
+	} else if op == impl.MINUS {
+		varMeta := comp.buildMachineCode(node.Expr).(_VarMeta)
+		delete(comp.vars, varMeta.Key)
+		switch v := varMeta.Value.(type) {
+		case float64:
+			varMeta.Value = -v
+		case int64:
+			varMeta.Value = -v
+		}
+		return comp.addNum(varMeta.Value, varMeta.Key)
+	}
+
+	panic(fmt.Sprintf("invalid operation %s", op))
 }
 
 func (comp *Compiler) visit_Compound(cmp impl.Compound) any {
@@ -255,6 +270,106 @@ func (comp *Compiler) visit_NoOp(node impl.NoOp) any {
 	return nil
 }
 
+func (comp *Compiler) visit_BoolOp(node impl.BoolOp) int {
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
+
+	switch left.Type {
+	case INT64_CONST, INT64_VAR:
+		switch right.Type {
+		case INT64_CONST, INT64_VAR:
+			tmpVar := uuid.New().String()
+			varMeta := _VarMeta{
+				Type: INT64_VAR,
+				Key:  tmpVar,
+				Addr: uuid.New().String(),
+			}
+			comp.vars[tmpVar] = varMeta
+
+			cmdMove := _Command{
+				OpCode: CMD_MOVE,
+				Arg1:   _Addr{varMeta.Addr},
+				Arg2:   _Addr{left.Addr},
+			}
+
+			comp.commands = append(comp.commands, cmdMove)
+
+			cmdSub := _Command{
+				OpCode: CMD_SUB_INT,
+				Arg1:   _Addr{varMeta.Addr},
+				Arg2:   _Addr{right.Addr},
+			}
+
+			comp.commands = append(comp.commands, cmdSub)
+		default:
+			panic("not supported")
+		}
+	default:
+		panic("not supported")
+	}
+
+	nextAddress := fmt.Sprintf("%06x", len(comp.commands)+3)
+	const zeros = "000000"
+
+	cmdGT := _Command{
+		OpCode: CMD_COND_JUMP_GT,
+		Arg1:   _Arg{nextAddress},
+		Arg2:   _Arg{zeros},
+	}
+	cmdLT := _Command{
+		OpCode: CMD_COND_JUMP_LT,
+		Arg1:   _Arg{nextAddress},
+		Arg2:   _Arg{zeros},
+	}
+	cmdEQ := _Command{
+		OpCode: CMD_COND_JUMP_EQ,
+		Arg1:   _Arg{nextAddress},
+		Arg2:   _Arg{zeros},
+	}
+
+	switch node.Op.Type {
+	case impl.LESS:
+		cmdGT.Arg1 = _JumpOutAddr{}
+		cmdEQ.Arg1 = _JumpOutAddr{}
+	}
+
+	comp.commands = append(comp.commands, cmdGT, cmdLT, cmdEQ)
+	return len(comp.commands) - 3
+}
+
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
+	comp.visit_Assign(node.Assign)
+	startLoopIndex := len(comp.commands)
+	jumpOutIndex := comp.visit_BoolOp(node.BoolExpr)
+	_ = startLoopIndex
+	comp.visit_Compound(node.Body)
+	comp.visit_Assign(node.Expr)
+	comp.appendCondJump(startLoopIndex)
+	comp.correctJumpOutAddr(jumpOutIndex, len(comp.commands))
 	return nil
+}
+
+func (comp *Compiler) appendCondJump(index int) {
+	comp.commands = append(comp.commands, _Command{
+		OpCode: CMD_JUMP,
+		Arg1:   _Arg{"000000"},
+		Arg2:   _Arg{fmt.Sprintf("%06x", index)},
+	})
+}
+
+func (comp *Compiler) correctJumpOutAddr(cmdJumpIndex int, outIndex int) {
+	correct := func(arg any) any {
+		switch v := arg.(type) {
+		case _JumpOutAddr:
+			return _Arg{fmt.Sprintf("%06x", outIndex)}
+		default:
+			return v
+		}
+	}
+
+	for i := 0; i < 3; i, cmdJumpIndex = i+1, cmdJumpIndex+1 {
+		cmd := comp.commands[cmdJumpIndex]
+		cmd.Arg1 = correct(cmd.Arg1)
+		comp.commands[cmdJumpIndex] = cmd
+	}
 }

@@ -430,6 +430,7 @@ func (comp *Compiler) visit_BoolOp(node impl.BoolOp) int {
 
 	switch node.Op.Type {
 	case impl.LESS:
+		cmd.Arg1 = _JumpOutAddr{}
 		cmd.Arg3 = _JumpOutAddr{}
 	}
 
