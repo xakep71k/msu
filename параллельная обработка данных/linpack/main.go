@@ -28,7 +28,7 @@ func main() {
 	countOps := big.NewInt(0).Exp(big.NewInt(MSIZE), big.NewInt(3), nil)
 	countOps = big.NewInt(0).Mul(countOps, big.NewInt(2))
 
-	// считаем ГФлопс
+	// считаем Флопсы
 	// делим количество операций / время в секундах
 	gflops := big.NewFloat(0).Quo(big.NewFloat(0).SetInt(countOps), elapsed)
 	fmt.Println(gflops.String())
