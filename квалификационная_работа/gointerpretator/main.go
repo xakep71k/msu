@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"gointerpretator/impl"
+	"gointerpretator/um1"
 	"gointerpretator/um2"
 	"gointerpretator/um3"
 )
@@ -31,6 +32,8 @@ func main() {
 		compiler = um3.NewCompiler()
 	case "um2":
 		compiler = um2.NewCompiler()
+	case "um1":
+		compiler = um1.NewCompiler()
 	default:
 		fmt.Println("unknown machine type")
 		os.Exit(1)
