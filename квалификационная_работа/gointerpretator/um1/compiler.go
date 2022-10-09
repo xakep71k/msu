@@ -131,79 +131,80 @@ func (comp *Compiler) buildMachineCode(node impl.AST) any {
 }
 
 func (comp *Compiler) visit_BinOp(node impl.BinOp) any {
-	// left := comp.buildMachineCode(node.Left).(_VarMeta)
-	// right := comp.buildMachineCode(node.Right).(_VarMeta)
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
 
-	// tmpVar := uuid.New().String()
-	// varMeta := _VarMeta{
-	// 	Key:  tmpVar,
-	// 	Addr: uuid.New().String(),
-	// }
+	leftInS := _Command{
+		OpCode: CMD_MOVE_TO_S,
+		Arg:    _Addr{left.Addr},
+	}
 
-	// cmdMove := _Command{
-	// 	OpCode: CMD_MOVE,
-	// 	Arg1:   _Addr{varMeta.Addr},
-	// 	Arg2:   _Addr{left.Addr},
-	// }
+	resulTmpVarMeta := _VarMeta{
+		Key:  uuid.New().String(),
+		Addr: uuid.New().String(),
+	}
 
-	// comp.commands = append(comp.commands, cmdMove)
+	switch node.Op.Type {
+	case impl.PLUS:
+		cmd := _Command{
+			Arg: _Addr{right.Addr},
+		}
 
-	// switch node.Op.Type {
-	// case impl.PLUS:
-	// 	cmd := _Command{
-	// 		Arg1: _Addr{varMeta.Addr},
-	// 		Arg2: _Addr{right.Addr},
-	// 	}
+		switch left.Type {
+		case INT64_VAR, INT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				cmd.OpCode = CMD_ADD_INT
+				resulTmpVarMeta.Type = INT64_VAR
+			default:
+				panic("not supported type1")
+			}
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case FLOAT64_VAR, FLOAT64_CONST:
+				resulTmpVarMeta.Type = FLOAT64_VAR
+				cmd.OpCode = CMD_ADD_FLOAT
+			default:
+				panic("not supported type3")
+			}
+		default:
+			panic("not supported type2")
+		}
 
-	// 	switch left.Type {
-	// 	case INT64_VAR, INT64_CONST:
-	// 		switch right.Type {
-	// 		case INT64_VAR, INT64_CONST:
-	// 			varMeta.Type = INT64_VAR
-	// 			cmd.OpCode = CMD_ADD_INT
-	// 		default:
-	// 			panic("not supported type1")
-	// 		}
-	// 	case FLOAT64_VAR, FLOAT64_CONST:
-	// 		switch right.Type {
-	// 		case FLOAT64_VAR, FLOAT64_CONST:
-	// 			varMeta.Type = FLOAT64_VAR
-	// 			cmd.OpCode = CMD_ADD_FLOAT
-	// 		default:
-	// 			panic("not supported type3")
-	// 		}
-	// 	default:
-	// 		panic("not supported type2")
-	// 	}
+		comp.commands = append(comp.commands, leftInS)
+		comp.commands = append(comp.commands, cmd)
+	case impl.DIV:
+		switch left.Type {
+		case FLOAT64_VAR, FLOAT64_CONST:
+			switch right.Type {
+			case INT64_VAR, INT64_CONST:
+				right = comp.castINT642FLOAT64(right)
+			case FLOAT64_VAR, FLOAT64_CONST:
+			default:
+				panic("not supported type1")
+			}
 
-	// 	comp.commands = append(comp.commands, cmd)
-	// case impl.DIV:
-	// 	switch left.Type {
-	// 	case FLOAT64_VAR, FLOAT64_CONST:
-	// 		switch right.Type {
-	// 		case INT64_VAR, INT64_CONST:
-	// 			right = comp.castINT642FLOAT64(right)
-	// 		case FLOAT64_VAR, FLOAT64_CONST:
-	// 		default:
-	// 			panic("not supported type1")
-	// 		}
+			cmd := _Command{
+				OpCode: CMD_DIV_FLOAT64,
+				Arg:    _Addr{right.Addr},
+			}
 
-	// 		cmd := _Command{
-	// 			OpCode: CMD_DIV_FLOAT64,
-	// 			Arg1:   _Addr{varMeta.Addr},
-	// 			Arg2:   _Addr{right.Addr},
-	// 		}
-	// 		comp.commands = append(comp.commands, cmd)
-	// 	default:
-	// 		panic("not supported type2")
-	// 	}
-	// default:
-	// 	panic("unknown op")
-	// }
+			comp.commands = append(comp.commands, leftInS)
+			comp.commands = append(comp.commands, cmd)
+		default:
+			panic("not supported type2")
+		}
+	default:
+		panic("unknown op")
+	}
 
-	// comp.vars[tmpVar] = varMeta
-	// return varMeta
-	return nil
+	moveResult := _Command{
+		OpCode: CMD_MOVE_FROM_S,
+		Arg:    _Addr{resulTmpVarMeta.Addr},
+	}
+	comp.commands = append(comp.commands, moveResult)
+	comp.vars[resulTmpVarMeta.Key] = resulTmpVarMeta
+	return resulTmpVarMeta
 }
 
 func (comp *Compiler) castINT642FLOAT64(v _VarMeta) _VarMeta {
@@ -212,20 +213,26 @@ func (comp *Compiler) castINT642FLOAT64(v _VarMeta) _VarMeta {
 		panic("only int32")
 	}
 
-	tmpVar := uuid.New().String()
+	castCmd := _Command{
+		OpCode: CMD_CAST_INT64_TO_FLOAT64,
+		Arg:    _Addr{v.Addr},
+	}
+
+	comp.commands = append(comp.commands, castCmd)
+
 	tmpVarMeta := _VarMeta{
 		Type: FLOAT64_VAR,
-		Key:  tmpVar,
+		Key:  uuid.New().String(),
 		Addr: uuid.New().String(),
 	}
-	comp.vars[tmpVar] = tmpVarMeta
+	comp.vars[tmpVarMeta.Key] = tmpVarMeta
 
-	cmd := _Command{
-		OpCode: CMD_CAST_INT64_TO_FLOAT64,
+	moveToTmpResult := _Command{
+		OpCode: CMD_MOVE_FROM_S,
 		Arg:    _Addr{tmpVarMeta.Addr},
 	}
 
-	comp.commands = append(comp.commands, cmd)
+	comp.commands = append(comp.commands, moveToTmpResult)
 
 	return tmpVarMeta
 }
@@ -335,6 +342,7 @@ func (comp *Compiler) visit_VarDecl(node impl.VarDecl) any {
 	}
 
 	comp.vars[node.Var.Value] = m
+
 	return nil
 }
 
@@ -384,78 +392,63 @@ func (comp *Compiler) visit_NoOp(node impl.NoOp) any {
 }
 
 func (comp *Compiler) visit_BoolOp(node impl.BoolOp) int {
-	// left := comp.buildMachineCode(node.Left).(_VarMeta)
-	// right := comp.buildMachineCode(node.Right).(_VarMeta)
+	left := comp.buildMachineCode(node.Left).(_VarMeta)
+	right := comp.buildMachineCode(node.Right).(_VarMeta)
 
-	// switch left.Type {
-	// case INT64_CONST, INT64_VAR:
-	// 	switch right.Type {
-	// 	case INT64_CONST, INT64_VAR:
-	// 		tmpVar := uuid.New().String()
-	// 		varMeta := _VarMeta{
-	// 			Type: INT64_VAR,
-	// 			Key:  tmpVar,
-	// 			Addr: uuid.New().String(),
-	// 		}
-	// 		comp.vars[tmpVar] = varMeta
+	switch left.Type {
+	case INT64_CONST, INT64_VAR:
+		switch right.Type {
+		case INT64_CONST, INT64_VAR:
+			moveToSCmd := _Command{
+				OpCode: CMD_MOVE_TO_S,
+				Arg:    _Addr{left.Addr},
+			}
 
-	// 		cmdMove := _Command{
-	// 			OpCode: CMD_MOVE,
-	// 			Arg1:   _Addr{varMeta.Addr},
-	// 			Arg2:   _Addr{left.Addr},
-	// 		}
+			comp.commands = append(comp.commands, moveToSCmd)
 
-	// 		comp.commands = append(comp.commands, cmdMove)
+			subIntCmd := _Command{
+				OpCode: CMD_SUB_INT,
+				Arg:    _Addr{right.Addr},
+			}
 
-	// 		cmdSub := _Command{
-	// 			OpCode: CMD_SUB_INT,
-	// 			Arg1:   _Addr{varMeta.Addr},
-	// 			Arg2:   _Addr{right.Addr},
-	// 		}
+			comp.commands = append(comp.commands, subIntCmd)
 
-	// 		comp.commands = append(comp.commands, cmdSub)
-	// 	default:
-	// 		panic("not supported")
-	// 	}
-	// default:
-	// 	panic("not supported")
-	// }
+		default:
+			panic("not supported")
+		}
+	default:
+		panic("not supported")
+	}
 
-	// nextAddress := fmt.Sprintf("%06x", len(comp.commands)+3)
-	// const zeros = "000000"
+	nextAddress := fmt.Sprintf("%012x", len(comp.commands)+3)
 
-	// cmdGT := _Command{
-	// 	OpCode: CMD_COND_JUMP_GT,
-	// 	Arg1:   _Arg{nextAddress},
-	// 	Arg2:   _Arg{zeros},
-	// }
-	// cmdLT := _Command{
-	// 	OpCode: CMD_COND_JUMP_LT,
-	// 	Arg1:   _Arg{nextAddress},
-	// 	Arg2:   _Arg{zeros},
-	// }
-	// cmdEQ := _Command{
-	// 	OpCode: CMD_COND_JUMP_EQ,
-	// 	Arg1:   _Arg{nextAddress},
-	// 	Arg2:   _Arg{zeros},
-	// }
+	cmdGT := _Command{
+		OpCode: CMD_COND_JUMP_GT,
+		Arg:    _Arg{nextAddress},
+	}
+	cmdLT := _Command{
+		OpCode: CMD_COND_JUMP_LT,
+		Arg:    _Arg{nextAddress},
+	}
+	cmdEQ := _Command{
+		OpCode: CMD_COND_JUMP_EQ,
+		Arg:    _Arg{nextAddress},
+	}
 
-	// switch node.Op.Type {
-	// case impl.LESS:
-	// 	cmdGT.Arg1 = _JumpOutAddr{}
-	// 	cmdEQ.Arg1 = _JumpOutAddr{}
-	// }
+	switch node.Op.Type {
+	case impl.LESS:
+		cmdGT.Arg = _JumpOutAddr{}
+		cmdEQ.Arg = _JumpOutAddr{}
+	}
 
-	// comp.commands = append(comp.commands, cmdGT, cmdLT, cmdEQ)
-	// return len(comp.commands) - 3
-	return 0
+	comp.commands = append(comp.commands, cmdGT, cmdLT, cmdEQ)
+	return len(comp.commands) - 3
 }
 
 func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
 	comp.visit_Assign(node.Assign)
 	startLoopIndex := len(comp.commands)
 	jumpOutIndex := comp.visit_BoolOp(node.BoolExpr)
-	_ = startLoopIndex
 	comp.visit_Compound(node.Body)
 	comp.visit_Assign(node.Expr)
 	comp.appendCondJump(startLoopIndex)
@@ -471,18 +464,18 @@ func (comp *Compiler) appendCondJump(index int) {
 }
 
 func (comp *Compiler) correctJumpOutAddr(cmdJumpIndex int, outIndex int) {
-	// correct := func(arg any) any {
-	// 	switch v := arg.(type) {
-	// 	case _JumpOutAddr:
-	// 		return _Arg{fmt.Sprintf("%06x", outIndex)}
-	// 	default:
-	// 		return v
-	// 	}
-	// }
+	correct := func(arg any) any {
+		switch v := arg.(type) {
+		case _JumpOutAddr:
+			return _Arg{fmt.Sprintf("%012x", outIndex)}
+		default:
+			return v
+		}
+	}
 
-	// for i := 0; i < 3; i, cmdJumpIndex = i+1, cmdJumpIndex+1 {
-	// 	cmd := comp.commands[cmdJumpIndex]
-	// 	cmd.Arg1 = correct(cmd.Arg1)
-	// 	comp.commands[cmdJumpIndex] = cmd
-	// }
+	for i := 0; i < 3; i, cmdJumpIndex = i+1, cmdJumpIndex+1 {
+		cmd := comp.commands[cmdJumpIndex]
+		cmd.Arg = correct(cmd.Arg)
+		comp.commands[cmdJumpIndex] = cmd
+	}
 }

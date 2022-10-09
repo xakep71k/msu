@@ -4,9 +4,9 @@ func main() {
     var n int
 
     n = 8
-    Println(n)
-    //for i = 1; i < n; i = i + 1 {
-    //    y = y + 1.0 / i
-    //    Println(y)
-   // }
+    for i = 1; i < n; i = i + 1 {
+        y = y + 1.0 / i
+    }
+
+    Println(y)
 }

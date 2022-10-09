@@ -437,7 +437,6 @@ func (comp *Compiler) visit_ForLoop(node impl.ForLoop) any {
 	comp.visit_Assign(node.Assign)
 	startLoopIndex := len(comp.commands)
 	jumpOutIndex := comp.visit_BoolOp(node.BoolExpr)
-	_ = startLoopIndex
 	comp.visit_Compound(node.Body)
 	comp.visit_Assign(node.Expr)
 	comp.appendCondJump(startLoopIndex)
