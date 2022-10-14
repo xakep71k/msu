@@ -118,7 +118,7 @@ void append_char(Buffer *buffer, char ch) {
 
     if (buffer->data == NULL) {
         fprintf(stderr, "not enough memory");
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     buffer->data[buffer->len] = ch;
@@ -128,19 +128,24 @@ void append_char(Buffer *buffer, char ch) {
 
 void usage(const char* current_filename) {
     printf("usage: %s <pattern> [-v] [file...]", current_filename);
-    exit(1);
+    exit(EXIT_FAILURE);
 }
 
 int is_inverse_match_specified(int argc, char *const *argv) {
     int option;
-
+    int count_opts = 0;
     while ((option = getopt(argc, argv, "v")) != -1) {
         switch(option) {
-            case 'v': return 1;
+            case 'v': count_opts++;
         }
     }
 
-    return 0;
+    if (count_opts > 1) {
+        fprintf(stderr, "-v repeated\n");
+        exit(EXIT_FAILURE);
+    }
+
+    return count_opts;
 }
 
 int is_opt(const char *supposed_opt) {
