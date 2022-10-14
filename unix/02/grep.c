@@ -21,8 +21,8 @@ int read_pattern(char *const *argv);
 int main(int argc,  char *const *argv) {
     int option;
 
-    const int print_file_name = argc > 3;
     const int is_inverse_match = is_inverse_match_specified(argc, argv);
+    const int print_file_name = is_inverse_match ? argc > 4 : argc > 3;
     int pattern_index = read_pattern(argv);
     int count_files = 0;
     Buffer buffer = {0};
