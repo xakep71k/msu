@@ -14,7 +14,6 @@ char *join_path(const char *s1, const char *s2);
 int main(int argc, char **argv) {
     for (int i = 1; argv[i] != NULL; i++) {
         const char *filename = argv[i];
-        return 0;
         if (strlen(filename) == 0) {
             fprintf(stderr, "path %d is empty\n", i);
             continue;
