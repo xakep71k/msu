@@ -137,6 +137,8 @@ int is_inverse_match_specified(int argc, char *const *argv) {
     while ((option = getopt(argc, argv, "v")) != -1) {
         switch(option) {
             case 'v': count_opts++;
+            default:
+                exit(EXIT_FAILURE);
         }
     }
 
