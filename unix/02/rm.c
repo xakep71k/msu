@@ -25,7 +25,6 @@ void rm(const char *filename) {
     struct stat statbuf;
     if (stat(filename, &statbuf) == -1) {
         if (ENOENT == errno) {
-            unlink(filename); // it can be a dangling symbolic link
             return;
         }
         perror(filename);
