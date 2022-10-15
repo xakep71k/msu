@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
     return EXIT_SUCCESS;
 }
 
-int read_line(FILE *file, Buffer *buffer);
+int read_word(FILE *file, Buffer *buffer);
 
 void strings(Buffer *buffer, FILE *file) {
     for (;;) {
-        int ch = read_line(file, buffer);
+        int ch = read_word(file, buffer);
         if (buffer->len >= 4) {
             puts(buffer->data);
         }
@@ -51,16 +51,14 @@ void strings(Buffer *buffer, FILE *file) {
 
 void append_char(Buffer *buffer, char ch);
 
-int read_line(FILE *file, Buffer *buffer) {
+int read_word(FILE *file, Buffer *buffer) {
     int ch;
     buffer->len = 0;
 
     while ((ch = getc(file)) != EOF) {
-        if (ch == '\n') {
+        if (ch < 32 || ch > 126) {
             break;
-        }
-
-        if (ch > 32 && ch < 128) {
+        } else {
             append_char(buffer, ch);
         }
     }
