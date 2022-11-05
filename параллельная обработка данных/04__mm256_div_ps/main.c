@@ -11,6 +11,7 @@ int main()
 
     __m256 float_result = _mm256_div_ps(float_vec_0, float_vec_1); // деление векторов
 
+    // вывод результата
     float *ret = (float*) &float_result;
     printf(
         "ret: %f, %f, %f, %f, %f, %f, %f, %f\n",
