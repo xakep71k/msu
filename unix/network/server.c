@@ -4,11 +4,19 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #define ECHO_PORT (2002)
 #define MAX_LINE (1024)
 
-void doprocessing(int sock);
+void *thread_processing(void*);
+
+typedef struct
+{
+    char *data;
+    size_t len;
+    size_t cap;
+} Buffer;
 
 int main(int argc, char *argv[])
 {
@@ -48,6 +56,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
+    pthread_t thread_id;
+
     clilen = sizeof(cli_addr);
 
     while (1)
@@ -61,50 +71,96 @@ int main(int argc, char *argv[])
             continue;
         }
 
-        pid_t pid = fork();
-
-        if (pid < 0)
+        if (pthread_create(&thread_id, NULL, thread_processing, (void *)&newsockfd) < 0)
         {
-            perror("ERROR on fork");
-            exit(1);
-        }
-
-        if (pid == 0)
-        {
-            close(sockfd);
-            doprocessing(newsockfd);
-            puts("client exited");
-            exit(0);
-        }
-        else
-        {
-            close(newsockfd);
+            perror("could not create thread");
+            return 1;
         }
     }
 }
 
-void doprocessing(int sock)
+void append_char(Buffer *buffer, char ch)
 {
-    char buffer[MAX_LINE] = {0};
-
-    for (;;)
+    if (buffer->data == NULL)
     {
-        ssize_t size = read(sock, buffer, MAX_LINE - 1);
-        if (size < 0)
-        {
-            perror("ERROR on read from client");
-            return;
-        }
+        size_t init_capacity = 2;
+        buffer->data = malloc(sizeof(char) * init_capacity);
+        buffer->cap = init_capacity;
+        buffer->len = 0;
+    }
+    else if (buffer->len + 1 >= buffer->cap)
+    {
+        buffer->cap *= 2;
+        buffer->data = realloc(buffer->data, sizeof(char) * buffer->cap);
+    }
 
-        if (strcmp(buffer, "quit\n") == 0)
-        {
-            return;
-        }
+    if (buffer->data == NULL)
+    {
+        fprintf(stderr, "not enough memory");
+        exit(EXIT_FAILURE);
+    }
 
-        if (write(sock, buffer, size) < 0)
+    buffer->data[buffer->len] = ch;
+    buffer->len += 1;
+    buffer->data[buffer->len] = 0;
+}
+
+int read_line(FILE *file, Buffer *buffer)
+{
+    int ch;
+    buffer->len = 0;
+
+    while ((ch = getc(file)) != EOF)
+    {
+        append_char(buffer, ch);
+        if (ch == '\n')
         {
-            perror("ERROR on write to client");
-            return;
+            break;
         }
     }
+
+    return ch;
+}
+
+void processing_client(int sock)
+{
+    FILE *fp = fdopen(sock, "r");
+
+    if (fp == NULL)
+    {
+        perror("fdopen failed");
+        return;
+    }
+
+    Buffer buffer = {0};
+    while (read_line(fp, &buffer) != EOF)
+    {
+        if (strcmp(buffer.data, "quit\n") == 0)
+        {
+            break;
+        }
+
+        if (write(sock, buffer.data, buffer.len) < 0)
+        {
+            perror("ERROR on write to client");
+            break;
+        }
+
+        buffer.len = 0;
+    }
+
+    if (buffer.data != NULL)
+    {
+        free(buffer.data);
+    }
+
+    fclose(fp);
+    return;
+}
+
+void *thread_processing(void *arg)
+{
+    int sock = *(int*)arg;
+    processing_client(sock);
+    puts("client exited");
 }
