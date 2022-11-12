@@ -9,7 +9,7 @@
 #define ECHO_PORT (2002)
 #define MAX_LINE (1024)
 
-void *thread_processing(void*);
+void *thread_processing(void *);
 
 typedef struct
 {
@@ -122,16 +122,8 @@ int read_line(FILE *file, Buffer *buffer)
     return ch;
 }
 
-void processing_client(int sock)
+void processing_client(FILE *fp)
 {
-    FILE *fp = fdopen(sock, "r");
-
-    if (fp == NULL)
-    {
-        perror("fdopen failed");
-        return;
-    }
-
     Buffer buffer = {0};
     while (read_line(fp, &buffer) != EOF)
     {
@@ -140,11 +132,13 @@ void processing_client(int sock)
             break;
         }
 
-        if (write(sock, buffer.data, buffer.len) < 0)
+        if (fwrite(buffer.data, sizeof(buffer.data), buffer.len, fp) != buffer.len)
         {
             perror("ERROR on write to client");
             break;
         }
+
+        fflush(fp);
 
         buffer.len = 0;
     }
@@ -154,13 +148,21 @@ void processing_client(int sock)
         free(buffer.data);
     }
 
-    fclose(fp);
     return;
 }
 
 void *thread_processing(void *arg)
 {
-    int sock = *(int*)arg;
-    processing_client(sock);
+    int sock = *(int *)arg;
+    FILE *fp = fdopen(sock, "r+");
+    if (fp != NULL)
+    {
+        processing_client(fp);
+        fclose(fp);
+    }
+    else
+    {
+        perror("fdopen failed");
+    }
     puts("client exited");
 }
