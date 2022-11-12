@@ -92,6 +92,7 @@ int main(int argc, char *argv[])
         if (poll(fds, nfds, -1) < 0)
         {
             perror("ERROR poll failed");
+            exit(1);
         }
 
         for (int i = 0; i < nfds; i++)
