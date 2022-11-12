@@ -63,10 +63,9 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    memset(fds, 0, sizeof(fds));
     for (int i = 0; i < MAX_CLIENTS; i++)
     {
-        fds[i].fd = -1;
+        nulled_pollfd(&fds[i]);
     }
 
     if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
