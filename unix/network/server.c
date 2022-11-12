@@ -8,6 +8,7 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <errno.h>
+#include <arpa/inet.h>
 
 #define ECHO_PORT 2002
 #define MAX_LINE 1024
@@ -26,7 +27,7 @@ void nulled_pollfd(struct pollfd *fd);
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd, clilen;
-    struct sockaddr_in serv_addr, cli_addr;
+    struct sockaddr_in serv_addr;
     struct pollfd fds[MAX_CLIENTS] = {0};
     int nfds = 1;
 
@@ -108,7 +109,8 @@ int main(int argc, char *argv[])
 
             if (fds[i].fd == sockfd)
             {
-                puts("listen socket");
+                struct sockaddr_in cli_addr;
+                puts("LOG: listen socket ready");
                 int newsockfd = accept(sockfd, (struct sockaddr *)&cli_addr, &clilen);
 
                 if (newsockfd < 0)
@@ -140,6 +142,7 @@ int main(int argc, char *argv[])
                     {
                         nfds++;
                     }
+
                     puts("LOG: client connected");
                 }
                 break;
@@ -149,7 +152,6 @@ int main(int argc, char *argv[])
             int rc = 0;
             if ((rc = read_line(fds[i].fd, &buffer)) <= 0)
             {
-                printf("LOG: rc = %d\n", rc);
                 if (rc < 0)
                 {
                     perror("ERROR read_line()");
@@ -166,7 +168,7 @@ int main(int argc, char *argv[])
                 break;
             }
 
-            printf("%s", buffer.data);
+            printf("LOG: received from client: %s", buffer.data);
             for (int j = 1; j < nfds; j++)
             {
                 if (fds[j].fd == -1)
