@@ -12,17 +12,18 @@ int main()
     __m256 float_result = _mm256_div_ps(float_vec_0, float_vec_1); // деление векторов
 
     // вывод результата
+    // хранятся в little endian, поэтому в обратном порядке
     float *ret = (float*) &float_result;
     printf(
         "ret: %f, %f, %f, %f, %f, %f, %f, %f\n",
-        ret[0],
-        ret[1],
-        ret[2],
-        ret[3],
-        ret[4],
-        ret[5],
+        ret[7],
         ret[6],
-        ret[7]);
+        ret[5],
+        ret[4],
+        ret[3],
+        ret[2],
+        ret[1],
+        ret[0]);
 
     return 0;
 }
