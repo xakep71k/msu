@@ -4,7 +4,7 @@
 
 //
 // программа демонстрирует пример испольования MPI_Cancel
-// 
+// запуск программы make run 
 
 int main (int argc, char **argv)
 {
