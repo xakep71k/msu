@@ -14,7 +14,8 @@ int main()
 
     // Фиксируем события до и после запуска kernel
     cudaEventRecord(event1, 0); // 0 - поток по умолчанию
-    kernel<<<1,1>>>();
+    dim3 grid(3,2,1), block(4,3,1);
+    kernel<<<grid, block>>>();
     cudaEventRecord(event2, 0);
 
     // Синхронизируем события
