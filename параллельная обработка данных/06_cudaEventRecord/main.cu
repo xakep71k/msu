@@ -1,4 +1,5 @@
 #include <cuda.h>
+#include <stdio.h>
 //
 // Программа фиксирует два события с помощью cudaEventRecord и выводит время между ними
 //
@@ -25,6 +26,7 @@ int main()
     // Вычисляем время между cudaEventRecord
     float dt_ms;
     cudaEventElapsedTime(&dt_ms, event1, event2);
+    printf("%f\n", dt_ms);
 
     return 0;
 }
